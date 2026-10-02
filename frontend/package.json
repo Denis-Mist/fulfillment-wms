@@ -1,0 +1,54 @@
+{
+  "name": "fulfillment-wms-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc -b",
+    "lint": "eslint . --fix",
+    "format": "prettier --write src/"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@lucide/vue": "^1.49.0",
+    "@primeuix/themes": "^2.0.3",
+    "@tanstack/vue-query": "^5.104.0",
+    "@vueuse/core": "^15.0.0",
+    "dayjs": "^1.11.23",
+    "echarts": "^6.1.0",
+    "pinia": "^4.0.3",
+    "primevue": "~4.5.5",
+    "vue": "^3.5.43",
+    "vue-echarts": "^8.3.1",
+    "vue-router": "^5.3.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@primevue/auto-import-resolver": "~4.5.5",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.4",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.9.0",
+    "@vue/tsconfig": "^0.9.1",
+    "eslint": "^10.11.0",
+    "eslint-plugin-vue": "^10.11.1",
+    "jiti": "^2.7.0",
+    "msw": "^3.0.1",
+    "prettier": "^3.9.9",
+    "tailwindcss": "^4.3.3",
+    "tailwindcss-primeui": "^0.6.1",
+    "typescript": "^6.0.3",
+    "unplugin-vue-components": "^32.1.0",
+    "vite": "^8.3.2",
+    "vue-tsc": "^3.3.11"
+  }
+}
