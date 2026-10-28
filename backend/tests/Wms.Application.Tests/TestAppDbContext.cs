@@ -31,6 +31,7 @@ public sealed class TestAppDbContext() : DbContext(new DbContextOptionsBuilder<T
     public DbSet<WarehouseTask> Tasks => Set<WarehouseTask>();
     public DbSet<StaffProfile> StaffProfiles => Set<StaffProfile>();
     public DbSet<FboShipment> FboShipments => Set<FboShipment>();
+    public DbSet<CustomerReturn> Returns => Set<CustomerReturn>();
     public DbSet<StockOperation> StockOperations => Set<StockOperation>();
     public DbSet<Order> Orders => Set<Order>();
 

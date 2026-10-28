@@ -1,0 +1,1330 @@
+{
+ "returns": [
+  {
+   "id": "ret_1",
+   "number": "ВЗ-20400",
+   "orderId": "ord_104853",
+   "reason": "not_bought",
+   "status": "expected",
+   "sellerId": "org_s2",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-01T10:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_kw_21",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_2",
+   "number": "ВЗ-20401",
+   "orderId": "ord_100115",
+   "reason": "not_bought",
+   "status": "inspected",
+   "sellerId": "org_s2",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-10T16:00:00.000Z",
+   "receivedAt": "2026-09-12T21:00:00.000Z",
+   "inspectedAt": "2026-09-13T17:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_kw_9",
+     "quantity": 1,
+     "grade": "dispose"
+    }
+   ]
+  },
+  {
+   "id": "ret_3",
+   "number": "ВЗ-20402",
+   "orderId": "ord_103456",
+   "reason": "defect",
+   "status": "closed",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-24T14:00:00.000Z",
+   "receivedAt": "2026-09-26T18:00:00.000Z",
+   "inspectedAt": "2026-09-27T02:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_sl_2",
+     "quantity": 1,
+     "grade": "resale"
+    }
+   ]
+  },
+  {
+   "id": "ret_4",
+   "number": "ВЗ-20403",
+   "orderId": "ord_103462",
+   "reason": "size",
+   "status": "closed",
+   "sellerId": "org_s5",
+   "warehouseId": "wh_khm1",
+   "createdAt": "2026-09-12T18:00:00.000Z",
+   "receivedAt": "2026-09-14T00:00:00.000Z",
+   "inspectedAt": "2026-09-14T15:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_bl_2",
+     "quantity": 1,
+     "grade": "resale"
+    },
+    {
+     "productId": "prd_bl_1",
+     "quantity": 1,
+     "grade": "resale"
+    }
+   ]
+  },
+  {
+   "id": "ret_5",
+   "number": "ВЗ-20404",
+   "orderId": "ord_101963",
+   "reason": "size",
+   "status": "expected",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-04T02:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_sl_2",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_6",
+   "number": "ВЗ-20405",
+   "orderId": "ord_104899",
+   "reason": "not_bought",
+   "status": "received",
+   "sellerId": "org_s7",
+   "warehouseId": "wh_prn1",
+   "createdAt": "2026-09-03T14:00:00.000Z",
+   "receivedAt": "2026-09-04T15:00:00.000Z",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_cl_3",
+     "quantity": 1
+    },
+    {
+     "productId": "prd_cl_15",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_7",
+   "number": "ВЗ-20406",
+   "orderId": "ord_104018",
+   "reason": "size",
+   "status": "expected",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-24T07:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_sl_31",
+     "quantity": 2
+    },
+    {
+     "productId": "prd_sl_9",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_8",
+   "number": "ВЗ-20407",
+   "orderId": "ord_100094",
+   "reason": "size",
+   "status": "received",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-14T15:00:00.000Z",
+   "receivedAt": "2026-09-16T12:00:00.000Z",
+   "photos": 3,
+   "lines": [
+    {
+     "productId": "prd_sl_6",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_9",
+   "number": "ВЗ-20408",
+   "orderId": "ord_102335",
+   "reason": "defect",
+   "status": "closed",
+   "sellerId": "org_s8",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-17T18:00:00.000Z",
+   "receivedAt": "2026-09-20T12:00:00.000Z",
+   "inspectedAt": "2026-09-20T14:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 3,
+   "lines": [
+    {
+     "productId": "prd_st_12",
+     "quantity": 1,
+     "grade": "resale"
+    },
+    {
+     "productId": "prd_st_31",
+     "quantity": 1,
+     "grade": "as_new"
+    }
+   ]
+  },
+  {
+   "id": "ret_10",
+   "number": "ВЗ-20409",
+   "orderId": "ord_101919",
+   "reason": "not_bought",
+   "status": "inspected",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-12T05:00:00.000Z",
+   "receivedAt": "2026-09-14T15:00:00.000Z",
+   "inspectedAt": "2026-09-15T04:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 3,
+   "lines": [
+    {
+     "productId": "prd_sl_13",
+     "quantity": 1,
+     "grade": "resale"
+    }
+   ]
+  },
+  {
+   "id": "ret_11",
+   "number": "ВЗ-20410",
+   "orderId": "ord_104777",
+   "reason": "defect",
+   "status": "expected",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-15T14:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_sl_2",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_12",
+   "number": "ВЗ-20411",
+   "orderId": "ord_105214",
+   "reason": "not_bought",
+   "status": "expected",
+   "sellerId": "org_s8",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-06T22:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_st_5",
+     "quantity": 2
+    },
+    {
+     "productId": "prd_st_31",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_13",
+   "number": "ВЗ-20412",
+   "orderId": "ord_103792",
+   "reason": "defect",
+   "status": "received",
+   "sellerId": "org_s2",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-22T09:00:00.000Z",
+   "receivedAt": "2026-09-24T00:00:00.000Z",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_kw_2",
+     "quantity": 1
+    },
+    {
+     "productId": "prd_kw_31",
+     "quantity": 1
+    },
+    {
+     "productId": "prd_kw_3",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_14",
+   "number": "ВЗ-20413",
+   "orderId": "ord_101757",
+   "reason": "not_bought",
+   "status": "expected",
+   "sellerId": "org_s6",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-30T01:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_zm_4",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_15",
+   "number": "ВЗ-20414",
+   "orderId": "ord_101856",
+   "reason": "defect",
+   "status": "expected",
+   "sellerId": "org_s8",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-03T07:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_st_1",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_16",
+   "number": "ВЗ-20415",
+   "orderId": "ord_103141",
+   "reason": "not_bought",
+   "status": "received",
+   "sellerId": "org_s3",
+   "warehouseId": "wh_khm1",
+   "createdAt": "2026-09-21T19:00:00.000Z",
+   "receivedAt": "2026-09-22T20:00:00.000Z",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_tm_27",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_17",
+   "number": "ВЗ-20416",
+   "orderId": "ord_102167",
+   "reason": "not_bought",
+   "status": "received",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_shu1",
+   "createdAt": "2026-09-17T12:00:00.000Z",
+   "receivedAt": "2026-09-20T09:00:00.000Z",
+   "photos": 1,
+   "lines": [
+    {
+     "productId": "prd_ud_12",
+     "quantity": 1
+    },
+    {
+     "productId": "prd_ud_11",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_18",
+   "number": "ВЗ-20417",
+   "orderId": "ord_101354",
+   "reason": "defect",
+   "status": "closed",
+   "sellerId": "org_s6",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-16T20:00:00.000Z",
+   "receivedAt": "2026-09-18T21:00:00.000Z",
+   "inspectedAt": "2026-09-19T10:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_zm_5",
+     "quantity": 1,
+     "grade": "dispose"
+    }
+   ]
+  },
+  {
+   "id": "ret_19",
+   "number": "ВЗ-20418",
+   "orderId": "ord_100321",
+   "reason": "size",
+   "status": "inspected",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-21T04:00:00.000Z",
+   "receivedAt": "2026-09-23T11:00:00.000Z",
+   "inspectedAt": "2026-09-24T07:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_sl_32",
+     "quantity": 1,
+     "grade": "as_new"
+    },
+    {
+     "productId": "prd_sl_14",
+     "quantity": 1,
+     "grade": "resale"
+    },
+    {
+     "productId": "prd_sl_1",
+     "quantity": 1,
+     "grade": "dispose"
+    }
+   ]
+  },
+  {
+   "id": "ret_20",
+   "number": "ВЗ-20419",
+   "orderId": "ord_101264",
+   "reason": "damaged",
+   "status": "expected",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-01T09:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_sl_6",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_21",
+   "number": "ВЗ-20420",
+   "orderId": "ord_101975",
+   "reason": "size",
+   "status": "expected",
+   "sellerId": "org_s7",
+   "warehouseId": "wh_prn1",
+   "createdAt": "2026-09-01T17:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_cl_1",
+     "quantity": 1
+    },
+    {
+     "productId": "prd_cl_8",
+     "quantity": 1
+    },
+    {
+     "productId": "prd_cl_12",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_22",
+   "number": "ВЗ-20421",
+   "orderId": "ord_101503",
+   "reason": "damaged",
+   "status": "closed",
+   "sellerId": "org_s8",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-11T10:00:00.000Z",
+   "receivedAt": "2026-09-12T09:00:00.000Z",
+   "inspectedAt": "2026-09-12T16:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_st_2",
+     "quantity": 2,
+     "grade": "as_new"
+    }
+   ]
+  },
+  {
+   "id": "ret_23",
+   "number": "ВЗ-20422",
+   "orderId": "ord_102336",
+   "reason": "defect",
+   "status": "closed",
+   "sellerId": "org_s8",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-23T05:00:00.000Z",
+   "receivedAt": "2026-09-23T21:00:00.000Z",
+   "inspectedAt": "2026-09-24T06:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 1,
+   "lines": [
+    {
+     "productId": "prd_st_7",
+     "quantity": 1,
+     "grade": "as_new"
+    },
+    {
+     "productId": "prd_st_5",
+     "quantity": 1,
+     "grade": "defect"
+    },
+    {
+     "productId": "prd_st_21",
+     "quantity": 1,
+     "grade": "as_new"
+    }
+   ]
+  },
+  {
+   "id": "ret_24",
+   "number": "ВЗ-20423",
+   "orderId": "ord_101874",
+   "reason": "damaged",
+   "status": "expected",
+   "sellerId": "org_s3",
+   "warehouseId": "wh_khm1",
+   "createdAt": "2026-09-28T11:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_tm_3",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_25",
+   "number": "ВЗ-20424",
+   "orderId": "ord_105338",
+   "reason": "not_bought",
+   "status": "inspected",
+   "sellerId": "org_s6",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-18T01:00:00.000Z",
+   "receivedAt": "2026-09-19T04:00:00.000Z",
+   "inspectedAt": "2026-09-20T00:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_zm_3",
+     "quantity": 1,
+     "grade": "as_new"
+    }
+   ]
+  },
+  {
+   "id": "ret_26",
+   "number": "ВЗ-20425",
+   "orderId": "ord_102948",
+   "reason": "not_bought",
+   "status": "closed",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_shu1",
+   "createdAt": "2026-09-18T22:00:00.000Z",
+   "receivedAt": "2026-09-21T06:00:00.000Z",
+   "inspectedAt": "2026-09-21T20:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_ud_2",
+     "quantity": 1,
+     "grade": "as_new"
+    }
+   ]
+  },
+  {
+   "id": "ret_27",
+   "number": "ВЗ-20426",
+   "orderId": "ord_100762",
+   "reason": "wrong_item",
+   "status": "closed",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-25T01:00:00.000Z",
+   "receivedAt": "2026-09-26T06:00:00.000Z",
+   "inspectedAt": "2026-09-26T09:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 3,
+   "lines": [
+    {
+     "productId": "prd_ud_10",
+     "quantity": 1,
+     "grade": "resale"
+    },
+    {
+     "productId": "prd_ud_26",
+     "quantity": 1,
+     "grade": "resale"
+    }
+   ]
+  },
+  {
+   "id": "ret_28",
+   "number": "ВЗ-20427",
+   "orderId": "ord_100151",
+   "reason": "damaged",
+   "status": "closed",
+   "sellerId": "org_s3",
+   "warehouseId": "wh_prn1",
+   "createdAt": "2026-09-24T15:00:00.000Z",
+   "receivedAt": "2026-09-27T02:00:00.000Z",
+   "inspectedAt": "2026-09-27T14:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 3,
+   "lines": [
+    {
+     "productId": "prd_tm_27",
+     "quantity": 2,
+     "grade": "resale"
+    }
+   ]
+  },
+  {
+   "id": "ret_29",
+   "number": "ВЗ-20428",
+   "orderId": "ord_103882",
+   "reason": "not_bought",
+   "status": "closed",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-18T02:00:00.000Z",
+   "receivedAt": "2026-09-19T04:00:00.000Z",
+   "inspectedAt": "2026-09-19T06:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 1,
+   "lines": [
+    {
+     "productId": "prd_sl_24",
+     "quantity": 1,
+     "grade": "resale"
+    }
+   ]
+  },
+  {
+   "id": "ret_30",
+   "number": "ВЗ-20429",
+   "orderId": "ord_103483",
+   "reason": "size",
+   "status": "expected",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-28T09:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_ud_1",
+     "quantity": 1
+    },
+    {
+     "productId": "prd_ud_28",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_31",
+   "number": "ВЗ-20430",
+   "orderId": "ord_104733",
+   "reason": "not_bought",
+   "status": "closed",
+   "sellerId": "org_s6",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-25T13:00:00.000Z",
+   "receivedAt": "2026-09-28T02:00:00.000Z",
+   "inspectedAt": "2026-09-28T13:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 3,
+   "lines": [
+    {
+     "productId": "prd_zm_4",
+     "quantity": 1,
+     "grade": "as_new"
+    }
+   ]
+  },
+  {
+   "id": "ret_32",
+   "number": "ВЗ-20431",
+   "orderId": "ord_101616",
+   "reason": "not_bought",
+   "status": "expected",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-02T19:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_ud_7",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_33",
+   "number": "ВЗ-20432",
+   "orderId": "ord_105496",
+   "reason": "size",
+   "status": "closed",
+   "sellerId": "org_s2",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-20T11:00:00.000Z",
+   "receivedAt": "2026-09-20T23:00:00.000Z",
+   "inspectedAt": "2026-09-21T10:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_kw_1",
+     "quantity": 2,
+     "grade": "as_new"
+    }
+   ]
+  },
+  {
+   "id": "ret_34",
+   "number": "ВЗ-20433",
+   "orderId": "ord_103805",
+   "reason": "defect",
+   "status": "received",
+   "sellerId": "org_s3",
+   "warehouseId": "wh_prn1",
+   "createdAt": "2026-09-27T05:00:00.000Z",
+   "receivedAt": "2026-09-29T00:00:00.000Z",
+   "photos": 1,
+   "lines": [
+    {
+     "productId": "prd_tm_1",
+     "quantity": 1
+    },
+    {
+     "productId": "prd_tm_30",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_35",
+   "number": "ВЗ-20434",
+   "orderId": "ord_103050",
+   "reason": "not_bought",
+   "status": "closed",
+   "sellerId": "org_s5",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-08T07:00:00.000Z",
+   "receivedAt": "2026-09-10T22:00:00.000Z",
+   "inspectedAt": "2026-09-11T04:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 1,
+   "lines": [
+    {
+     "productId": "prd_bl_8",
+     "quantity": 1,
+     "grade": "resale"
+    }
+   ]
+  },
+  {
+   "id": "ret_36",
+   "number": "ВЗ-20435",
+   "orderId": "ord_104589",
+   "reason": "wrong_item",
+   "status": "closed",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_shu1",
+   "createdAt": "2026-09-29T07:00:00.000Z",
+   "receivedAt": "2026-09-30T05:00:00.000Z",
+   "inspectedAt": "2026-09-30T10:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 3,
+   "lines": [
+    {
+     "productId": "prd_ud_6",
+     "quantity": 1,
+     "grade": "resale"
+    },
+    {
+     "productId": "prd_ud_2",
+     "quantity": 1,
+     "grade": "as_new"
+    },
+    {
+     "productId": "prd_ud_1",
+     "quantity": 1,
+     "grade": "defect"
+    }
+   ]
+  },
+  {
+   "id": "ret_37",
+   "number": "ВЗ-20436",
+   "orderId": "ord_104953",
+   "reason": "size",
+   "status": "received",
+   "sellerId": "org_s6",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-21T23:00:00.000Z",
+   "receivedAt": "2026-09-23T22:00:00.000Z",
+   "photos": 1,
+   "lines": [
+    {
+     "productId": "prd_zm_16",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_38",
+   "number": "ВЗ-20437",
+   "orderId": "ord_103394",
+   "reason": "size",
+   "status": "received",
+   "sellerId": "org_s3",
+   "warehouseId": "wh_khm1",
+   "createdAt": "2026-09-01T01:00:00.000Z",
+   "receivedAt": "2026-09-03T19:00:00.000Z",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_tm_3",
+     "quantity": 1
+    },
+    {
+     "productId": "prd_tm_16",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_39",
+   "number": "ВЗ-20438",
+   "orderId": "ord_100442",
+   "reason": "size",
+   "status": "inspected",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_shu1",
+   "createdAt": "2026-09-03T21:00:00.000Z",
+   "receivedAt": "2026-09-06T06:00:00.000Z",
+   "inspectedAt": "2026-09-06T20:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_ud_18",
+     "quantity": 1,
+     "grade": "resale"
+    },
+    {
+     "productId": "prd_ud_23",
+     "quantity": 1,
+     "grade": "as_new"
+    }
+   ]
+  },
+  {
+   "id": "ret_40",
+   "number": "ВЗ-20439",
+   "orderId": "ord_103776",
+   "reason": "defect",
+   "status": "received",
+   "sellerId": "org_s8",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-13T14:00:00.000Z",
+   "receivedAt": "2026-09-14T18:00:00.000Z",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_st_11",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_41",
+   "number": "ВЗ-20440",
+   "orderId": "ord_101569",
+   "reason": "not_bought",
+   "status": "received",
+   "sellerId": "org_s5",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-08T12:00:00.000Z",
+   "receivedAt": "2026-09-09T18:00:00.000Z",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_bl_4",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_42",
+   "number": "ВЗ-20441",
+   "orderId": "ord_100105",
+   "reason": "size",
+   "status": "received",
+   "sellerId": "org_s8",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-19T02:00:00.000Z",
+   "receivedAt": "2026-09-21T17:00:00.000Z",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_st_1",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_43",
+   "number": "ВЗ-20442",
+   "orderId": "ord_101242",
+   "reason": "damaged",
+   "status": "closed",
+   "sellerId": "org_s8",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-25T14:00:00.000Z",
+   "receivedAt": "2026-09-27T06:00:00.000Z",
+   "inspectedAt": "2026-09-27T16:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_st_35",
+     "quantity": 1,
+     "grade": "as_new"
+    }
+   ]
+  },
+  {
+   "id": "ret_44",
+   "number": "ВЗ-20443",
+   "orderId": "ord_101441",
+   "reason": "not_bought",
+   "status": "received",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-13T00:00:00.000Z",
+   "receivedAt": "2026-09-15T22:00:00.000Z",
+   "photos": 1,
+   "lines": [
+    {
+     "productId": "prd_sl_17",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_45",
+   "number": "ВЗ-20444",
+   "orderId": "ord_101266",
+   "reason": "size",
+   "status": "expected",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-25T09:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_sl_20",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_46",
+   "number": "ВЗ-20445",
+   "orderId": "ord_104005",
+   "reason": "defect",
+   "status": "expected",
+   "sellerId": "org_s2",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-02T12:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_kw_1",
+     "quantity": 1
+    },
+    {
+     "productId": "prd_kw_12",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_47",
+   "number": "ВЗ-20446",
+   "orderId": "ord_104096",
+   "reason": "not_bought",
+   "status": "expected",
+   "sellerId": "org_s2",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-06T15:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_kw_1",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_48",
+   "number": "ВЗ-20447",
+   "orderId": "ord_104670",
+   "reason": "defect",
+   "status": "expected",
+   "sellerId": "org_s4",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-13T14:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_sl_6",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_49",
+   "number": "ВЗ-20448",
+   "orderId": "ord_100133",
+   "reason": "not_bought",
+   "status": "received",
+   "sellerId": "org_s8",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-22T18:00:00.000Z",
+   "receivedAt": "2026-09-24T06:00:00.000Z",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_st_38",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_50",
+   "number": "ВЗ-20449",
+   "orderId": "ord_105025",
+   "reason": "not_bought",
+   "status": "received",
+   "sellerId": "org_s8",
+   "warehouseId": "wh_krd1",
+   "createdAt": "2026-09-29T07:00:00.000Z",
+   "receivedAt": "2026-10-01T00:00:00.000Z",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_st_8",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_51",
+   "number": "ВЗ-20450",
+   "orderId": "ord_102257",
+   "reason": "not_bought",
+   "status": "closed",
+   "sellerId": "org_s3",
+   "warehouseId": "wh_shu1",
+   "createdAt": "2026-09-21T15:00:00.000Z",
+   "receivedAt": "2026-09-24T00:00:00.000Z",
+   "inspectedAt": "2026-09-24T08:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 3,
+   "lines": [
+    {
+     "productId": "prd_tm_13",
+     "quantity": 1,
+     "grade": "as_new"
+    }
+   ]
+  },
+  {
+   "id": "ret_52",
+   "number": "ВЗ-20451",
+   "orderId": "ord_102361",
+   "reason": "size",
+   "status": "inspected",
+   "sellerId": "org_s2",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-20T01:00:00.000Z",
+   "receivedAt": "2026-09-23T01:00:00.000Z",
+   "inspectedAt": "2026-09-23T20:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 3,
+   "lines": [
+    {
+     "productId": "prd_kw_26",
+     "quantity": 1,
+     "grade": "as_new"
+    }
+   ]
+  },
+  {
+   "id": "ret_53",
+   "number": "ВЗ-20452",
+   "orderId": "ord_103672",
+   "reason": "damaged",
+   "status": "closed",
+   "sellerId": "org_s2",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-19T02:00:00.000Z",
+   "receivedAt": "2026-09-20T01:00:00.000Z",
+   "inspectedAt": "2026-09-20T21:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_kw_10",
+     "quantity": 1,
+     "grade": "defect"
+    }
+   ]
+  },
+  {
+   "id": "ret_54",
+   "number": "ВЗ-20453",
+   "orderId": "ord_103123",
+   "reason": "not_bought",
+   "status": "inspected",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_khm1",
+   "createdAt": "2026-09-28T21:00:00.000Z",
+   "receivedAt": "2026-09-30T03:00:00.000Z",
+   "inspectedAt": "2026-09-30T05:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 1,
+   "lines": [
+    {
+     "productId": "prd_ud_15",
+     "quantity": 1,
+     "grade": "resale"
+    }
+   ]
+  },
+  {
+   "id": "ret_55",
+   "number": "ВЗ-20454",
+   "orderId": "ord_101753",
+   "reason": "not_bought",
+   "status": "expected",
+   "sellerId": "org_s5",
+   "warehouseId": "wh_khm1",
+   "createdAt": "2026-09-12T16:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_bl_2",
+     "quantity": 2
+    }
+   ]
+  },
+  {
+   "id": "ret_56",
+   "number": "ВЗ-20455",
+   "orderId": "ord_105492",
+   "reason": "defect",
+   "status": "received",
+   "sellerId": "org_s2",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-07T01:00:00.000Z",
+   "receivedAt": "2026-09-07T20:00:00.000Z",
+   "photos": 4,
+   "lines": [
+    {
+     "productId": "prd_kw_15",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_57",
+   "number": "ВЗ-20456",
+   "orderId": "ord_105433",
+   "reason": "not_bought",
+   "status": "inspected",
+   "sellerId": "org_s3",
+   "warehouseId": "wh_khm1",
+   "createdAt": "2026-09-04T06:00:00.000Z",
+   "receivedAt": "2026-09-05T12:00:00.000Z",
+   "inspectedAt": "2026-09-05T15:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 1,
+   "lines": [
+    {
+     "productId": "prd_tm_2",
+     "quantity": 1,
+     "grade": "dispose"
+    }
+   ]
+  },
+  {
+   "id": "ret_58",
+   "number": "ВЗ-20457",
+   "orderId": "ord_101192",
+   "reason": "damaged",
+   "status": "inspected",
+   "sellerId": "org_s6",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-15T01:00:00.000Z",
+   "receivedAt": "2026-09-15T20:00:00.000Z",
+   "inspectedAt": "2026-09-16T03:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_zm_20",
+     "quantity": 1,
+     "grade": "defect"
+    }
+   ]
+  },
+  {
+   "id": "ret_59",
+   "number": "ВЗ-20458",
+   "orderId": "ord_104422",
+   "reason": "defect",
+   "status": "inspected",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_shu1",
+   "createdAt": "2026-09-23T01:00:00.000Z",
+   "receivedAt": "2026-09-25T05:00:00.000Z",
+   "inspectedAt": "2026-09-25T21:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 1,
+   "lines": [
+    {
+     "productId": "prd_ud_1",
+     "quantity": 1,
+     "grade": "defect"
+    },
+    {
+     "productId": "prd_ud_10",
+     "quantity": 1,
+     "grade": "dispose"
+    }
+   ]
+  },
+  {
+   "id": "ret_60",
+   "number": "ВЗ-20459",
+   "orderId": "ord_101492",
+   "reason": "not_bought",
+   "status": "closed",
+   "sellerId": "org_s6",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-25T12:00:00.000Z",
+   "receivedAt": "2026-09-26T21:00:00.000Z",
+   "inspectedAt": "2026-09-27T03:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_zm_22",
+     "quantity": 1,
+     "grade": "resale"
+    }
+   ]
+  },
+  {
+   "id": "ret_61",
+   "number": "ВЗ-20460",
+   "orderId": "ord_102210",
+   "reason": "damaged",
+   "status": "closed",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_shu1",
+   "createdAt": "2026-09-12T05:00:00.000Z",
+   "receivedAt": "2026-09-12T21:00:00.000Z",
+   "inspectedAt": "2026-09-13T03:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 1,
+   "lines": [
+    {
+     "productId": "prd_ud_4",
+     "quantity": 1,
+     "grade": "defect"
+    }
+   ]
+  },
+  {
+   "id": "ret_62",
+   "number": "ВЗ-20461",
+   "orderId": "ord_104371",
+   "reason": "defect",
+   "status": "expected",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-05T02:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_ud_1",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_63",
+   "number": "ВЗ-20462",
+   "orderId": "ord_104681",
+   "reason": "size",
+   "status": "expected",
+   "sellerId": "org_s6",
+   "warehouseId": "wh_kzn1",
+   "createdAt": "2026-09-16T03:00:00.000Z",
+   "photos": 0,
+   "lines": [
+    {
+     "productId": "prd_zm_20",
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "ret_64",
+   "number": "ВЗ-20463",
+   "orderId": "ord_103852",
+   "reason": "not_bought",
+   "status": "closed",
+   "sellerId": "org_s1",
+   "warehouseId": "wh_pdl1",
+   "createdAt": "2026-09-18T20:00:00.000Z",
+   "receivedAt": "2026-09-21T16:00:00.000Z",
+   "inspectedAt": "2026-09-21T22:00:00.000Z",
+   "inspectedBy": "Ольга Петрова",
+   "photos": 2,
+   "lines": [
+    {
+     "productId": "prd_ud_1",
+     "quantity": 1,
+     "grade": "as_new"
+    }
+   ]
+  }
+ ]
+}

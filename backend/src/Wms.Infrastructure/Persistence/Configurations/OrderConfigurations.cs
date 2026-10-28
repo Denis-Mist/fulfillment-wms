@@ -30,6 +30,29 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
 }
 
 /// <summary>FBO-отгрузка: строки и история — jsonb-документы.</summary>
+internal sealed class CustomerReturnConfiguration : IEntityTypeConfiguration<CustomerReturn>
+{
+    public void Configure(EntityTypeBuilder<CustomerReturn> b)
+    {
+        b.ToTable("customer_returns");
+        b.HasKey(r => r.Id);
+        b.Property(r => r.Status).HasConversion(new SnakeCaseEnumConverter<ReturnStatus>());
+        b.Property(r => r.Reason).HasConversion(new SnakeCaseEnumConverter<ReturnReason>());
+        b.HasIndex(r => r.Number).IsUnique();
+        b.HasIndex(r => r.SellerId);
+        b.HasIndex(r => r.WarehouseId);
+        b.OwnsMany(r => r.Lines, l =>
+        {
+            l.ToJson("lines");
+            l.Property(x => x.Grade).HasConversion(new SnakeCaseEnumConverter<ReturnGrade>());
+            l.Ignore(x => x.Restock);
+        });
+        b.Ignore(r => r.Units);
+        b.Ignore(r => r.Resolution);
+        SeqColumn.Add(b);
+    }
+}
+
 internal sealed class FboShipmentConfiguration : IEntityTypeConfiguration<FboShipment>
 {
     public void Configure(EntityTypeBuilder<FboShipment> b)
