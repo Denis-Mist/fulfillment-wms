@@ -16,34 +16,6 @@ public sealed record StaffResponseDto(DateTimeOffset WeekStart, IReadOnlyList<Em
 
 public sealed record EmployeeInput(Role Role, string? WarehouseId, IReadOnlyList<string>? ZoneIds, IReadOnlyList<Skill>? Skills, bool Active);
 
-/// <summary>Местное время складов (Москва, UTC+3) для графика смен.</summary>
-public static class WarehouseTime
-{
-    private static readonly TimeZoneInfo Zone = Resolve();
-
-    private static TimeZoneInfo Resolve()
-    {
-        try { return TimeZoneInfo.FindSystemTimeZoneById("Europe/Moscow"); }
-        catch (Exception e) when (e is TimeZoneNotFoundException or InvalidTimeZoneException)
-        {
-            return TimeZoneInfo.CreateCustomTimeZone("MSK", TimeSpan.FromHours(3), "MSK", "MSK");
-        }
-    }
-
-    public static DateTimeOffset Local(DateTimeOffset now) => TimeZoneInfo.ConvertTime(now, Zone);
-
-    /// <summary>День недели, 0 — понедельник.</summary>
-    public static int DayIndex(DateTimeOffset now) => ((int)Local(now).DayOfWeek + 6) % 7;
-
-    /// <summary>Понедельник 00:00 местного времени текущей недели (в UTC).</summary>
-    public static DateTimeOffset WeekStart(DateTimeOffset now)
-    {
-        var local = Local(now);
-        var monday = local.Date.AddDays(-DayIndex(now));
-        return new DateTimeOffset(monday, local.Offset).ToUniversalTime();
-    }
-}
-
 /// <summary>Персонал фулфилмента: список с графиком, редактирование карточки и смен.</summary>
 public sealed class StaffHandler(IAppDbContext db, IUnitOfWork uow, IClock clock)
 {

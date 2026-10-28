@@ -64,3 +64,19 @@ public enum Skill
     Inventory,
     Returns,
 }
+
+public enum FboStatus
+{
+    Draft,
+    Confirmed,
+    Assembling,
+    Ready,
+    Shipped,
+    Cancelled,
+}
+
+public enum FboMarketplace
+{
+    Wb,
+    Ozon,
+}
