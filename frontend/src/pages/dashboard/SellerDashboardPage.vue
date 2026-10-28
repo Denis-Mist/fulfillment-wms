@@ -150,6 +150,7 @@ function daysLeftClass(days: number) {
       </SectionCard>
       <SectionCard class="xl:col-span-2" title="Заказы по каналам" description="Сколько заказов пришло с каждого маркетплейса">
         <Skeleton v-if="isPending" height="280px" border-radius="12px" />
+        <EmptyState v-else-if="!data?.trend?.length" compact title="Данных пока нет" />
         <BaseChart v-else :option="trendOption" />
       </SectionCard>
     </div>

@@ -102,6 +102,7 @@ const trendOption = computed<ChartOption>(() => {
     <div class="grid gap-6 xl:grid-cols-3">
       <SectionCard class="xl:col-span-2" title="Заказы по каналам" description="Все фулфилмент-центры платформы, по дням">
         <Skeleton v-if="isPending" height="280px" />
+        <EmptyState v-else-if="!data?.ordersByDay?.length" compact title="Данных пока нет" />
         <BaseChart v-else :option="trendOption" />
       </SectionCard>
 
