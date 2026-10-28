@@ -100,3 +100,36 @@
     @apply font-medium;
   }
 }
+
+/*
+ * Тач-цели ≥ 44×44 px (WCAG 2.5.5, Apple HIG) на узких экранах и сенсорных устройствах (ТСД).
+ * Задаём в px: корневой шрифт 14px, и size-10 даёт только 35px. min-* перекрывает фиксированные размеры.
+ */
+@media (max-width: 639.98px), (pointer: coarse) {
+  button,
+  [role='button'],
+  a.p-button,
+  .p-button,
+  .p-paginator .p-paginator-page,
+  .p-paginator .p-paginator-first,
+  .p-paginator .p-paginator-prev,
+  .p-paginator .p-paginator-next,
+  .p-paginator .p-paginator-last,
+  .p-togglebutton,
+  .p-select,
+  .p-tab {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Чекбоксы, радио и переключатели визуально прежние, но скрытый input — зона нажатия 44px */
+  .p-checkbox .p-checkbox-input,
+  .p-radiobutton .p-radiobutton-input,
+  .p-toggleswitch .p-toggleswitch-input {
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}

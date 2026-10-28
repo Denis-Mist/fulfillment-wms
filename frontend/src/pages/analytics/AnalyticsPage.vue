@@ -21,9 +21,9 @@ const tab = useStorage('wms.analytics.tab', 'forecast')
         <Tab value="kpi">Отчёты и KPI</Tab>
       </TabList>
       <TabPanels class="!bg-transparent !px-0 !pt-5">
-        <TabPanel value="forecast"><ForecastTab /></TabPanel>
-        <TabPanel value="slotting"><SlottingTab /></TabPanel>
-        <TabPanel value="kpi"><KpiTab /></TabPanel>
+        <TabPanel value="forecast"><ForecastTab v-if="tab === 'forecast'" /></TabPanel>
+        <TabPanel value="slotting"><SlottingTab v-if="tab === 'slotting'" /></TabPanel>
+        <TabPanel value="kpi"><KpiTab v-if="tab === 'kpi'" /></TabPanel>
       </TabPanels>
     </Tabs>
   </div>

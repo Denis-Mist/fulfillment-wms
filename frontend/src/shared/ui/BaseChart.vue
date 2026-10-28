@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useTemplateRef } from 'vue'
+import { useElementSize } from '@vueuse/core'
 import VChart from 'vue-echarts'
 import { CHART_COLORS, useChartTheme } from '@/shared/composables/useChartTheme'
 import './chart'
@@ -7,6 +8,10 @@ import type { ChartOption, TooltipComponentOption } from './chart'
 
 const props = withDefaults(defineProps<{ option: ChartOption; height?: string }>(), { height: '280px' })
 const theme = useChartTheme()
+// ECharts нельзя инициализировать в скрытом контейнере (0×0): ждём, пока у обёртки появится ширина
+const box = useTemplateRef<HTMLElement>('box')
+const { width } = useElementSize(box)
+const visible = computed(() => width.value > 0)
 
 const merged = computed<ChartOption>(() => ({
   color: CHART_COLORS,
@@ -26,5 +31,7 @@ const merged = computed<ChartOption>(() => ({
 </script>
 
 <template>
-  <VChart :option="merged" autoresize :style="{ height }" />
+  <div ref="box" :style="{ height }">
+    <VChart v-if="visible" :option="merged" autoresize :style="{ height }" />
+  </div>
 </template>

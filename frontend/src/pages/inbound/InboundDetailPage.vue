@@ -32,6 +32,7 @@ const id = computed(() => String(route.params.id))
 const queryKey = computed(() => ['inbound-shipment', id.value])
 
 const { data: shipment, isPending, isError } = useQuery({
+  meta: { localError: true },
   queryKey,
   queryFn: () => inboundApi.get(id.value),
 })

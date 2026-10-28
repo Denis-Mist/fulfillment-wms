@@ -33,7 +33,10 @@ const registry = useRegistry({
 const { state, filters, searchInput } = registry
 
 const warehouseId = computed(() => (isFulfillment.value ? session.warehouseId || undefined : undefined))
-const listQuery = computed<InboundListQuery>(() => ({ ...registry.query.value, warehouseId: warehouseId.value }))
+const listQuery = computed<InboundListQuery>(() => ({
+  ...registry.query.value,
+  warehouseId: warehouseId.value,
+}))
 const summaryQuery = computed(() => ({
   search: state.search || undefined,
   sellerId: filters.sellerId,
@@ -59,7 +62,15 @@ const { data: clients } = useQuery({
   staleTime: 5 * 60_000,
 })
 
-const STATUS_ORDER: InboundStatus[] = ['draft', 'in_transit', 'arrived', 'receiving', 'received', 'placed', 'cancelled']
+const STATUS_ORDER: InboundStatus[] = [
+  'draft',
+  'in_transit',
+  'arrived',
+  'receiving',
+  'received',
+  'placed',
+  'cancelled',
+]
 
 const chips = computed<ChipOption<InboundStatus>[]>(() => [
   { value: undefined, label: 'Все', count: summary.value?.total },
@@ -107,7 +118,12 @@ const openShipment = (item: InboundListItem) => router.push(to('inbound-detail',
           class="w-full sm:w-56"
           @update:model-value="registry.setFilter('sellerId', $event ?? undefined)"
         />
-        <Button v-if="registry.hasActiveFilters.value" text severity="secondary" @click="registry.resetFilters()">
+        <Button
+          v-if="registry.hasActiveFilters.value"
+          text
+          severity="secondary"
+          @click="registry.resetFilters()"
+        >
           <FilterX class="size-4" />
           Сбросить
         </Button>
@@ -179,6 +195,45 @@ const openShipment = (item: InboundListItem) => router.push(to('inbound-detail',
           <span v-else class="text-sm text-secondary">—</span>
         </template>
       </Column>
+      <template #card="{ item }">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="font-semibold text-heading">{{ item.number }}</div>
+            <div class="truncate text-xs text-secondary">
+              {{ isFulfillment ? item.sellerName : item.fulfillmentName
+              }}<template v-if="showWarehouse"> · {{ item.warehouseName }}</template>
+            </div>
+          </div>
+          <div class="flex shrink-0 items-center gap-1.5">
+            <TriangleAlert
+              v-if="item.hasDiscrepancy"
+              class="size-4 text-amber-500"
+              aria-label="Есть расхождения"
+            />
+            <StatusTag domain="inbound" :status="item.status" />
+          </div>
+        </div>
+        <div class="mt-3 flex items-end justify-between gap-3 text-sm">
+          <div class="tabular text-xs text-secondary">
+            Ожидается {{ formatDate(item.expectedAt) }} к {{ formatTime(item.expectedAt) }}<br />
+            {{ item.packagesCount }} {{ item.packageType === 'pallets' ? 'палл.' : 'кор.' }} ·
+            {{ item.linesCount }} SKU
+          </div>
+          <div class="w-28 shrink-0 text-right">
+            <div class="tabular text-sm text-heading">
+              {{ formatNumber(item.receivedUnits ?? 0) }}
+              <span class="text-secondary">/ {{ formatNumber(item.expectedUnits) }}</span>
+            </div>
+            <ProgressMeter
+              v-if="item.receivedUnits"
+              class="mt-1.5"
+              :value="item.receivedUnits"
+              :max="item.expectedUnits"
+              :tone="item.hasDiscrepancy ? 'warn' : 'success'"
+            />
+          </div>
+        </div>
+      </template>
     </RegistryTable>
   </div>
 </template>

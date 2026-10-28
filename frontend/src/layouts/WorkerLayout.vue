@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import QueryErrorBoundary from '@/shared/ui/QueryErrorBoundary.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { cabinetDef, routeName } from '@/app/sections'
@@ -20,7 +21,9 @@ const sections = computed(() => cabinetDef('worker').groups.flatMap((g) => g.sec
       <AppLogo compact />
       <div class="min-w-0 px-3 text-center leading-tight">
         <div class="truncate text-sm font-semibold text-heading">{{ route.meta.title }}</div>
-        <div class="truncate text-[11px] text-secondary">{{ session.activeMembership?.organizationName }}</div>
+        <div class="truncate text-[11px] text-secondary">
+          {{ session.activeMembership?.organizationName }}
+        </div>
       </div>
       <div class="flex items-center">
         <ThemeToggle />
@@ -29,11 +32,13 @@ const sections = computed(() => cabinetDef('worker').groups.flatMap((g) => g.sec
     </header>
 
     <main class="mx-auto w-full max-w-xl flex-1 p-4 pb-24">
-      <RouterView v-slot="{ Component }">
-        <Transition name="page" mode="out-in">
-          <component :is="Component" />
-        </Transition>
-      </RouterView>
+      <QueryErrorBoundary>
+        <RouterView v-slot="{ Component }">
+          <Transition name="page" mode="out-in">
+            <component :is="Component" />
+          </Transition>
+        </RouterView>
+      </QueryErrorBoundary>
     </main>
 
     <nav
@@ -46,7 +51,9 @@ const sections = computed(() => cabinetDef('worker').groups.flatMap((g) => g.sec
         :to="{ name: routeName('worker', section.name) }"
         class="flex flex-col items-center gap-1 py-2.5 text-xs font-medium"
         :class="
-          route.name === routeName('worker', section.name) ? 'text-primary' : 'text-surface-500 dark:text-surface-400'
+          route.name === routeName('worker', section.name)
+            ? 'text-primary'
+            : 'text-surface-500 dark:text-surface-400'
         "
       >
         <component :is="section.icon" class="size-6" />
