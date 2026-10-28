@@ -30,6 +30,7 @@ public sealed class TestAppDbContext() : DbContext(new DbContextOptionsBuilder<T
     public DbSet<InboundShipment> InboundShipments => Set<InboundShipment>();
     public DbSet<WarehouseTask> Tasks => Set<WarehouseTask>();
     public DbSet<StockOperation> StockOperations => Set<StockOperation>();
+    public DbSet<Order> Orders => Set<Order>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

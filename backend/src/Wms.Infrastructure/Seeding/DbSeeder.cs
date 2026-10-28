@@ -46,6 +46,10 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
     private sealed record SeedOperation(string Id, string Number, string Type, DateTimeOffset At, string ActorName, string WarehouseId,
         string ProductId, string? FromLocationCode, string? ToLocationCode, int Quantity, int? Expected, int? Counted, string? Reason);
     private sealed record OperationsData(SeedOperation[] Operations);
+    private sealed record SeedOrderLine(string ProductId, int Quantity, double Price);
+    private sealed record SeedOrder(string Id, string Number, string? ExternalNumber, string Channel, string Status, string SellerId,
+        string WarehouseId, DateTimeOffset CreatedAt, DateTimeOffset ShipBy, DateTimeOffset? ShippedAt, string DeliveryCity, SeedOrderLine[] Lines);
+    private sealed record OrdersData(SeedOrder[] Orders);
     private sealed record DirectoryData(SeedReference[] References, SeedRequest[] ClientRequests);
 
     /// <summary>Каждый раздел идемпотентен: заполняется, только если его таблица пуста.</summary>
@@ -57,6 +61,32 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         await SeedCatalogAsync(ct);
         await SeedInboundAsync(ct);
         await SeedOperationsAsync(ct);
+        await SeedOrdersAsync(ct);
+    }
+
+    /// <summary>Момент, на который сняты демо-данные (seed(Date.UTC(2026, 9, 1))).</summary>
+    public static readonly DateTimeOffset SnapshotAt = new(2026, 10, 1, 0, 0, 0, TimeSpan.Zero);
+
+    /// <summary>
+    /// Заказы за 120 дней (Seeding/Data/orders.json). В моках они строятся относительно Date.now, поэтому даты
+    /// сдвигаются от снимка к моменту сидирования — окна «за 30 дней» и просрочки остаются осмысленными.
+    /// </summary>
+    private async Task SeedOrdersAsync(CancellationToken ct)
+    {
+        if (await db.Orders.AnyAsync(ct)) return;
+        var data = Load<OrdersData>("orders.json");
+        var shift = clock.UtcNow - SnapshotAt;
+        if (shift < TimeSpan.Zero) shift = TimeSpan.Zero;
+        foreach (var o in data.Orders)
+        {
+            var order = new Order(o.Id, o.Number, o.ExternalNumber, SnakeCase.Parse<SalesChannel>(o.Channel), SnakeCase.Parse<OrderStatus>(o.Status),
+                o.SellerId, o.WarehouseId, o.CreatedAt, o.ShipBy, o.ShippedAt, o.DeliveryCity,
+                o.Lines.Select(l => new OrderLine(l.ProductId, l.Quantity, l.Price)));
+            order.ShiftTimes(shift);
+            db.Orders.Add(order);
+        }
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Seeded {Orders} orders", data.Orders.Length);
     }
 
     /// <summary>Синтетический журнал операций (seedOperations() из stock.ts на 2026-10-01, Seeding/Data/operations.json).</summary>

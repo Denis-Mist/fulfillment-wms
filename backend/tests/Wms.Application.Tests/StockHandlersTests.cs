@@ -48,7 +48,7 @@ public class StockHandlersTests : IDisposable
     public void Dispose() => _db.Dispose();
 
     private StockReadModel Read => new(_db, new WarehouseScope(_db));
-    private StockQueryHandler Queries => new(_db, Read, new WarehouseScope(_db), _clock);
+    private StockQueryHandler Queries => new(_db, Read, new WarehouseScope(_db), new Orders.OrderSales(new Orders.OrderScope(_db, new WarehouseScope(_db))), _clock);
     private StockCommandHandler Commands => new(_db, Read, _clock, _ids);
     private StockOperationQueryHandler Ops => new(_db, new WarehouseScope(_db), _clock);
     private static StockQuery Q(StockStatus? status = null) => new(new PageQuery(), null, null, null, status);
@@ -80,6 +80,21 @@ public class StockHandlersTests : IDisposable
         Assert.Equal((6, 4, 2, 0.0, (int?)null), (banana.Available, banana.Reserved, banana.Defect, banana.AvgDailySales, banana.DaysOfCover));
         Assert.Equal("ФЦ", Assert.Single(banana.Warehouses).FulfillmentName);
         Assert.Empty((await Queries.ProductsAsync(Fc, new PageQuery(), lowStock: true, default)).Items);
+    }
+
+    [Fact]
+    public async Task Products_use_30_day_sales_for_days_of_cover()
+    {
+        Order Make(string id, OrderStatus status, int daysAgo, int qty) => new(id, id, null, SalesChannel.Wb, status, "org_s", "wh_1",
+            Now.AddDays(-daysAgo), Now.AddDays(-daysAgo).AddHours(36), null, "Москва", [new OrderLine("prd_1", qty, 10)]);
+        _db.Orders.AddRange(Make("o1", OrderStatus.Shipped, 3, 10), Make("o2", OrderStatus.New, 0, 5),
+            Make("o3", OrderStatus.Cancelled, 1, 100), Make("o4", OrderStatus.Shipped, 40, 100));
+        await _db.SaveChangesAsync();
+
+        var banana = (await Queries.ProductsAsync(Fc, new PageQuery(), lowStock: false, default)).Items.Single(p => p.ProductId == "prd_1");
+        Assert.Equal((0.5, (int?)12), (banana.AvgDailySales, banana.DaysOfCover));
+        Assert.Equal(["prd_1"], (await Queries.ProductsAsync(Fc, new PageQuery(), lowStock: true, default)).Items.Select(p => p.ProductId));
+        Assert.Equal(0.0, (await Queries.ProductsAsync(Other, new PageQuery(), lowStock: false, default)).Items.Sum(p => p.AvgDailySales));
     }
 
     [Fact]

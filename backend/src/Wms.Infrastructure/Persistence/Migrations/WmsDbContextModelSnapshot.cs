@@ -308,6 +308,87 @@ namespace Wms.Infrastructure.Persistence.Migrations
                     b.ToTable("notification_reads", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Domain.Entities.Order", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("channel");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DeliveryCity")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("delivery_city");
+
+                    b.Property<string>("ExternalNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("external_number");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("number");
+
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("seller_id");
+
+                    b.Property<long>("Seq")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("seq");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Seq"));
+
+                    b.Property<DateTimeOffset>("ShipBy")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ship_by");
+
+                    b.Property<DateTimeOffset?>("ShippedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("shipped_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("WarehouseId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_orders");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("ix_orders_created_at");
+
+                    b.HasIndex("Number")
+                        .IsUnique()
+                        .HasDatabaseName("ix_orders_number");
+
+                    b.HasIndex("SellerId")
+                        .HasDatabaseName("ix_orders_seller_id");
+
+                    b.HasIndex("Seq")
+                        .HasDatabaseName("ix_orders_seq");
+
+                    b.HasIndex("WarehouseId")
+                        .HasDatabaseName("ix_orders_warehouse_id");
+
+                    b.ToTable("orders", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Domain.Entities.Organization", b =>
                 {
                     b.Property<string>("Id")
@@ -1099,6 +1180,39 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_memberships_users_user_id");
 
                     b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("Wms.Domain.Entities.Order", b =>
+                {
+                    b.OwnsMany("Wms.Domain.Entities.OrderLine", "Lines", b1 =>
+                        {
+                            b1.Property<string>("OrderId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<double>("Price");
+
+                            b1.Property<string>("ProductId")
+                                .IsRequired();
+
+                            b1.Property<int>("Quantity");
+
+                            b1.HasKey("OrderId", "__synthesizedOrdinal")
+                                .HasName("pk_orders");
+
+                            b1.ToTable("orders");
+
+                            b1
+                                .ToJson("lines")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrderId")
+                                .HasConstraintName("fk_orders_orders_order_id");
+                        });
+
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Wms.Domain.Entities.WarehouseTask", b =>

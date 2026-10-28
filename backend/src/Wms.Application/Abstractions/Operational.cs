@@ -10,8 +10,7 @@ public sealed record PlatformOrderStats(int Orders30d, int OrdersPrev30d, int Sh
     IReadOnlyDictionary<DateOnly, ChannelCounts> OrdersByDay, IReadOnlyDictionary<string, int> Orders30dByWarehouse);
 
 /// <summary>
-/// Порт к операционным данным (заказы, поставки, товары, остатки). Эти модули переносятся в следующих PR;
-/// до тех пор используется реализация, возвращающая нули.
+/// Порт к операционным данным (заказы, поставки, товары, остатки) для сводных метрик.
 /// </summary>
 public interface IOperationalMetrics
 {

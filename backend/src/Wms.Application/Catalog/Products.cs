@@ -29,7 +29,7 @@ public sealed record ImportInput(IReadOnlyList<ProductDraft>? Rows);
 
 public sealed record ProductQuery(PageQuery Page, string? SellerId, string? Category, string? Flag);
 
-/// <summary>Порт продаж по товару (заказы появятся в следующих PR).</summary>
+/// <summary>Порт продаж по товару за 30 дней.</summary>
 public interface IProductSalesSource
 {
     Task<int> Sold30dAsync(string productId, IReadOnlyCollection<string>? warehouseIds, DateTimeOffset now, CancellationToken ct);
