@@ -235,6 +235,7 @@ const maxClientOrders = computed(() => Math.max(1, ...(data.value?.topClients.ma
         description="Сколько заказов поступило и сколько отгружено по дням"
       >
         <Skeleton v-if="isPending" height="280px" border-radius="12px" />
+        <EmptyState v-else-if="!data?.trend?.length" compact title="Данных пока нет" />
         <BaseChart v-else :option="trendOption" />
       </SectionCard>
     </div>

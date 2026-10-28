@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyState from '@/shared/ui/EmptyState.vue'
 import { computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import dayjs from 'dayjs'
@@ -100,7 +101,8 @@ const option = computed<ChartOption>(() => {
       </div>
       <div>
         <h3 class="mb-1 text-sm font-semibold text-heading">Заказы за 14 дней</h3>
-        <BaseChart :option="option" height="160px" />
+        <EmptyState v-if="!c?.ordersTrend?.length" compact title="Данных пока нет" />
+        <BaseChart v-else :option="option" height="160px" />
       </div>
       <div>
         <h3 class="mb-2 text-sm font-semibold text-heading">Договор и тарифы</h3>

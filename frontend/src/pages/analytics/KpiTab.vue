@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyState from '@/shared/ui/EmptyState.vue'
 import { computed, ref } from 'vue'
 import dayjs from 'dayjs'
 import { keepPreviousData, useQuery } from '@tanstack/vue-query'
@@ -188,10 +189,12 @@ const ordersOption = computed<ChartOption>(() => ({
         title="Маршруты: до и после"
         description="Средняя длина маршрута отбора в день; алгоритм включён с середины периода"
       >
-        <BaseChart :option="routeOption" height="260px" />
+        <EmptyState v-if="!isPending && !data?.series?.length" compact title="Данных пока нет" />
+        <BaseChart v-else :option="routeOption" height="260px" />
       </SectionCard>
       <SectionCard title="Объём и скорость обработки">
-        <BaseChart :option="ordersOption" height="260px" />
+        <EmptyState v-if="!isPending && !data?.series?.length" compact title="Данных пока нет" />
+        <BaseChart v-else :option="ordersOption" height="260px" />
       </SectionCard>
     </div>
 

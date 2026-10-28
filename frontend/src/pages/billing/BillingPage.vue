@@ -214,6 +214,7 @@ const tariffContracts = computed(() =>
           <div class="mb-4 grid gap-4 xl:grid-cols-[2fr_1fr]">
             <SectionCard title="Начисления за 30 дней" description="По видам услуг, ₽">
               <Skeleton v-if="summaryPending" height="240px" />
+              <EmptyState v-else-if="!summary?.daily?.length" compact title="Данных пока нет" />
               <BaseChart v-else :option="chartOption" height="240px" />
             </SectionCard>
             <SectionCard title="Структура текущего месяца">

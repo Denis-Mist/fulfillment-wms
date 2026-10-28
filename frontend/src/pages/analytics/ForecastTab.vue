@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyState from '@/shared/ui/EmptyState.vue'
 import { computed, ref } from 'vue'
 import dayjs from 'dayjs'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
@@ -196,7 +197,8 @@ const option = computed<ChartOption>(() => {
       title="Заказы в день: факт и прогноз"
       description="Последние 14 дней истории — проверка точности на отложенной выборке"
     >
-      <BaseChart :option="option" height="300px" />
+      <EmptyState v-if="!isPending && !data?.series?.length" compact title="Данных пока нет" />
+      <BaseChart v-else :option="option" height="300px" />
       <CalcMetaLine class="mt-2" :meta="data?.meta" />
     </SectionCard>
 
