@@ -1,23 +1,20 @@
+import type { RequestHandler } from 'msw'
 import { setupWorker } from 'msw/browser'
-import { adminHandlers } from './handlers/admin'
-import { authHandlers } from './handlers/auth'
-import { dashboardHandlers } from './handlers/dashboard'
-import { directoryHandlers } from './handlers/directory'
-import { inboundHandlers } from './handlers/inbound'
-import { miscHandlers } from './handlers/misc'
-import { orderHandlers } from './handlers/orders'
 import { db } from './db/store'
 
-export const worker = setupWorker(
-  ...authHandlers,
-  ...directoryHandlers,
-  ...orderHandlers,
-  ...inboundHandlers,
-  ...dashboardHandlers,
-  ...miscHandlers,
-  ...adminHandlers,
-)
+/** Все экспортируемые массивы обработчиков из handlers/* — новый модуль подключается без правки этого файла */
+const modules = import.meta.glob<Record<string, unknown>>('./handlers/*.ts', { eager: true })
+const handlers = Object.values(modules)
+  .flatMap((module) => Object.values(module))
+  .filter((value): value is RequestHandler[] => Array.isArray(value))
+  .flat()
+
+export const worker = setupWorker(...handlers)
 
 export function resetMockData() {
   db.reset()
+  // Дополнительные коллекции модулей (mocks/lib/collection.ts)
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith('wms.mock.')) localStorage.removeItem(key)
+  }
 }
