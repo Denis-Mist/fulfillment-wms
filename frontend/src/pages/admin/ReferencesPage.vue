@@ -10,6 +10,7 @@ import { useFormValidation } from '@/shared/composables/useFormValidation'
 import { useNotify } from '@/shared/composables/useNotify'
 import PageHeader from '@/shared/ui/PageHeader.vue'
 import SectionCard from '@/shared/ui/SectionCard.vue'
+import EmptyState from '@/shared/ui/EmptyState.vue'
 
 const queryClient = useQueryClient()
 const notify = useNotify()
@@ -89,6 +90,9 @@ const toggle = useMutation({
 
     <SectionCard :title="REFERENCE_KINDS[kind].label" :description="REFERENCE_KINDS[kind].description" flush>
       <div v-if="isPending" class="space-y-2 p-5"><Skeleton v-for="i in 5" :key="i" height="2.5rem" /></div>
+      <EmptyState v-else-if="!data?.length" title="Записей пока нет" description="Добавьте первую запись в справочник.">
+        <Button label="Запись" @click="dialog = true"><template #icon><Plus class="size-4" /></template></Button>
+      </EmptyState>
       <ul v-else class="divide-y divide-surface-100 dark:divide-surface-800">
         <li
           v-for="item in data"
