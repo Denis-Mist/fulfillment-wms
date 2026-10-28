@@ -182,6 +182,80 @@ namespace Wms.Infrastructure.Persistence.Migrations
                     b.ToTable("contracts", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Domain.Entities.FboShipment", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Destination")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("destination");
+
+                    b.Property<string>("Marketplace")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("marketplace");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("number");
+
+                    b.Property<DateTimeOffset>("PlannedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("planned_at");
+
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("seller_id");
+
+                    b.Property<long>("Seq")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("seq");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Seq"));
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("SupplyId")
+                        .HasColumnType("text")
+                        .HasColumnName("supply_id");
+
+                    b.Property<string>("WarehouseId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_fbo_shipments");
+
+                    b.HasIndex("Number")
+                        .IsUnique()
+                        .HasDatabaseName("ix_fbo_shipments_number");
+
+                    b.HasIndex("SellerId")
+                        .HasDatabaseName("ix_fbo_shipments_seller_id");
+
+                    b.HasIndex("Seq")
+                        .HasDatabaseName("ix_fbo_shipments_seq");
+
+                    b.HasIndex("WarehouseId")
+                        .HasDatabaseName("ix_fbo_shipments_warehouse_id");
+
+                    b.ToTable("fbo_shipments", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Domain.Entities.InboundShipment", b =>
                 {
                     b.Property<string>("Id")
@@ -1142,6 +1216,70 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_zones_warehouse_id_code");
 
                     b.ToTable("zones", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Domain.Entities.FboShipment", b =>
+                {
+                    b.OwnsMany("Wms.Domain.Entities.FboHistoryEntry", "History", b1 =>
+                        {
+                            b1.Property<string>("FboShipmentId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<DateTimeOffset>("At");
+
+                            b1.Property<string>("By")
+                                .IsRequired();
+
+                            b1.Property<string>("Status")
+                                .IsRequired();
+
+                            b1.HasKey("FboShipmentId", "__synthesizedOrdinal")
+                                .HasName("pk_fbo_shipments");
+
+                            b1.ToTable("fbo_shipments");
+
+                            b1
+                                .ToJson("history")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("FboShipmentId")
+                                .HasConstraintName("fk_fbo_shipments_fbo_shipments_fbo_shipment_id");
+                        });
+
+                    b.OwnsMany("Wms.Domain.Entities.FboLine", "Lines", b1 =>
+                        {
+                            b1.Property<string>("FboShipmentId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<int>("Packed");
+
+                            b1.Property<string>("ProductId")
+                                .IsRequired();
+
+                            b1.Property<int>("Quantity");
+
+                            b1.HasKey("FboShipmentId", "__synthesizedOrdinal")
+                                .HasName("pk_fbo_shipments");
+
+                            b1.ToTable("fbo_shipments");
+
+                            b1
+                                .ToJson("lines")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("FboShipmentId")
+                                .HasConstraintName("fk_fbo_shipments_fbo_shipments_fbo_shipment_id");
+                        });
+
+                    b.Navigation("History");
+
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Wms.Domain.Entities.InboundShipment", b =>

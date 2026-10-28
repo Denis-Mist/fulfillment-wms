@@ -56,6 +56,15 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         string? InboundId, SeedTaskItem[] Items, int[]? Progress);
     private sealed record TasksData(SeedTask[] Tasks);
 
+    private sealed record FboData(SeedFbo[] Shipments);
+
+    private sealed record SeedFbo(string Id, string Number, string Marketplace, string Destination, string Status, string SellerId, string WarehouseId,
+        DateTimeOffset PlannedAt, DateTimeOffset CreatedAt, string? SupplyId, SeedFboLine[] Lines, SeedFboHistory[] History);
+
+    private sealed record SeedFboLine(string ProductId, int Quantity, int Packed);
+
+    private sealed record SeedFboHistory(DateTimeOffset At, string Status, string By);
+
     private sealed record StaffData(SeedStaffProfile[] Profiles);
 
     private sealed record SeedStaffProfile(string Id, string WarehouseId, string[] ZoneIds, string[] Skills, bool Active, string? RoleOverride,
@@ -74,6 +83,26 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         await SeedOrdersAsync(ct);
         await SeedTasksAsync(ct);
         await SeedStaffAsync(ct);
+        await SeedFboAsync(ct);
+    }
+
+    /// <summary>FBO-отгрузки (seedFbo() из fbo.ts, Seeding/Data/fbo.json); даты сдвигаются как у заказов.</summary>
+    private async Task SeedFboAsync(CancellationToken ct)
+    {
+        if (await db.FboShipments.AnyAsync(ct)) return;
+        var data = Load<FboData>("fbo.json");
+        var shift = clock.UtcNow - SnapshotAt;
+        if (shift < TimeSpan.Zero) shift = TimeSpan.Zero;
+        foreach (var r in data.Shipments)
+        {
+            var record = new FboShipment(r.Id, r.Number, SnakeCase.Parse<FboMarketplace>(r.Marketplace), r.Destination, SnakeCase.Parse<FboStatus>(r.Status),
+                r.SellerId, r.WarehouseId, r.PlannedAt, r.CreatedAt, r.SupplyId, r.Lines.Select(l => new FboLine(l.ProductId, l.Quantity, l.Packed)),
+                r.History.Select(h => new FboHistoryEntry(h.At, SnakeCase.Parse<FboStatus>(h.Status), h.By)));
+            record.ShiftTimes(shift);
+            db.FboShipments.Add(record);
+        }
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Seeded {Shipments} FBO shipments", data.Shipments.Length);
     }
 
     /// <summary>Кадровые профили (seedStaff() из staff.ts, Seeding/Data/staff.json); дата найма сдвигается как у заказов.</summary>
