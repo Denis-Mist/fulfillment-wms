@@ -132,4 +132,32 @@
     height: max(100%, 44px);
     transform: translate(-50%, -50%);
   }
+
+  /* Сам контейнер чекбокса/радио — 44×44, квадратик по центру (BUG-07) */
+  .p-checkbox,
+  .p-radiobutton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Поля ввода */
+  .p-inputtext,
+  .p-inputnumber-input,
+  .p-password-input,
+  .p-autocomplete-input,
+  .p-datepicker-input,
+  textarea.p-textarea {
+    min-height: 44px;
+  }
+
+  /* Текстовые ссылки («Все поставки», «Зарегистрировать организацию», «назад» в шапке) */
+  a[class~='hover:underline']:not(.p-button),
+  a.page-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }

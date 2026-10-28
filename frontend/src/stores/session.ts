@@ -3,8 +3,16 @@ import { computed, ref } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { authApi } from '@/modules/auth/api'
 import { cabinetForRole } from '@/modules/auth/roles'
-import type { AuthResponse, Cabinet, CurrentUser, LoginRequest, RegisterRequest, Role } from '@/modules/auth/types'
+import type {
+  AuthResponse,
+  Cabinet,
+  CurrentUser,
+  LoginRequest,
+  RegisterRequest,
+  Role,
+} from '@/modules/auth/types'
 import { queryClient } from '@/app/query'
+import { ApiError } from '@/shared/api/http'
 
 export const useSessionStore = defineStore('session', () => {
   const token = useStorage<string>('wms.token', '')
@@ -62,11 +70,21 @@ export const useSessionStore = defineStore('session', () => {
   function init() {
     initPromise ??= (async () => {
       if (!token.value) return
-      try {
-        setUser(await authApi.me())
-      } catch {
-        clear()
+      // Разлогиниваем только при явном отказе (401/403); 404/5xx/сеть — повторяем, токен не трогаем (BUG-08)
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          setUser(await authApi.me())
+          return
+        } catch (error) {
+          if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+            clear()
+            return
+          }
+          await new Promise((r) => setTimeout(r, 400 * (attempt + 1)))
+        }
       }
+      // Сервер недоступен: без пользователя роутер отправит на вход, но токен сохранён до следующей загрузки
+      initPromise = null
     })()
     return initPromise
   }

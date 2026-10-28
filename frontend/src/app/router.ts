@@ -60,7 +60,10 @@ const authPage = (
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'home', component: { render: () => null } },
-  authPage('/login', 'login', 'Вход', () => import('@/pages/auth/LoginPage.vue'), { public: true, guestOnly: true }),
+  authPage('/login', 'login', 'Вход', () => import('@/pages/auth/LoginPage.vue'), {
+    public: true,
+    guestOnly: true,
+  }),
   authPage('/register', 'register', 'Регистрация', () => import('@/pages/auth/RegisterPage.vue'), {
     public: true,
     guestOnly: true,
@@ -95,8 +98,10 @@ router.beforeEach(async (to) => {
   }
   if (session.isRestricted) return to.name === 'pending' ? true : { name: 'pending' }
   if (to.name === 'pending' || to.name === 'home') return home()
-  if (to.meta.cabinet && to.meta.cabinet !== session.cabinet) return home()
-  if (to.meta.roles?.length && session.role && !to.meta.roles.includes(session.role)) return home()
+  // Нет доступа: ведём на главную кабинета с ?denied=<путь>, CabinetLayout покажет тост (BUG-06)
+  const denied = () => ({ ...home(), query: { denied: to.fullPath } })
+  if (to.meta.cabinet && to.meta.cabinet !== session.cabinet) return denied()
+  if (to.meta.roles?.length && session.role && !to.meta.roles.includes(session.role)) return denied()
   return true
 })
 
