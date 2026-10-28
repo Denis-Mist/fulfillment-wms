@@ -41,6 +41,10 @@ public static class DependencyInjection
         services.AddScoped<Inbound.InboundQueryHandler>();
         services.AddScoped<Inbound.InboundActionHandler>();
         services.AddSingleton<Inbound.IReceivingInspectorFactory, Inbound.RandomReceivingInspectorFactory>();
+        services.AddScoped<Orders.OrderScope>();
+        services.AddScoped<Orders.OrderQueryHandler>();
+        services.AddScoped<Orders.OrderSales>();
+        services.AddScoped<IAuditEventSource, Orders.ShippedOrdersAuditSource>();
         services.AddScoped<Stock.StockReadModel>();
         services.AddScoped<Stock.StockQueryHandler>();
         services.AddScoped<Stock.StockOperationQueryHandler>();
@@ -72,8 +76,10 @@ public static class DependencyInjection
 
         // Notifications / search
         services.AddScoped<INotificationSource, PendingOrganizationsNotificationSource>();
+        services.AddScoped<INotificationSource, Orders.OverdueOrdersNotificationSource>();
         services.AddScoped<NotificationsHandler>();
         services.AddScoped<GlobalSearchHandler>();
+        services.AddScoped<ISearchProvider, Orders.OrderSearchProvider>();
         services.AddScoped<ISearchProvider, ProductSearchProvider>();
 
         // Warehouses

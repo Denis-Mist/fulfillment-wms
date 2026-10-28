@@ -73,7 +73,7 @@ internal sealed record StockLookups(IReadOnlyDictionary<string, string> OrgNames
     }
 }
 
-public sealed class StockQueryHandler(IAppDbContext db, StockReadModel stock, WarehouseScope warehouses, IClock clock)
+public sealed class StockQueryHandler(IAppDbContext db, StockReadModel stock, WarehouseScope warehouses, Orders.OrderSales sales, IClock clock)
 {
     public async Task<Paged<StockItemDto>> ListAsync(RequestContext ctx, StockQuery q, CancellationToken ct)
     {
@@ -106,12 +106,12 @@ public sealed class StockQueryHandler(IAppDbContext db, StockReadModel stock, Wa
             items.Sum(i => i.Available), items.Where(i => i.Status == StockStatus.Defect).Sum(i => i.Quantity), empty);
     }
 
-    /// <summary>Остатки по товарам с запасом в днях; продажи — из заказов за 30 дней (пока заказов нет — 0).</summary>
+    /// <summary>Остатки по товарам с запасом в днях; продажи — из заказов за 30 дней (неотменённые, видимые организации).</summary>
     public async Task<Paged<ProductStockDto>> ProductsAsync(RequestContext ctx, PageQuery page, bool lowStock, CancellationToken ct)
     {
         var views = await stock.VisibleAsync(ctx, null, ct);
         var lookups = await stock.LoadLookupsAsync(views.Select(v => v.Row.WarehouseId).Distinct().ToList(), ct);
-        var sales = await SalesAsync(ctx, clock.UtcNow, ct);
+        var sold = await sales.ByProductAsync(ctx, clock.UtcNow, ct);
         var byProduct = new Dictionary<string, (StockItemDto First, int Available, int Reserved, int Defect, List<ProductWarehouseStock> Warehouses)>();
         var order = new List<string>();
         foreach (var (row, item) in views)
@@ -140,7 +140,7 @@ public sealed class StockQueryHandler(IAppDbContext db, StockReadModel stock, Wa
         var items = order.Select(id =>
             {
                 var e = byProduct[id];
-                var avg = JsMath.Round1(sales.GetValueOrDefault(id) / 30.0);
+                var avg = JsMath.Round1(sold.GetValueOrDefault(id) / 30.0);
                 return new ProductStockDto(id, id, e.First.Sku, e.First.ProductName, e.Available, e.Reserved, e.Defect, avg,
                     avg > 0 ? (int)Math.Floor(e.Available / avg) : null, e.Warehouses);
             })
@@ -174,10 +174,6 @@ public sealed class StockQueryHandler(IAppDbContext db, StockReadModel stock, Wa
         if (row is null || !await stock.CanSeeAsync(ctx, row, ct)) throw AppException.NotFound("Позиция остатка не найдена");
         return await stock.ToDtoAsync(row, ct);
     }
-
-    /// <summary>Порт продаж: сейчас заказов в бэкенде нет, поэтому продажи пустые (avgDailySales = 0, daysOfCover = null).</summary>
-    private static Task<Dictionary<string, int>> SalesAsync(RequestContext ctx, DateTimeOffset now, CancellationToken ct) =>
-        Task.FromResult(new Dictionary<string, int>());
 
     private static Func<StockItemDto, object?>? SortKey(string field) => field switch
     {

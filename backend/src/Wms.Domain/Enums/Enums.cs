@@ -41,3 +41,7 @@ public enum StockStatus { Available, Reserved, Defect }
 public enum OperationType { Move, Inventory, Writeoff }
 
 public enum ErrorReason { Defect, Shortage, Missort, Expired }
+
+public enum OrderStatus { New, Reserved, OutOfStock, Picking, Picked, Packed, Shipped, Cancelled }
+
+public enum SalesChannel { Wb, Ozon, Own }

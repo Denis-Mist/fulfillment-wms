@@ -26,4 +26,5 @@ public interface IAppDbContext : IUnitOfWork
     DbSet<InboundShipment> InboundShipments { get; }
     DbSet<WarehouseTask> Tasks { get; }
     DbSet<StockOperation> StockOperations { get; }
+    DbSet<Order> Orders { get; }
 }
