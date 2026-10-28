@@ -33,7 +33,7 @@ public sealed record SellerDashboardDto(SellerKpis Kpis, IReadOnlyList<Attention
     IReadOnlyList<FulfillmentStock> Fulfillments, IReadOnlyList<LowStockItem> LowStock, IReadOnlyList<InboundListItemDto> RecentInbound);
 
 /// <summary>Дашборды ФЦ и селлера (mocks/handlers/dashboard.ts). Сутки считаются в UTC.</summary>
-public sealed class DashboardHandler(IAppDbContext db, IClock clock, OrderScope orders, InboundScope inbound, WarehouseScope scope)
+public sealed class DashboardHandler(IAppDbContext db, IClock clock, OrderScope orders, InboundScope inbound)
 {
     private static readonly OrderStatus[] Pipeline = [OrderStatus.New, OrderStatus.Reserved, OrderStatus.Picking, OrderStatus.Picked, OrderStatus.Packed];
 
