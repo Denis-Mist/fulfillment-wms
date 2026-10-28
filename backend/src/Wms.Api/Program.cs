@@ -50,7 +50,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
-app.MapGroup("/api").MapAuthEndpoints();
+var api = app.MapGroup("/api");
+api.MapAuthEndpoints();
+api.MapAdminEndpoints();
+api.MapOrganizationEndpoints();
 
 if (app.Configuration.GetValue("Database:MigrateOnStartup", true))
     await app.Services.MigrateAndSeedAsync(app.Configuration.GetValue("Database:Seed", true));

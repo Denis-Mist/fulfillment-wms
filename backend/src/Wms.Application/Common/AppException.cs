@@ -12,6 +12,8 @@ public class AppException(int status, string title, string? detail = null,
     public static AppException BadRequest(string title, string? detail = null, IDictionary<string, string[]>? errors = null) => new(400, title, detail, errors);
     public static AppException Unauthorized(string title = "Требуется авторизация", string? detail = null) => new(401, title, detail);
     public static AppException Forbidden(string title = "Нет доступа к организации", string? detail = null) => new(403, title, detail);
+    public static AppException InsufficientRights() => new(403, "Недостаточно прав");
     public static AppException NotFound(string title, string? detail = null) => new(404, title, detail);
     public static AppException Conflict(string title, string? detail = null) => new(409, title, detail);
+    public static AppException Unprocessable(string title, string? detail = null) => new(422, title, detail);
 }

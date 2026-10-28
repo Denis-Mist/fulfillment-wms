@@ -27,7 +27,18 @@ public class User
     public string FullName { get; private set; } = null!;
     public string? Phone { get; private set; }
     public bool IsPlatformAdmin { get; private set; }
+    public bool IsBlocked { get; private set; }
     public IReadOnlyList<Membership> Memberships => _memberships;
+
+    public void Block()
+    {
+        if (IsPlatformAdmin) throw new DomainConflictException("Нельзя заблокировать администратора платформы");
+        IsBlocked = true;
+    }
+
+    public void Unblock() => IsBlocked = false;
+
+    public void ChangePasswordHash(string passwordHash) => PasswordHash = passwordHash;
 
     public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 

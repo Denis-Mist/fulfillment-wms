@@ -4,7 +4,17 @@ using Wms.Domain.Enums;
 namespace Wms.Application.Auth;
 
 /// <summary>Кто делает запрос и от имени какой организации (X-Organization-Id).</summary>
-public sealed record RequestContext(string UserId, string? OrganizationId, Role Role, OrganizationStatus? OrganizationStatus);
+public sealed record RequestContext(string UserId, string? OrganizationId, Role Role, OrganizationStatus? OrganizationStatus,
+    OrganizationType? OrganizationType = null)
+{
+    public bool IsPlatformAdmin => OrganizationId is null;
+    public bool IsFulfillment => OrganizationType == Domain.Enums.OrganizationType.Fulfillment;
+    public bool IsSeller => OrganizationType == Domain.Enums.OrganizationType.Seller;
+
+    /// <summary>Как withAuth в моках: организация «не активна» закрывает все разделы, кроме разрешённых явно.</summary>
+    public bool OrganizationInactive => OrganizationId is not null && OrganizationStatus != Domain.Enums.OrganizationStatus.Active;
+
+}
 
 public interface IRequestContextResolver
 {
@@ -22,6 +32,6 @@ public sealed class RequestContextResolver(IUserRepository users, IOrganizationR
         var membership = user.ResolveMembership(organizationIdHeader);
         if (membership is null) return null;
         var org = (await organizations.GetByIdsAsync([membership.OrganizationId], ct)).FirstOrDefault();
-        return new RequestContext(user.Id, membership.OrganizationId, membership.Role, org?.Status);
+        return new RequestContext(user.Id, membership.OrganizationId, membership.Role, org?.Status, org?.Type);
     }
 }

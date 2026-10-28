@@ -4,11 +4,19 @@ using Wms.Domain.Entities;
 
 namespace Wms.Infrastructure.Persistence;
 
-public sealed class WmsDbContext(DbContextOptions<WmsDbContext> options) : DbContext(options), IUnitOfWork
+public sealed class WmsDbContext(DbContextOptions<WmsDbContext> options) : DbContext(options), IAppDbContext
 {
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Membership> Memberships => Set<Membership>();
+    public DbSet<Warehouse> Warehouses => Set<Warehouse>();
+    public DbSet<Contract> Contracts => Set<Contract>();
+    public DbSet<ReferenceItem> References => Set<ReferenceItem>();
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+    public DbSet<OrganizationSettings> Settings => Set<OrganizationSettings>();
+    public DbSet<TeamInvite> TeamInvites => Set<TeamInvite>();
+    public DbSet<ClientRequest> ClientRequests => Set<ClientRequest>();
+    public DbSet<NotificationRead> NotificationReads => Set<NotificationRead>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(WmsDbContext).Assembly);

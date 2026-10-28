@@ -35,4 +35,23 @@ public class Organization
     public static Organization Register(string id, OrganizationType type, string name, string inn, string city,
         DateTimeOffset now, IEnumerable<Marketplace>? marketplaces) =>
         new(id, type, name, inn, city, OrganizationStatus.Pending, now, marketplaces);
+
+    private static readonly IReadOnlyDictionary<ModerationAction, (OrganizationStatus[] From, OrganizationStatus To)> Transitions =
+        new Dictionary<ModerationAction, (OrganizationStatus[], OrganizationStatus)>
+        {
+            [ModerationAction.Approve] = ([OrganizationStatus.Pending, OrganizationStatus.Rejected], OrganizationStatus.Active),
+            [ModerationAction.Reject] = ([OrganizationStatus.Pending], OrganizationStatus.Rejected),
+            [ModerationAction.Block] = ([OrganizationStatus.Active], OrganizationStatus.Blocked),
+            [ModerationAction.Unblock] = ([OrganizationStatus.Blocked], OrganizationStatus.Active),
+        };
+
+    public bool IsActive => Status == OrganizationStatus.Active;
+
+    /// <summary>Модерация администратором платформы (правила переходов — как в моках).</summary>
+    public void Moderate(ModerationAction action)
+    {
+        var (from, to) = Transitions[action];
+        if (!from.Contains(Status)) throw new DomainConflictException("Действие недоступно для текущего статуса");
+        Status = to;
+    }
 }
