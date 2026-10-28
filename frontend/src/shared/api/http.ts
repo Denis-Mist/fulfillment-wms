@@ -42,6 +42,21 @@ function buildUrl(path: string, query?: QueryParams) {
   return url.toString()
 }
 
+const MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
+
+/** Ответ обработчика MSW всегда JSON (или 204); всё остальное — проход мимо моков */
+function fromMock(response: Response) {
+  if (response.status === 204) return true
+  return (response.headers.get('content-type') ?? '').includes('json')
+}
+
+async function waitForMockWorker(attempt: number) {
+  if ('serviceWorker' in navigator) {
+    await Promise.race([navigator.serviceWorker.ready, new Promise((r) => setTimeout(r, 1000))])
+  }
+  await new Promise((r) => setTimeout(r, 250 * (attempt + 1)))
+}
+
 interface RequestOptions {
   query?: QueryParams
   body?: unknown
@@ -56,14 +71,23 @@ async function request<T>(method: string, path: string, options: RequestOptions 
   if (organizationId) headers['X-Organization-Id'] = organizationId
   if (options.body !== undefined) headers['Content-Type'] = 'application/json'
 
-  let response: Response
-  try {
-    response = await fetch(buildUrl(path, options.query), {
+  const send = () =>
+    fetch(buildUrl(path, options.query), {
       method,
       headers,
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
       signal: options.signal,
     })
+
+  let response: Response
+  try {
+    response = await send()
+    // Моки: если ответ пришёл не от MSW (dev-сервер отдал не-JSON 404 — service worker ещё/снова
+    // не контролирует вкладку), ждём готовности worker и повторяем запрос (BUG-08)
+    for (let attempt = 0; MOCKS && attempt < 3 && !fromMock(response); attempt++) {
+      await waitForMockWorker(attempt)
+      response = await send()
+    }
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw new ApiError(0, { title: 'Нет соединения с сервером', status: 0 })
@@ -86,7 +110,8 @@ async function request<T>(method: string, path: string, options: RequestOptions 
 }
 
 export const http = {
-  get: <T>(path: string, query?: QueryParams, signal?: AbortSignal) => request<T>('GET', path, { query, signal }),
+  get: <T>(path: string, query?: QueryParams, signal?: AbortSignal) =>
+    request<T>('GET', path, { query, signal }),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, { body }),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, { body }),
   patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, { body }),
