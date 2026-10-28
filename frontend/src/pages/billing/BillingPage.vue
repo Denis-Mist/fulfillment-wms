@@ -176,7 +176,7 @@ const tariffContracts = computed(() =>
       <KpiCard
         label="Начислено за месяц"
         :icon="CircleDollarSign"
-        :value="summary ? formatMoney(summary.monthAccrued) : undefined"
+        :value="summary ? formatCompactMoney(summary.monthAccrued) : undefined"
         :hint="summary ? `прошлый месяц ${formatCompactMoney(summary.prevMonthAccrued)}` : undefined"
         :loading="summaryPending"
       />
@@ -184,14 +184,14 @@ const tariffContracts = computed(() =>
         label="К оплате по актам"
         :icon="ReceiptText"
         :tone="summary?.unpaid ? 'warn' : 'success'"
-        :value="summary ? formatMoney(summary.unpaid) : undefined"
+        :value="summary ? formatCompactMoney(summary.unpaid) : undefined"
         :loading="summaryPending"
       />
       <KpiCard
         :label="isFulfillment ? 'Сальдо клиентов' : 'Баланс'"
         :icon="Wallet"
         :tone="(summary?.balance ?? 0) < 0 ? 'danger' : 'success'"
-        :value="summary ? formatMoney(summary.balance) : undefined"
+        :value="summary ? formatCompactMoney(summary.balance) : undefined"
         hint="с учётом текущего месяца"
         :loading="summaryPending"
       />
