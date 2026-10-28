@@ -57,6 +57,7 @@ api.MapAdminEndpoints();
 api.MapOrganizationEndpoints();
 api.MapWarehouseEndpoints();
 api.MapInboundEndpoints();
+api.MapStockEndpoints();
 
 if (app.Configuration.GetValue("Database:MigrateOnStartup", true))
     await app.Services.MigrateAndSeedAsync(app.Configuration.GetValue("Database:Seed", true));

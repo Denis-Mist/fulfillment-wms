@@ -43,6 +43,9 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         DateTimeOffset ExpectedAt, string PackageType, int PackagesCount, string? Comment, string? DriverName, string? VehicleNumber,
         SeedInboundLine[] Lines, SeedInboundEvent[] Events);
     private sealed record InboundData(SeedInbound[] Inbound);
+    private sealed record SeedOperation(string Id, string Number, string Type, DateTimeOffset At, string ActorName, string WarehouseId,
+        string ProductId, string? FromLocationCode, string? ToLocationCode, int Quantity, int? Expected, int? Counted, string? Reason);
+    private sealed record OperationsData(SeedOperation[] Operations);
     private sealed record DirectoryData(SeedReference[] References, SeedRequest[] ClientRequests);
 
     /// <summary>Каждый раздел идемпотентен: заполняется, только если его таблица пуста.</summary>
@@ -53,6 +56,27 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         await SeedDirectoryAsync(ct);
         await SeedCatalogAsync(ct);
         await SeedInboundAsync(ct);
+        await SeedOperationsAsync(ct);
+    }
+
+    /// <summary>Синтетический журнал операций (seedOperations() из stock.ts на 2026-10-01, Seeding/Data/operations.json).</summary>
+    private async Task SeedOperationsAsync(CancellationToken ct)
+    {
+        if (await db.StockOperations.AnyAsync(ct)) return;
+        var data = Load<OperationsData>("operations.json");
+        var products = await db.Products.AsNoTracking().ToDictionaryAsync(p => p.Id, ct);
+        var orgs = await db.Organizations.AsNoTracking().ToDictionaryAsync(o => o.Id, o => o.Name, ct);
+        var warehouses = await db.Warehouses.AsNoTracking().ToDictionaryAsync(w => w.Id, w => w.Name, ct);
+        db.StockOperations.AddRange(data.Operations.Select(o =>
+        {
+            var product = products.GetValueOrDefault(o.ProductId);
+            return new StockOperation(o.Id, o.Number, SnakeCase.Parse<OperationType>(o.Type), o.At, o.ActorName, o.WarehouseId,
+                warehouses.GetValueOrDefault(o.WarehouseId) ?? "—", o.ProductId, product?.Sku ?? "—", product?.Name ?? "Товар",
+                (product is null ? null : orgs.GetValueOrDefault(product.SellerId)) ?? "—", o.Quantity, o.FromLocationCode, o.ToLocationCode,
+                o.Expected, o.Counted, o.Reason is null ? null : SnakeCase.Parse<ErrorReason>(o.Reason));
+        }));
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Seeded {Operations} stock operations", data.Operations.Length);
     }
 
     /// <summary>Поставки (снимок seed.ts, Seeding/Data/inbound.json).</summary>

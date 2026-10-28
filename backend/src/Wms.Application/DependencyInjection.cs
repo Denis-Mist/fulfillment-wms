@@ -41,6 +41,10 @@ public static class DependencyInjection
         services.AddScoped<Inbound.InboundQueryHandler>();
         services.AddScoped<Inbound.InboundActionHandler>();
         services.AddSingleton<Inbound.IReceivingInspectorFactory, Inbound.RandomReceivingInspectorFactory>();
+        services.AddScoped<Stock.StockReadModel>();
+        services.AddScoped<Stock.StockQueryHandler>();
+        services.AddScoped<Stock.StockOperationQueryHandler>();
+        services.AddScoped<Stock.StockCommandHandler>();
         services.AddScoped<IAuditFeed, AuditFeed>();
         services.AddScoped<AuditQueryHandler>();
         services.AddScoped<ReferencesQueryHandler>();
