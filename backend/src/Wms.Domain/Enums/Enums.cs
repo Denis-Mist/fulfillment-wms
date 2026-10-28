@@ -80,3 +80,36 @@ public enum FboMarketplace
     Wb,
     Ozon,
 }
+
+
+public enum ReturnStatus
+{
+    Expected,
+    Received,
+    Inspected,
+    Closed,
+}
+
+public enum ReturnReason
+{
+    NotBought,
+    Size,
+    Defect,
+    Damaged,
+    WrongItem,
+}
+
+public enum ReturnGrade
+{
+    AsNew,
+    Resale,
+    Defect,
+    Dispose,
+}
+
+public enum ReturnResolution
+{
+    Restocked,
+    Defect,
+    Mixed,
+}

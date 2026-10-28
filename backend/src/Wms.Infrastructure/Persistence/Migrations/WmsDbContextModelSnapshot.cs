@@ -182,6 +182,92 @@ namespace Wms.Infrastructure.Persistence.Migrations
                     b.ToTable("contracts", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Domain.Entities.CustomerReturn", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("InspectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inspected_at");
+
+                    b.Property<string>("InspectedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("inspected_by");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("number");
+
+                    b.Property<string>("OrderId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("order_id");
+
+                    b.Property<int>("Photos")
+                        .HasColumnType("integer")
+                        .HasColumnName("photos");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset?>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("received_at");
+
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("seller_id");
+
+                    b.Property<long>("Seq")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("seq");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Seq"));
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("WarehouseId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_customer_returns");
+
+                    b.HasIndex("Number")
+                        .IsUnique()
+                        .HasDatabaseName("ix_customer_returns_number");
+
+                    b.HasIndex("SellerId")
+                        .HasDatabaseName("ix_customer_returns_seller_id");
+
+                    b.HasIndex("Seq")
+                        .HasDatabaseName("ix_customer_returns_seq");
+
+                    b.HasIndex("WarehouseId")
+                        .HasDatabaseName("ix_customer_returns_warehouse_id");
+
+                    b.ToTable("customer_returns", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Domain.Entities.FboShipment", b =>
                 {
                     b.Property<string>("Id")
@@ -1216,6 +1302,39 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_zones_warehouse_id_code");
 
                     b.ToTable("zones", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Domain.Entities.CustomerReturn", b =>
+                {
+                    b.OwnsMany("Wms.Domain.Entities.ReturnLine", "Lines", b1 =>
+                        {
+                            b1.Property<string>("CustomerReturnId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<string>("Grade");
+
+                            b1.Property<string>("ProductId")
+                                .IsRequired();
+
+                            b1.Property<int>("Quantity");
+
+                            b1.HasKey("CustomerReturnId", "__synthesizedOrdinal")
+                                .HasName("pk_customer_returns");
+
+                            b1.ToTable("customer_returns");
+
+                            b1
+                                .ToJson("lines")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CustomerReturnId")
+                                .HasConstraintName("fk_customer_returns_customer_returns_customer_return_id");
+                        });
+
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Wms.Domain.Entities.FboShipment", b =>

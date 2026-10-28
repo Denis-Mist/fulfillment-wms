@@ -56,6 +56,32 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         string? InboundId, SeedTaskItem[] Items, int[]? Progress);
     private sealed record TasksData(SeedTask[] Tasks);
 
+    private sealed record ReturnsData(SeedReturn[] Returns);
+
+    private sealed record SeedReturn(string Id, string Number, string OrderId, string Reason, string Status, string SellerId, string WarehouseId,
+        DateTimeOffset CreatedAt, DateTimeOffset? ReceivedAt, DateTimeOffset? InspectedAt, string? InspectedBy, string? Comment, int Photos, SeedReturnLine[] Lines);
+
+    private sealed record SeedReturnLine(string ProductId, int Quantity, string? Grade);
+
+    /// <summary>Возвраты покупателей (seedReturns() из returns.ts, Seeding/Data/returns.json); даты сдвигаются как у заказов.</summary>
+    private async Task SeedReturnsAsync(CancellationToken ct)
+    {
+        if (await db.Returns.AnyAsync(ct)) return;
+        var data = Load<ReturnsData>("returns.json");
+        var shift = clock.UtcNow - SnapshotAt;
+        if (shift < TimeSpan.Zero) shift = TimeSpan.Zero;
+        foreach (var r in data.Returns)
+        {
+            var record = new CustomerReturn(r.Id, r.Number, r.OrderId, SnakeCase.Parse<ReturnReason>(r.Reason), SnakeCase.Parse<ReturnStatus>(r.Status),
+                r.SellerId, r.WarehouseId, r.CreatedAt, r.ReceivedAt, r.InspectedAt, r.InspectedBy, r.Comment, r.Photos,
+                r.Lines.Select(l => new ReturnLine(l.ProductId, l.Quantity, l.Grade is null ? null : SnakeCase.Parse<ReturnGrade>(l.Grade))));
+            record.ShiftTimes(shift);
+            db.Returns.Add(record);
+        }
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Seeded {Returns} customer returns", data.Returns.Length);
+    }
+
     private sealed record FboData(SeedFbo[] Shipments);
 
     private sealed record SeedFbo(string Id, string Number, string Marketplace, string Destination, string Status, string SellerId, string WarehouseId,
@@ -84,6 +110,7 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         await SeedTasksAsync(ct);
         await SeedStaffAsync(ct);
         await SeedFboAsync(ct);
+        await SeedReturnsAsync(ct);
     }
 
     /// <summary>FBO-отгрузки (seedFbo() из fbo.ts, Seeding/Data/fbo.json); даты сдвигаются как у заказов.</summary>
