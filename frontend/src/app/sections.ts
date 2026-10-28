@@ -466,6 +466,7 @@ export const CABINETS: CabinetDef[] = [
             path: '',
             title: 'Обзор платформы',
             icon: LayoutDashboard,
+            page: () => import('@/pages/admin/AdminDashboardPage.vue'),
             planned: [
               'Количество организаций и пользователей',
               'Суммарные объёмы операций по платформе',
@@ -489,6 +490,7 @@ export const CABINETS: CabinetDef[] = [
             path: 'organizations',
             title: 'Организации',
             icon: Building2,
+            page: () => import('@/pages/admin/OrganizationsPage.vue'),
             planned: [
               'Все ФЦ и селлеры',
               'Вход от имени организации для поддержки',
@@ -500,6 +502,7 @@ export const CABINETS: CabinetDef[] = [
             path: 'users',
             title: 'Пользователи',
             icon: Users,
+            page: () => import('@/pages/admin/UsersPage.vue'),
             planned: ['Все пользователи платформы', 'Блокировка и сброс доступа'],
           },
           {
@@ -507,6 +510,7 @@ export const CABINETS: CabinetDef[] = [
             path: 'references',
             title: 'Справочники',
             icon: BookOpen,
+            page: () => import('@/pages/admin/ReferencesPage.vue'),
             planned: ['Единицы измерения', 'Типы ячеек и тары', 'Перевозчики и маркетплейсы', 'Виды услуг'],
           },
           {
@@ -514,6 +518,7 @@ export const CABINETS: CabinetDef[] = [
             path: 'audit',
             title: 'Журнал действий',
             icon: ScrollText,
+            page: () => import('@/pages/admin/AuditPage.vue'),
             planned: [
               'Аудит всех действий пользователей',
               'Фильтры по организации, пользователю, типу события',
