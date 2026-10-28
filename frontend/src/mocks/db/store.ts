@@ -1,7 +1,7 @@
 import { seed } from './seed'
 import type { CollectionName, Collections, RecordOf } from './types'
 
-const STORAGE_KEY = 'wms.mockdb.v1'
+const STORAGE_KEY = 'wms.mockdb.v2'
 
 type Overlay = {
   [K in CollectionName]?: { upserts: Record<string, RecordOf<K>>; deleted: string[] }

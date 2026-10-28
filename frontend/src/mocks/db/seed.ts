@@ -358,6 +358,7 @@ export function seed(now = Date.now()): Collections {
   })
 
   const sellerProducts = new Map<string, ProductRecord[]>()
+  const usedLiters = new Map<string, number>()
   const sellerContracts = new Map<string, ContractRecord[]>()
   const sellerActors = new Map<string, string>()
 
@@ -413,19 +414,27 @@ export function seed(now = Date.now()): Collections {
       products.forEach((product, rank) => {
         if (!rng.bool(0.85)) return
         const popularity = 1 / Math.pow(rank + 1, 0.6)
-        const total = rng.bool(0.08) ? rng.int(0, 8) : Math.round(rng.int(40, 420) * (0.4 + popularity))
-        const parts = rng.bool(0.5) ? 2 : 1
-        for (let part = 0; part < parts; part++) {
-          const location = rng.pick(locations)
+        let left = rng.bool(0.08) ? rng.int(0, 8) : Math.round(rng.int(40, 420) * (0.4 + popularity))
+        const unit = Math.max(product.volumeLiters, 0.1)
+        // Раскладываем по ячейкам, не превышая их вместимость (FR-06)
+        let part = 0
+        for (const location of rng.sample(locations, 8)) {
+          if (left <= 0 || part >= 3) break
+          const free = location.capacityLiters - (usedLiters.get(location.id) ?? 0)
+          const fits = Math.min(left, Math.floor(free / unit))
+          if (fits <= 0) continue
+          usedLiters.set(location.id, (usedLiters.get(location.id) ?? 0) + fits * unit)
           c.stock.push({
             id: `stk_${product.id}_${warehouseId}_${part}`,
             productId: product.id,
             sellerId: id,
             warehouseId,
             locationId: location.id,
-            quantity: Math.round(total / parts),
+            quantity: fits,
             reserved: 0,
           })
+          left -= fits
+          part++
         }
       })
     }
