@@ -108,6 +108,8 @@ public static class DependencyInjection
         services.AddScoped<Staff.StaffHandler>();
         services.AddScoped<Fbo.FboHandler>();
         services.AddScoped<Returns.ReturnsHandler>();
+        services.AddScoped<Billing.BillingHandler>();
+        services.AddScoped<Integrations.IntegrationsHandler>();
         return services;
     }
 }
