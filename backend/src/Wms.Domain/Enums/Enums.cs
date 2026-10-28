@@ -35,3 +35,9 @@ public enum TaskType { Receiving, Putaway, Picking, Packing, Move, Inventory }
 public enum WarehouseTaskStatus { New, Assigned, InProgress, Done, Cancelled }
 
 public enum TaskPriority { Normal, High }
+
+public enum StockStatus { Available, Reserved, Defect }
+
+public enum OperationType { Move, Inventory, Writeoff }
+
+public enum ErrorReason { Defect, Shortage, Missort, Expired }

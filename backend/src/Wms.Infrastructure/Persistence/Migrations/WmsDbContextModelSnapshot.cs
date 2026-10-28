@@ -566,6 +566,111 @@ namespace Wms.Infrastructure.Persistence.Migrations
                     b.ToTable("stock", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Domain.Entities.StockOperation", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ActorName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("actor_name");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("at");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text")
+                        .HasColumnName("comment");
+
+                    b.Property<int?>("Counted")
+                        .HasColumnType("integer")
+                        .HasColumnName("counted");
+
+                    b.Property<int?>("Expected")
+                        .HasColumnType("integer")
+                        .HasColumnName("expected");
+
+                    b.Property<string>("FromLocationCode")
+                        .HasColumnType("text")
+                        .HasColumnName("from_location_code");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("number");
+
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("product_name");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("SellerName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("seller_name");
+
+                    b.Property<long>("Seq")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("seq");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Seq"));
+
+                    b.Property<string>("Sku")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sku");
+
+                    b.Property<string>("ToLocationCode")
+                        .HasColumnType("text")
+                        .HasColumnName("to_location_code");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<string>("WarehouseId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warehouse_id");
+
+                    b.Property<string>("WarehouseName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warehouse_name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_stock_operations");
+
+                    b.HasIndex("At")
+                        .HasDatabaseName("ix_stock_operations_at");
+
+                    b.HasIndex("Seq")
+                        .HasDatabaseName("ix_stock_operations_seq");
+
+                    b.HasIndex("WarehouseId")
+                        .HasDatabaseName("ix_stock_operations_warehouse_id");
+
+                    b.ToTable("stock_operations", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Domain.Entities.StorageLocation", b =>
                 {
                     b.Property<string>("Id")

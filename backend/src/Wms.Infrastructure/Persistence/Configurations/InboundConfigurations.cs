@@ -50,3 +50,17 @@ internal sealed class WarehouseTaskConfiguration : IEntityTypeConfiguration<Ware
         SeqColumn.Add(b);
     }
 }
+
+internal sealed class StockOperationConfiguration : IEntityTypeConfiguration<StockOperation>
+{
+    public void Configure(EntityTypeBuilder<StockOperation> b)
+    {
+        b.ToTable("stock_operations");
+        b.HasKey(o => o.Id);
+        b.Property(o => o.Type).HasConversion(new SnakeCaseEnumConverter<OperationType>());
+        b.Property(o => o.Reason).HasConversion(new SnakeCaseEnumConverter<ErrorReason>());
+        b.HasIndex(o => o.WarehouseId);
+        b.HasIndex(o => o.At);
+        SeqColumn.Add(b);
+    }
+}
