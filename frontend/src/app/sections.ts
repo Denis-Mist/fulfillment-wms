@@ -116,6 +116,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'returns',
+            page: () => import('@/pages/returns/ReturnsPage.vue'),
             path: 'returns',
             title: 'Возвраты',
             description: 'Возвраты от маркетплейсов и покупателей.',
@@ -200,6 +201,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'fbo',
+            page: () => import('@/pages/fbo/FboPage.vue'),
             path: 'fbo',
             title: 'Отгрузки на маркетплейсы',
             description: 'Поставки FBO на склады Wildberries и Ozon.',
@@ -244,6 +246,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'billing',
+            page: () => import('@/pages/billing/BillingPage.vue'),
             path: 'billing',
             title: 'Биллинг',
             description: 'Тарифы, начисления и акты.',
@@ -277,6 +280,7 @@ export const CABINETS: CabinetDef[] = [
         sections: [
           {
             name: 'staff',
+            page: () => import('@/pages/staff/StaffPage.vue'),
             path: 'staff',
             title: 'Сотрудники и смены',
             icon: Users,
@@ -289,11 +293,16 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'settings',
+            page: () => import('@/pages/settings/SettingsPage.vue'),
             path: 'settings',
             title: 'Настройки',
             icon: Settings,
             roles: FC_MANAGEMENT,
-            planned: ['Профиль организации и реквизиты', 'Карточка в каталоге ФЦ', 'Пользователи и приглашения'],
+            planned: [
+              'Профиль организации и реквизиты',
+              'Карточка в каталоге ФЦ',
+              'Пользователи и приглашения',
+            ],
           },
         ],
       },
@@ -421,7 +430,10 @@ export const CABINETS: CabinetDef[] = [
             path: 'integrations',
             title: 'Интеграции',
             icon: Plug,
-            planned: ['Подключение кабинетов Wildberries и Ozon по API-ключу', 'Автоматическая загрузка заказов FBS'],
+            planned: [
+              'Подключение кабинетов Wildberries и Ozon по API-ключу',
+              'Автоматическая загрузка заказов FBS',
+            ],
           },
           {
             name: 'settings',
@@ -468,7 +480,11 @@ export const CABINETS: CabinetDef[] = [
             path: 'organizations',
             title: 'Организации',
             icon: Building2,
-            planned: ['Все ФЦ и селлеры', 'Вход от имени организации для поддержки', 'Договоры между организациями'],
+            planned: [
+              'Все ФЦ и селлеры',
+              'Вход от имени организации для поддержки',
+              'Договоры между организациями',
+            ],
           },
           {
             name: 'users',
@@ -489,7 +505,10 @@ export const CABINETS: CabinetDef[] = [
             path: 'audit',
             title: 'Журнал действий',
             icon: ScrollText,
-            planned: ['Аудит всех действий пользователей', 'Фильтры по организации, пользователю, типу события'],
+            planned: [
+              'Аудит всех действий пользователей',
+              'Фильтры по организации, пользователю, типу события',
+            ],
           },
         ],
       },
