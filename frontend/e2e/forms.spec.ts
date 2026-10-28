@@ -116,7 +116,15 @@ test('товар: обязательные поля, создание, дубл�
     await page.locator('#pf-sku').fill(s)
     await page.locator('#pf-name').fill('Тестовый товар QA')
     await page.locator('#pf-bc').fill('4600000000001')
-    for (const id of ['pf-price', 'pf-w', 'pf-v']) await page.locator(`#${id}`).fill('10')
+    // InputNumber коммитит значение на blur: заполняем по одному и проверяем значение
+    for (const id of ['pf-price', 'pf-w', 'pf-v']) {
+      const input = page.locator(`#${id}`)
+      await expect(async () => {
+        await input.fill('10')
+        await input.blur()
+        await expect(input).toHaveValue(/^10\b/, { timeout: 1000 })
+      }).toPass()
+    }
   }
   await fill(sku)
   await save().click()
