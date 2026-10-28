@@ -42,7 +42,9 @@ export interface WarehouseRecord {
   isActive: boolean
 }
 
-export type ZoneType = 'receiving' | 'storage' | 'picking' | 'packing' | 'shipping' | 'defect'
+import type { ZoneType } from '@/modules/warehouses/types'
+
+export type { ZoneType }
 
 export interface ZoneRecord {
   id: string

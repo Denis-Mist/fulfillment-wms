@@ -163,6 +163,7 @@ export const CABINETS: CabinetDef[] = [
             description: 'Топология складов: зоны и ячейки с координатами.',
             icon: Warehouse,
             roles: FC_MANAGEMENT,
+            page: () => import('@/pages/warehouses/WarehousesPage.vue'),
             planned: [
               'Склады организации и их параметры',
               'Зоны: приёмка, хранение, отбор, упаковка, отгрузка, брак',
