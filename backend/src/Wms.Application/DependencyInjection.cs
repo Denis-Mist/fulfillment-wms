@@ -45,6 +45,12 @@ public static class DependencyInjection
         services.AddScoped<Orders.OrderQueryHandler>();
         services.AddScoped<Orders.OrderSales>();
         services.AddScoped<IAuditEventSource, Orders.ShippedOrdersAuditSource>();
+        services.AddScoped<Tasks.TaskScope>();
+        services.AddScoped<Tasks.WorkerDirectory>();
+        services.AddScoped<Tasks.TaskQueryHandler>();
+        services.AddScoped<Tasks.TaskCommandHandler>();
+        services.AddScoped<Tasks.PickingHandler>();
+        services.AddScoped<Tasks.WorkTerminalHandler>();
         services.AddScoped<Stock.StockReadModel>();
         services.AddScoped<Stock.StockQueryHandler>();
         services.AddScoped<Stock.StockOperationQueryHandler>();

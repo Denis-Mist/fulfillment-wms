@@ -1,3 +1,4 @@
+using Wms.Domain.Common;
 using Wms.Domain.Enums;
 
 namespace Wms.Domain.Entities;
@@ -67,6 +68,22 @@ public class Order
     public int QuantityOf(string productId) => _lines.Where(l => l.ProductId == productId).Sum(l => l.Quantity);
 
     /// <summary>Сдвиг всех дат (сид — снимок, перенесённый к текущему времени).</summary>
+    /// <summary>Взят в отбор (батч сформирован).</summary>
+    public void StartPicking()
+    {
+        if (Status != OrderStatus.Reserved) throw new DomainConflictException("Заказ не в резерве");
+        Status = OrderStatus.Picking;
+    }
+
+    /// <summary>Отбор отменён — заказ возвращается в резерв.</summary>
+    public void ReturnToReserve()
+    {
+        if (Status == OrderStatus.Picking) Status = OrderStatus.Reserved;
+    }
+
+    /// <summary>Отбор завершён.</summary>
+    public void MarkPicked() => Status = OrderStatus.Picked;
+
     public void ShiftTimes(TimeSpan delta)
     {
         CreatedAt += delta; ShipBy += delta;

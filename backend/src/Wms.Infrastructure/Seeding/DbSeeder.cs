@@ -50,6 +50,11 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
     private sealed record SeedOrder(string Id, string Number, string? ExternalNumber, string Channel, string Status, string SellerId,
         string WarehouseId, DateTimeOffset CreatedAt, DateTimeOffset ShipBy, DateTimeOffset? ShippedAt, string DeliveryCity, SeedOrderLine[] Lines);
     private sealed record OrdersData(SeedOrder[] Orders);
+    private sealed record SeedTaskItem(string ProductId, string LocationId, int Quantity);
+    private sealed record SeedTask(string Id, string Number, string OrganizationId, string WarehouseId, string Algorithm, string Type, string Status,
+        string Priority, string? AssigneeId, DateTimeOffset CreatedAt, DateTimeOffset? StartedAt, DateTimeOffset? FinishedAt, string[]? OrderIds,
+        string? InboundId, SeedTaskItem[] Items, int[]? Progress);
+    private sealed record TasksData(SeedTask[] Tasks);
     private sealed record DirectoryData(SeedReference[] References, SeedRequest[] ClientRequests);
 
     /// <summary>Каждый раздел идемпотентен: заполняется, только если его таблица пуста.</summary>
@@ -62,6 +67,27 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         await SeedInboundAsync(ct);
         await SeedOperationsAsync(ct);
         await SeedOrdersAsync(ct);
+        await SeedTasksAsync(ct);
+    }
+
+    /// <summary>Задания склада (seedTasks() из tasks.ts, Seeding/Data/tasks.json); даты сдвигаются так же, как у заказов.</summary>
+    private async Task SeedTasksAsync(CancellationToken ct)
+    {
+        if (await db.Tasks.AnyAsync(t => t.Id == "tsk_1", ct)) return;
+        var data = Load<TasksData>("tasks.json");
+        var shift = clock.UtcNow - SnapshotAt;
+        if (shift < TimeSpan.Zero) shift = TimeSpan.Zero;
+        foreach (var t in data.Tasks)
+        {
+            var task = WarehouseTask.Restore(t.Id, t.Number, SnakeCase.Parse<TaskType>(t.Type), SnakeCase.Parse<WarehouseTaskStatus>(t.Status),
+                SnakeCase.Parse<TaskPriority>(t.Priority), t.WarehouseId, t.OrganizationId, t.AssigneeId, t.CreatedAt, t.StartedAt, t.FinishedAt,
+                t.OrderIds ?? [], t.InboundId, t.Algorithm,
+                t.Items.Select((i, index) => new TaskItem(i.ProductId, i.LocationId, i.Quantity, t.Progress?.ElementAtOrDefault(index) ?? 0)));
+            task.ShiftTimes(shift);
+            db.Tasks.Add(task);
+        }
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Seeded {Tasks} tasks", data.Tasks.Length);
     }
 
     /// <summary>Момент, на который сняты демо-данные (seed(Date.UTC(2026, 9, 1))).</summary>
