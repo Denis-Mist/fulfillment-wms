@@ -113,3 +113,13 @@ public enum ReturnResolution
     Defect,
     Mixed,
 }
+
+public enum BillingService { Receiving, Storage, Picking, Packing, Fbo, Returns }
+
+public enum ActStatus { Draft, Issued, Paid }
+
+public enum IntegrationChannel { Wb, Ozon }
+
+public enum IntegrationStatus { Connected, Disconnected }
+
+public enum IntegrationLogKind { Orders, Stock, Error, Connect }

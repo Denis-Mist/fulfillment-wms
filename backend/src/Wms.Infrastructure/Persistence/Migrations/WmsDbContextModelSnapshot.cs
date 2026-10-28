@@ -69,6 +69,49 @@ namespace Wms.Infrastructure.Persistence.Migrations
                     b.ToTable("audit_entries", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Domain.Entities.BillingAct", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("numeric(14,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("ContractId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("contract_id");
+
+                    b.Property<DateTimeOffset>("IssuedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("issued_at");
+
+                    b.Property<DateTimeOffset?>("PaidAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_at");
+
+                    b.Property<string>("Period")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("period");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_billing_acts");
+
+                    b.HasIndex("ContractId", "Period")
+                        .HasDatabaseName("ix_billing_acts_contract_id_period");
+
+                    b.ToTable("billing_acts", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Domain.Entities.ClientRequest", b =>
                 {
                     b.Property<string>("FulfillmentId")
@@ -421,6 +464,60 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_inbound_shipments_warehouse_id");
 
                     b.ToTable("inbound_shipments", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Domain.Entities.MarketplaceIntegration", b =>
+                {
+                    b.Property<string>("OrganizationId")
+                        .HasColumnType("text")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Channel")
+                        .HasColumnType("text")
+                        .HasColumnName("channel");
+
+                    b.Property<bool>("AutoImportFbs")
+                        .HasColumnType("boolean")
+                        .HasColumnName("auto_import_fbs");
+
+                    b.Property<string>("ClientId")
+                        .HasColumnType("text")
+                        .HasColumnName("client_id");
+
+                    b.Property<DateTimeOffset?>("ConnectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("connected_at");
+
+                    b.Property<string>("KeyMask")
+                        .HasColumnType("text")
+                        .HasColumnName("key_mask");
+
+                    b.Property<DateTimeOffset?>("LastSyncAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_sync_at");
+
+                    b.Property<bool>("PushStock")
+                        .HasColumnType("boolean")
+                        .HasColumnName("push_stock");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<int>("SyncIntervalMin")
+                        .HasColumnType("integer")
+                        .HasColumnName("sync_interval_min");
+
+                    b.Property<string>("_log")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("log");
+
+                    b.HasKey("OrganizationId", "Channel")
+                        .HasName("pk_marketplace_integrations");
+
+                    b.ToTable("marketplace_integrations", (string)null);
                 });
 
             modelBuilder.Entity("Wms.Domain.Entities.Membership", b =>
@@ -1025,6 +1122,48 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_locations_warehouse_id_code");
 
                     b.ToTable("locations", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Domain.Entities.Tariff", b =>
+                {
+                    b.Property<string>("ContractId")
+                        .HasColumnType("text")
+                        .HasColumnName("contract_id");
+
+                    b.Property<decimal>("FboPerBox")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("fbo_per_box");
+
+                    b.Property<decimal>("PackPerUnit")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("pack_per_unit");
+
+                    b.Property<decimal>("PickPerOrder")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("pick_per_order");
+
+                    b.Property<decimal>("ReceivingPerUnit")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("receiving_per_unit");
+
+                    b.Property<decimal>("ReturnPerUnit")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("return_per_unit");
+
+                    b.Property<decimal>("StoragePerM3Day")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("storage_per_m3day");
+
+                    b.HasKey("ContractId")
+                        .HasName("pk_tariffs");
+
+                    b.ToTable("tariffs", (string)null);
                 });
 
             modelBuilder.Entity("Wms.Domain.Entities.TeamInvite", b =>

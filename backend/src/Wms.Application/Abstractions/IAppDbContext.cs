@@ -28,6 +28,9 @@ public interface IAppDbContext : IUnitOfWork
     DbSet<StaffProfile> StaffProfiles { get; }
     DbSet<FboShipment> FboShipments { get; }
     DbSet<CustomerReturn> Returns { get; }
+    DbSet<Tariff> Tariffs { get; }
+    DbSet<BillingAct> BillingActs { get; }
+    DbSet<MarketplaceIntegration> Integrations { get; }
     DbSet<StockOperation> StockOperations { get; }
     DbSet<Order> Orders { get; }
 }
