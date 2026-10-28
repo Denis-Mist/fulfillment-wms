@@ -1,0 +1,851 @@
+{
+ "organizations": [
+  {
+   "id": "org_fc1",
+   "type": "fulfillment",
+   "name": "СкладПро Фулфилмент",
+   "inn": "7714382910",
+   "city": "Москва",
+   "status": "active",
+   "createdAt": "2025-08-06T21:00:00.000Z"
+  },
+  {
+   "id": "org_fc2",
+   "type": "fulfillment",
+   "name": "Логистик Плюс",
+   "inn": "7811650274",
+   "city": "Санкт-Петербург",
+   "status": "active",
+   "createdAt": "2025-10-15T21:00:00.000Z"
+  },
+  {
+   "id": "org_fc3",
+   "type": "fulfillment",
+   "name": "ФФ Юг",
+   "inn": "2311298456",
+   "city": "Краснодар",
+   "status": "active",
+   "createdAt": "2025-12-24T21:00:00.000Z"
+  },
+  {
+   "id": "org_s1",
+   "type": "seller",
+   "name": "Уютный дом",
+   "inn": "503214567890",
+   "city": "Москва",
+   "status": "active",
+   "createdAt": "2025-12-04T21:00:00.000Z",
+   "marketplaces": [
+    "wb",
+    "ozon"
+   ]
+  },
+  {
+   "id": "org_s2",
+   "type": "seller",
+   "name": "Кидс Ворлд",
+   "inn": "7728456123",
+   "city": "Москва",
+   "status": "active",
+   "createdAt": "2025-12-24T21:00:00.000Z",
+   "marketplaces": [
+    "wb",
+    "ozon"
+   ]
+  },
+  {
+   "id": "org_s3",
+   "type": "seller",
+   "name": "ТехноМир",
+   "inn": "7805123987",
+   "city": "Санкт-Петербург",
+   "status": "active",
+   "createdAt": "2026-01-13T21:00:00.000Z",
+   "marketplaces": [
+    "wb",
+    "ozon"
+   ]
+  },
+  {
+   "id": "org_s4",
+   "type": "seller",
+   "name": "Спортлайф",
+   "inn": "231245678901",
+   "city": "Краснодар",
+   "status": "active",
+   "createdAt": "2026-02-02T21:00:00.000Z",
+   "marketplaces": [
+    "wb",
+    "ozon"
+   ]
+  },
+  {
+   "id": "org_s5",
+   "type": "seller",
+   "name": "Бьюти Лаб",
+   "inn": "7701987654",
+   "city": "Москва",
+   "status": "active",
+   "createdAt": "2026-02-22T21:00:00.000Z",
+   "marketplaces": [
+    "wb",
+    "ozon"
+   ]
+  },
+  {
+   "id": "org_s6",
+   "type": "seller",
+   "name": "ЗооМаркет",
+   "inn": "1655432109",
+   "city": "Казань",
+   "status": "active",
+   "createdAt": "2026-03-14T21:00:00.000Z",
+   "marketplaces": [
+    "wb",
+    "ozon"
+   ]
+  },
+  {
+   "id": "org_s7",
+   "type": "seller",
+   "name": "Чайная лавка",
+   "inn": "781609876543",
+   "city": "Санкт-Петербург",
+   "status": "active",
+   "createdAt": "2026-04-03T21:00:00.000Z",
+   "marketplaces": [
+    "wb",
+    "ozon"
+   ]
+  },
+  {
+   "id": "org_s8",
+   "type": "seller",
+   "name": "Стиль",
+   "inn": "7709345612",
+   "city": "Москва",
+   "status": "active",
+   "createdAt": "2026-04-23T21:00:00.000Z",
+   "marketplaces": [
+    "wb",
+    "ozon"
+   ]
+  },
+  {
+   "id": "org_p1",
+   "type": "fulfillment",
+   "name": "Сибирь Фулфилмент",
+   "inn": "5406789012",
+   "city": "Новосибирск",
+   "status": "pending",
+   "createdAt": "2026-09-30T17:00:00.000Z"
+  },
+  {
+   "id": "org_p2",
+   "type": "seller",
+   "name": "ЭкоБьюти",
+   "inn": "7743210987",
+   "city": "Москва",
+   "status": "pending",
+   "createdAt": "2026-09-30T10:00:00.000Z",
+   "marketplaces": [
+    "wb"
+   ]
+  },
+  {
+   "id": "org_p3",
+   "type": "seller",
+   "name": "Мастер Инструмент",
+   "inn": "6658123456",
+   "city": "Екатеринбург",
+   "status": "pending",
+   "createdAt": "2026-09-30T03:00:00.000Z",
+   "marketplaces": [
+    "wb"
+   ]
+  }
+ ],
+ "users": [
+  {
+   "id": "usr_admin",
+   "email": "admin@demo.ru",
+   "password": "demo",
+   "fullName": "Алексей Воронцов",
+   "phone": "+7 900 000-00-01",
+   "isPlatformAdmin": true,
+   "memberships": []
+  },
+  {
+   "id": "usr_fc1_1",
+   "email": "director@demo.ru",
+   "password": "demo",
+   "fullName": "Ирина Соколова",
+   "phone": "+7 975 368-73-83",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc1_2",
+   "email": "manager@demo.ru",
+   "password": "demo",
+   "fullName": "Дмитрий Орлов",
+   "phone": "+7 984 177-08-82",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_manager"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc1_3",
+   "email": "picker@demo.ru",
+   "password": "demo",
+   "fullName": "Сергей Кузнецов",
+   "phone": "+7 983 482-24-97",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_picker"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc1_4",
+   "email": "staff1@fc1.demo.ru",
+   "password": "demo",
+   "fullName": "Наталья Васильева",
+   "phone": "+7 925 344-76-72",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_receiver"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc1_5",
+   "email": "staff2@fc1.demo.ru",
+   "password": "demo",
+   "fullName": "Ольга Петрова",
+   "phone": "+7 940 898-97-68",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_receiver"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc1_6",
+   "email": "staff3@fc1.demo.ru",
+   "password": "demo",
+   "fullName": "Егор Николаев",
+   "phone": "+7 961 927-22-59",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_picker"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc1_7",
+   "email": "staff4@fc1.demo.ru",
+   "password": "demo",
+   "fullName": "Наталья Попова",
+   "phone": "+7 973 344-01-71",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_picker"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc1_8",
+   "email": "staff5@fc1.demo.ru",
+   "password": "demo",
+   "fullName": "Елена Попова",
+   "phone": "+7 912 857-61-65",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_picker"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc1_9",
+   "email": "staff6@fc1.demo.ru",
+   "password": "demo",
+   "fullName": "Юлия Лебедева",
+   "phone": "+7 956 035-07-28",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_packer"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc1_10",
+   "email": "staff7@fc1.demo.ru",
+   "password": "demo",
+   "fullName": "Николай Кузнецов",
+   "phone": "+7 957 230-49-42",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_packer"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc1_11",
+   "email": "staff8@fc1.demo.ru",
+   "password": "demo",
+   "fullName": "Дарья Алексеева",
+   "phone": "+7 912 631-98-96",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_supervisor"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc2_1",
+   "email": "owner@fc2.demo.ru",
+   "password": "demo",
+   "fullName": "Алексей Морозов",
+   "phone": "+7 904 268-79-42",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc2",
+     "role": "fc_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc2_2",
+   "email": "staff1@fc2.demo.ru",
+   "password": "demo",
+   "fullName": "Андрей Егоров",
+   "phone": "+7 951 957-18-47",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc2",
+     "role": "fc_receiver"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc2_3",
+   "email": "staff2@fc2.demo.ru",
+   "password": "demo",
+   "fullName": "Светлана Волкова",
+   "phone": "+7 973 336-58-88",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc2",
+     "role": "fc_receiver"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc2_4",
+   "email": "staff3@fc2.demo.ru",
+   "password": "demo",
+   "fullName": "Елена Степанова",
+   "phone": "+7 975 903-31-50",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc2",
+     "role": "fc_picker"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc2_5",
+   "email": "staff4@fc2.demo.ru",
+   "password": "demo",
+   "fullName": "Татьяна Васильева",
+   "phone": "+7 935 019-44-38",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc2",
+     "role": "fc_picker"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc2_6",
+   "email": "staff5@fc2.demo.ru",
+   "password": "demo",
+   "fullName": "Мария Павлова",
+   "phone": "+7 921 388-03-50",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc2",
+     "role": "fc_picker"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc2_7",
+   "email": "staff6@fc2.demo.ru",
+   "password": "demo",
+   "fullName": "Мария Кузнецова",
+   "phone": "+7 971 873-31-55",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc2",
+     "role": "fc_packer"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc2_8",
+   "email": "staff7@fc2.demo.ru",
+   "password": "demo",
+   "fullName": "Екатерина Волкова",
+   "phone": "+7 911 701-63-19",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc2",
+     "role": "fc_packer"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc2_9",
+   "email": "staff8@fc2.demo.ru",
+   "password": "demo",
+   "fullName": "Ксения Лебедева",
+   "phone": "+7 904 281-73-95",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc2",
+     "role": "fc_supervisor"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc3_1",
+   "email": "owner@fc3.demo.ru",
+   "password": "demo",
+   "fullName": "Елена Попова",
+   "phone": "+7 947 110-66-82",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc3",
+     "role": "fc_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc3_2",
+   "email": "staff1@fc3.demo.ru",
+   "password": "demo",
+   "fullName": "Михаил Волков",
+   "phone": "+7 989 338-67-66",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc3",
+     "role": "fc_receiver"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc3_3",
+   "email": "staff2@fc3.demo.ru",
+   "password": "demo",
+   "fullName": "Дарья Васильева",
+   "phone": "+7 956 566-09-64",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc3",
+     "role": "fc_receiver"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc3_4",
+   "email": "staff3@fc3.demo.ru",
+   "password": "demo",
+   "fullName": "Алексей Алексеев",
+   "phone": "+7 995 481-21-57",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc3",
+     "role": "fc_picker"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc3_5",
+   "email": "staff4@fc3.demo.ru",
+   "password": "demo",
+   "fullName": "Сергей Новиков",
+   "phone": "+7 917 560-08-71",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc3",
+     "role": "fc_picker"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc3_6",
+   "email": "staff5@fc3.demo.ru",
+   "password": "demo",
+   "fullName": "Наталья Алексеева",
+   "phone": "+7 901 846-72-10",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc3",
+     "role": "fc_picker"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc3_7",
+   "email": "staff6@fc3.demo.ru",
+   "password": "demo",
+   "fullName": "Сергей Соколов",
+   "phone": "+7 900 521-96-99",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc3",
+     "role": "fc_packer"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc3_8",
+   "email": "staff7@fc3.demo.ru",
+   "password": "demo",
+   "fullName": "Елена Морозова",
+   "phone": "+7 988 546-36-12",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc3",
+     "role": "fc_packer"
+    }
+   ]
+  },
+  {
+   "id": "usr_fc3_9",
+   "email": "staff8@fc3.demo.ru",
+   "password": "demo",
+   "fullName": "Роман Николаев",
+   "phone": "+7 919 470-44-79",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc3",
+     "role": "fc_supervisor"
+    }
+   ]
+  },
+  {
+   "id": "usr_s1_1",
+   "email": "seller@demo.ru",
+   "password": "demo",
+   "fullName": "Анна Смирнова",
+   "phone": "+7 943 561-97-07",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s1",
+     "role": "seller_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_s1_2",
+   "email": "manager@ud.demo.ru",
+   "password": "demo",
+   "fullName": "Михаил Васильев",
+   "phone": "+7 925 768-57-59",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s1",
+     "role": "seller_manager"
+    }
+   ]
+  },
+  {
+   "id": "usr_s2_1",
+   "email": "owner@kw.demo.ru",
+   "password": "demo",
+   "fullName": "Мария Морозова",
+   "phone": "+7 926 694-36-15",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s2",
+     "role": "seller_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_s2_2",
+   "email": "manager@kw.demo.ru",
+   "password": "demo",
+   "fullName": "Юлия Волкова",
+   "phone": "+7 911 917-63-71",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s2",
+     "role": "seller_manager"
+    }
+   ]
+  },
+  {
+   "id": "usr_s3_1",
+   "email": "owner@tm.demo.ru",
+   "password": "demo",
+   "fullName": "Максим Смирнов",
+   "phone": "+7 986 324-97-18",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s3",
+     "role": "seller_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_s3_2",
+   "email": "manager@tm.demo.ru",
+   "password": "demo",
+   "fullName": "Сергей Смирнов",
+   "phone": "+7 927 854-26-10",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s3",
+     "role": "seller_manager"
+    }
+   ]
+  },
+  {
+   "id": "usr_s4_1",
+   "email": "owner@sl.demo.ru",
+   "password": "demo",
+   "fullName": "Алексей Волков",
+   "phone": "+7 989 282-03-27",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s4",
+     "role": "seller_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_s4_2",
+   "email": "manager@sl.demo.ru",
+   "password": "demo",
+   "fullName": "Елена Павлова",
+   "phone": "+7 958 746-61-11",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s4",
+     "role": "seller_manager"
+    }
+   ]
+  },
+  {
+   "id": "usr_s5_1",
+   "email": "owner@bl.demo.ru",
+   "password": "demo",
+   "fullName": "Павел Васильев",
+   "phone": "+7 948 755-23-45",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s5",
+     "role": "seller_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_s5_2",
+   "email": "manager@bl.demo.ru",
+   "password": "demo",
+   "fullName": "Артём Новиков",
+   "phone": "+7 946 742-00-89",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s5",
+     "role": "seller_manager"
+    }
+   ]
+  },
+  {
+   "id": "usr_s6_1",
+   "email": "owner@zm.demo.ru",
+   "password": "demo",
+   "fullName": "Артём Смирнов",
+   "phone": "+7 900 642-30-24",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s6",
+     "role": "seller_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_s6_2",
+   "email": "manager@zm.demo.ru",
+   "password": "demo",
+   "fullName": "Татьяна Михайлова",
+   "phone": "+7 988 821-87-87",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s6",
+     "role": "seller_manager"
+    }
+   ]
+  },
+  {
+   "id": "usr_s7_1",
+   "email": "owner@cl.demo.ru",
+   "password": "demo",
+   "fullName": "Иван Лебедев",
+   "phone": "+7 987 459-14-78",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s7",
+     "role": "seller_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_s7_2",
+   "email": "manager@cl.demo.ru",
+   "password": "demo",
+   "fullName": "Ксения Кузнецова",
+   "phone": "+7 945 385-44-02",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s7",
+     "role": "seller_manager"
+    }
+   ]
+  },
+  {
+   "id": "usr_s8_1",
+   "email": "owner@st.demo.ru",
+   "password": "demo",
+   "fullName": "Елена Смирнова",
+   "phone": "+7 962 237-66-11",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s8",
+     "role": "seller_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_s8_2",
+   "email": "manager@st.demo.ru",
+   "password": "demo",
+   "fullName": "Екатерина Иванова",
+   "phone": "+7 981 164-27-78",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_s8",
+     "role": "seller_manager"
+    }
+   ]
+  },
+  {
+   "id": "usr_p1",
+   "email": "owner1@pending.demo.ru",
+   "password": "demo",
+   "fullName": "Павел Егоров",
+   "phone": "+7 945 923-40-04",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_p1",
+     "role": "fc_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_p2",
+   "email": "owner2@pending.demo.ru",
+   "password": "demo",
+   "fullName": "Ксения Лебедева",
+   "phone": "+7 980 754-81-56",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_p2",
+     "role": "seller_owner"
+    }
+   ]
+  },
+  {
+   "id": "usr_p3",
+   "email": "owner3@pending.demo.ru",
+   "password": "demo",
+   "fullName": "Роман Козлов",
+   "phone": "+7 930 048-24-31",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_p3",
+     "role": "seller_owner"
+    }
+   ]
+  }
+ ]
+}
