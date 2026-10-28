@@ -18,4 +18,11 @@ public class StockItem
     public string LocationId { get; private set; } = null!;
     public int Quantity { get; private set; }
     public int Reserved { get; private set; }
+
+    /// <summary>Приход годного товара на остаток.</summary>
+    public void Receive(int quantity)
+    {
+        if (quantity <= 0) throw new Common.DomainException("Количество должно быть больше нуля");
+        Quantity += quantity;
+    }
 }

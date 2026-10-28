@@ -37,6 +37,12 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         double Price, double WeightG, double VolumeLiters, bool TracksExpiry, bool RequiresMarking);
     private sealed record SeedStock(string Id, string ProductId, string SellerId, string WarehouseId, string LocationId, int Quantity, int Reserved);
     private sealed record CatalogData(SeedZone[] Zones, SeedLocation[] Locations, SeedProduct[] Products, SeedStock[] Stock);
+    private sealed record SeedInboundLine(string Id, string ProductId, int ExpectedQty, int ReceivedQty, int DefectQty, string? LotNumber, DateTimeOffset? ExpiresAt);
+    private sealed record SeedInboundEvent(string Id, string Type, DateTimeOffset At, string Title, string ActorName, string? Description);
+    private sealed record SeedInbound(string Id, string Number, string Status, string SellerId, string WarehouseId, DateTimeOffset CreatedAt,
+        DateTimeOffset ExpectedAt, string PackageType, int PackagesCount, string? Comment, string? DriverName, string? VehicleNumber,
+        SeedInboundLine[] Lines, SeedInboundEvent[] Events);
+    private sealed record InboundData(SeedInbound[] Inbound);
     private sealed record DirectoryData(SeedReference[] References, SeedRequest[] ClientRequests);
 
     /// <summary>Каждый раздел идемпотентен: заполняется, только если его таблица пуста.</summary>
@@ -46,6 +52,21 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         await SeedPlatformAsync(ct);
         await SeedDirectoryAsync(ct);
         await SeedCatalogAsync(ct);
+        await SeedInboundAsync(ct);
+    }
+
+    /// <summary>Поставки (снимок seed.ts, Seeding/Data/inbound.json).</summary>
+    private async Task SeedInboundAsync(CancellationToken ct)
+    {
+        if (await db.InboundShipments.AnyAsync(ct)) return;
+        var data = Load<InboundData>("inbound.json");
+        db.InboundShipments.AddRange(data.Inbound.Select(i => new InboundShipment(i.Id, i.Number, SnakeCase.Parse<InboundStatus>(i.Status),
+            i.SellerId, i.WarehouseId, i.CreatedAt, i.ExpectedAt, SnakeCase.Parse<PackageType>(i.PackageType), i.PackagesCount,
+            i.Comment, i.DriverName, i.VehicleNumber,
+            i.Lines.Select(l => new InboundLine(l.Id, l.ProductId, l.ExpectedQty, l.ReceivedQty, l.DefectQty, l.LotNumber, l.ExpiresAt)),
+            i.Events.Select(e => new InboundEvent(e.Id, SnakeCase.Parse<InboundEventType>(e.Type), e.At, e.Title, e.ActorName, e.Description)))));
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Seeded {Inbound} inbound shipments", data.Inbound.Length);
     }
 
     /// <summary>Топология складов, товары и остатки (снимок seed.ts, Seeding/Data/catalog.json); порядок вставки = порядок моков.</summary>

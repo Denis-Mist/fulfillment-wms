@@ -182,6 +182,87 @@ namespace Wms.Infrastructure.Persistence.Migrations
                     b.ToTable("contracts", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Domain.Entities.InboundShipment", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DriverName")
+                        .HasColumnType("text")
+                        .HasColumnName("driver_name");
+
+                    b.Property<DateTimeOffset>("ExpectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expected_at");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("number");
+
+                    b.Property<string>("PackageType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("package_type");
+
+                    b.Property<int>("PackagesCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("packages_count");
+
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("seller_id");
+
+                    b.Property<long>("Seq")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("seq");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Seq"));
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("VehicleNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("vehicle_number");
+
+                    b.Property<string>("WarehouseId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inbound_shipments");
+
+                    b.HasIndex("Number")
+                        .IsUnique()
+                        .HasDatabaseName("ix_inbound_shipments_number");
+
+                    b.HasIndex("SellerId")
+                        .HasDatabaseName("ix_inbound_shipments_seller_id");
+
+                    b.HasIndex("Seq")
+                        .HasDatabaseName("ix_inbound_shipments_seq");
+
+                    b.HasIndex("WarehouseId")
+                        .HasDatabaseName("ix_inbound_shipments_warehouse_id");
+
+                    b.ToTable("inbound_shipments", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Domain.Entities.Membership", b =>
                 {
                     b.Property<string>("UserId")
@@ -688,6 +769,89 @@ namespace Wms.Infrastructure.Persistence.Migrations
                     b.ToTable("warehouses", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Domain.Entities.WarehouseTask", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Algorithm")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("algorithm");
+
+                    b.Property<string>("AssigneeId")
+                        .HasColumnType("text")
+                        .HasColumnName("assignee_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<string>("InboundId")
+                        .HasColumnType("text")
+                        .HasColumnName("inbound_id");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("number");
+
+                    b.Property<string>("OrganizationId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("priority");
+
+                    b.Property<long>("Seq")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("seq");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Seq"));
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<string>("WarehouseId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tasks");
+
+                    b.HasIndex("InboundId")
+                        .HasDatabaseName("ix_tasks_inbound_id");
+
+                    b.HasIndex("Seq")
+                        .HasDatabaseName("ix_tasks_seq");
+
+                    b.HasIndex("WarehouseId")
+                        .HasDatabaseName("ix_tasks_warehouse_id");
+
+                    b.ToTable("tasks", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Domain.Entities.Zone", b =>
                 {
                     b.Property<string>("Id")
@@ -734,6 +898,85 @@ namespace Wms.Infrastructure.Persistence.Migrations
                     b.ToTable("zones", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Domain.Entities.InboundShipment", b =>
+                {
+                    b.OwnsMany("Wms.Domain.Entities.InboundEvent", "Events", b1 =>
+                        {
+                            b1.Property<string>("InboundShipmentId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<string>("ActorName")
+                                .IsRequired();
+
+                            b1.Property<DateTimeOffset>("At");
+
+                            b1.Property<string>("Description");
+
+                            b1.Property<string>("Id");
+
+                            b1.Property<string>("Title")
+                                .IsRequired();
+
+                            b1.Property<string>("Type")
+                                .IsRequired();
+
+                            b1.HasKey("InboundShipmentId", "__synthesizedOrdinal")
+                                .HasName("pk_inbound_shipments");
+
+                            b1.ToTable("inbound_shipments");
+
+                            b1
+                                .ToJson("events")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InboundShipmentId")
+                                .HasConstraintName("fk_inbound_shipments_inbound_shipments_inbound_shipment_id");
+                        });
+
+                    b.OwnsMany("Wms.Domain.Entities.InboundLine", "Lines", b1 =>
+                        {
+                            b1.Property<string>("InboundShipmentId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<int>("DefectQty");
+
+                            b1.Property<int>("ExpectedQty");
+
+                            b1.Property<DateTimeOffset?>("ExpiresAt");
+
+                            b1.Property<string>("Id");
+
+                            b1.Property<string>("LotNumber");
+
+                            b1.Property<string>("ProductId")
+                                .IsRequired();
+
+                            b1.Property<int>("ReceivedQty");
+
+                            b1.HasKey("InboundShipmentId", "__synthesizedOrdinal")
+                                .HasName("pk_inbound_shipments");
+
+                            b1.ToTable("inbound_shipments");
+
+                            b1
+                                .ToJson("lines")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InboundShipmentId")
+                                .HasConstraintName("fk_inbound_shipments_inbound_shipments_inbound_shipment_id");
+                        });
+
+                    b.Navigation("Events");
+
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("Wms.Domain.Entities.Membership", b =>
                 {
                     b.HasOne("Wms.Domain.Entities.Organization", "Organization")
@@ -751,6 +994,42 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_memberships_users_user_id");
 
                     b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("Wms.Domain.Entities.WarehouseTask", b =>
+                {
+                    b.OwnsMany("Wms.Domain.Entities.TaskItem", "Items", b1 =>
+                        {
+                            b1.Property<string>("WarehouseTaskId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<string>("LocationId")
+                                .IsRequired();
+
+                            b1.Property<string>("ProductId")
+                                .IsRequired();
+
+                            b1.Property<int>("Progress");
+
+                            b1.Property<int>("Quantity");
+
+                            b1.HasKey("WarehouseTaskId", "__synthesizedOrdinal")
+                                .HasName("pk_tasks");
+
+                            b1.ToTable("tasks");
+
+                            b1
+                                .ToJson("items")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("WarehouseTaskId")
+                                .HasConstraintName("fk_tasks_tasks_warehouse_task_id");
+                        });
+
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Wms.Domain.Entities.User", b =>
