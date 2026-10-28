@@ -17,6 +17,7 @@ const popover = ref()
 
 const queryKey = computed(() => ['notifications', session.organizationId])
 const { data } = useQuery({
+  meta: { shell: true },
   queryKey,
   queryFn: () => notificationsApi.list(),
   refetchInterval: 60_000,

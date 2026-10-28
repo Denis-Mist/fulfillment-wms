@@ -36,7 +36,10 @@ const { state, filters, searchInput } = registry
 
 const warehouseId = computed(() => (isFulfillment.value ? session.warehouseId || undefined : undefined))
 
-const listQuery = computed<OrderListQuery>(() => ({ ...registry.query.value, warehouseId: warehouseId.value }))
+const listQuery = computed<OrderListQuery>(() => ({
+  ...registry.query.value,
+  warehouseId: warehouseId.value,
+}))
 const summaryQuery = computed(() => ({
   search: state.search || undefined,
   channel: filters.channel,
@@ -63,7 +66,16 @@ const { data: clients } = useQuery({
   staleTime: 5 * 60_000,
 })
 
-const STATUS_ORDER: OrderStatus[] = ['new', 'reserved', 'out_of_stock', 'picking', 'picked', 'packed', 'shipped', 'cancelled']
+const STATUS_ORDER: OrderStatus[] = [
+  'new',
+  'reserved',
+  'out_of_stock',
+  'picking',
+  'picked',
+  'packed',
+  'shipped',
+  'cancelled',
+]
 
 const chips = computed<ChipOption<StatusFilter>[]>(() => [
   { value: undefined, label: 'Все', count: summary.value?.total },
@@ -125,7 +137,12 @@ const openOrder = (order: OrderListItem) => (selectedId.value = order.id)
           class="w-full sm:w-56"
           @update:model-value="registry.setFilter('sellerId', $event ?? undefined)"
         />
-        <Button v-if="registry.hasActiveFilters.value" text severity="secondary" @click="registry.resetFilters()">
+        <Button
+          v-if="registry.hasActiveFilters.value"
+          text
+          severity="secondary"
+          @click="registry.resetFilters()"
+        >
           <FilterX class="size-4" />
           Сбросить
         </Button>
@@ -179,19 +196,62 @@ const openOrder = (order: OrderListItem) => (selectedId.value = order.id)
             <TriangleAlert class="size-4" />
             {{ formatDateTime(order.shipBy) }}
           </div>
-          <div v-else class="tabular text-sm" :class="order.status === 'shipped' || order.status === 'cancelled' ? 'text-secondary' : 'text-heading'">
+          <div
+            v-else
+            class="tabular text-sm"
+            :class="
+              order.status === 'shipped' || order.status === 'cancelled' ? 'text-secondary' : 'text-heading'
+            "
+          >
             {{ formatDateTime(order.shipBy) }}
           </div>
           <div v-if="order.isOverdue" class="text-xs text-rose-500">просрочен</div>
-          <div v-else-if="order.shippedAt" class="text-xs text-secondary">отгружен {{ formatDateTime(order.shippedAt) }}</div>
+          <div v-else-if="order.shippedAt" class="text-xs text-secondary">
+            отгружен {{ formatDateTime(order.shippedAt) }}
+          </div>
         </template>
       </Column>
       <Column field="amount" header="Сумма" sortable class="text-right" header-class="[&>div]:justify-end">
         <template #body="{ data: order }">
           <div class="tabular font-medium text-heading">{{ formatMoney(order.amount) }}</div>
-          <div class="tabular text-xs text-secondary">{{ order.linesCount }} поз. · {{ formatNumber(order.unitsCount) }} шт</div>
+          <div class="tabular text-xs text-secondary">
+            {{ order.linesCount }} поз. · {{ formatNumber(order.unitsCount) }} шт
+          </div>
         </template>
       </Column>
+      <template #card="{ item: order }">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="font-semibold text-heading">{{ order.number }}</div>
+            <div class="truncate text-xs text-secondary">
+              {{ order.externalNumber }}<template v-if="isFulfillment"> · {{ order.sellerName }}</template>
+            </div>
+          </div>
+          <StatusTag domain="order" :status="order.status" />
+        </div>
+        <div class="mt-3 flex items-end justify-between gap-3 text-sm">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <ChannelBadge :channel="order.channel" />
+              <span v-if="showWarehouse" class="truncate text-xs text-secondary">{{
+                order.warehouseName
+              }}</span>
+            </div>
+            <div
+              class="tabular mt-1.5 text-xs"
+              :class="order.isOverdue ? 'font-medium text-rose-600 dark:text-rose-400' : 'text-secondary'"
+            >
+              {{ order.isOverdue ? 'Просрочен · ' : 'Отгрузить до ' }}{{ formatDateTime(order.shipBy) }}
+            </div>
+          </div>
+          <div class="shrink-0 text-right">
+            <div class="tabular font-medium text-heading">{{ formatMoney(order.amount) }}</div>
+            <div class="tabular text-xs text-secondary">
+              {{ order.linesCount }} поз. · {{ formatNumber(order.unitsCount) }} шт
+            </div>
+          </div>
+        </div>
+      </template>
     </RegistryTable>
 
     <OrderPreviewDrawer v-model:order-id="selectedId" :show-seller="isFulfillment" />

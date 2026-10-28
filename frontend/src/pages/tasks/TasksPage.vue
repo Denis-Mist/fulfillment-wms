@@ -51,7 +51,7 @@ const { data: summary, isPending: summaryPending } = useQuery({
   placeholderData: keepPreviousData,
   refetchInterval: 30_000,
 })
-const { data: workers } = useQuery({
+const { data: workers, isPending: workersPending } = useQuery({
   queryKey: computed(() => ['task-workers', session.organizationId, warehouseId.value]),
   queryFn: () => tasksApi.workers(warehouseId.value),
 })
@@ -249,7 +249,15 @@ function open(t: TaskListItem) {
       </div>
 
       <SectionCard title="Загрузка смены" description="Активные задания и выработка за сегодня">
-        <ul class="space-y-3 pb-5">
+        <div v-if="workersPending" class="space-y-3 pb-5" aria-busy="true">
+          <div v-for="i in 5" :key="i" class="flex items-center gap-3">
+            <Skeleton shape="circle" size="2rem" />
+            <div class="flex-1 space-y-1.5">
+              <Skeleton width="70%" height="0.9rem" /><Skeleton width="40%" height="0.7rem" />
+            </div>
+          </div>
+        </div>
+        <ul v-else class="space-y-3 pb-5">
           <li v-for="w in sortedWorkers" :key="w.id" class="flex items-center gap-3">
             <UserAvatar :name="w.fullName" size="sm" />
             <div class="min-w-0 flex-1">

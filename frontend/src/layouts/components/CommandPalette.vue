@@ -21,6 +21,7 @@ const debounced = refDebounced(query, 250)
 const activeIndex = ref(0)
 
 const { data, isFetching } = useQuery({
+  meta: { shell: true },
   queryKey: computed(() => ['search', session.organizationId, debounced.value]),
   queryFn: ({ signal }) => searchApi.search(debounced.value, signal),
   enabled: computed(() => visible.value && debounced.value.trim().length >= 2),
