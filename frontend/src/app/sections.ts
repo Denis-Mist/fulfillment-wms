@@ -214,6 +214,7 @@ export const CABINETS: CabinetDef[] = [
         sections: [
           {
             name: 'clients',
+            page: () => import('@/pages/clients/ClientsPage.vue'),
             path: 'clients',
             title: 'Клиенты и договоры',
             description: 'Селлеры, договоры, заявки на подключение.',
@@ -227,6 +228,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'products',
+            page: () => import('@/pages/catalog/ProductsPage.vue'),
             path: 'products',
             title: 'Товары клиентов',
             description: 'Каталог товаров всех клиентов.',
@@ -314,6 +316,7 @@ export const CABINETS: CabinetDef[] = [
         sections: [
           {
             name: 'products',
+            page: () => import('@/pages/catalog/ProductsPage.vue'),
             path: 'products',
             title: 'Мои товары',
             icon: Tag,
