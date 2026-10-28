@@ -83,6 +83,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'tasks',
+            page: () => import('@/pages/tasks/TasksPage.vue'),
             path: 'tasks',
             title: 'Задания',
             description: 'Очередь складских заданий и их распределение между сотрудниками.',
@@ -187,6 +188,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'picking',
+            page: () => import('@/pages/picking/PickingPage.vue'),
             path: 'picking',
             title: 'Комплектация',
             description: 'Волны, отбор, упаковка и отгрузка заказов.',
@@ -293,7 +295,11 @@ export const CABINETS: CabinetDef[] = [
             title: 'Настройки',
             icon: Settings,
             roles: FC_MANAGEMENT,
-            planned: ['Профиль организации и реквизиты', 'Карточка в каталоге ФЦ', 'Пользователи и приглашения'],
+            planned: [
+              'Профиль организации и реквизиты',
+              'Карточка в каталоге ФЦ',
+              'Пользователи и приглашения',
+            ],
           },
         ],
       },
@@ -421,7 +427,10 @@ export const CABINETS: CabinetDef[] = [
             path: 'integrations',
             title: 'Интеграции',
             icon: Plug,
-            planned: ['Подключение кабинетов Wildberries и Ozon по API-ключу', 'Автоматическая загрузка заказов FBS'],
+            planned: [
+              'Подключение кабинетов Wildberries и Ozon по API-ключу',
+              'Автоматическая загрузка заказов FBS',
+            ],
           },
           {
             name: 'settings',
@@ -468,7 +477,11 @@ export const CABINETS: CabinetDef[] = [
             path: 'organizations',
             title: 'Организации',
             icon: Building2,
-            planned: ['Все ФЦ и селлеры', 'Вход от имени организации для поддержки', 'Договоры между организациями'],
+            planned: [
+              'Все ФЦ и селлеры',
+              'Вход от имени организации для поддержки',
+              'Договоры между организациями',
+            ],
           },
           {
             name: 'users',
@@ -489,7 +502,10 @@ export const CABINETS: CabinetDef[] = [
             path: 'audit',
             title: 'Журнал действий',
             icon: ScrollText,
-            planned: ['Аудит всех действий пользователей', 'Фильтры по организации, пользователю, типу события'],
+            planned: [
+              'Аудит всех действий пользователей',
+              'Фильтры по организации, пользователю, типу события',
+            ],
           },
         ],
       },
@@ -503,6 +519,7 @@ export const CABINETS: CabinetDef[] = [
         sections: [
           {
             name: 'tasks',
+            page: () => import('@/pages/worker/WorkerTasksPage.vue'),
             path: '',
             title: 'Мои задания',
             icon: ListChecks,
@@ -515,6 +532,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'scan',
+            page: () => import('@/pages/worker/WorkerScanPage.vue'),
             path: 'scan',
             title: 'Сканер',
             icon: ScanBarcode,
