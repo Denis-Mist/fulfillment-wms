@@ -224,7 +224,7 @@ function seedRequests(): ClientRequest[] {
 }
 /* Заявки — по организации ФЦ, ключ включает id организации */
 const requestStores = new Map<string, ReturnType<typeof localCollection<ClientRequest>>>()
-function requests(orgId: string) {
+export function requests(orgId: string) {
   let store = requestStores.get(orgId)
   if (!store) {
     store = localCollection<ClientRequest>(`client-requests.${orgId}`, seedRequests)

@@ -383,6 +383,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'fbo',
+            page: () => import('@/pages/fbo/FboPage.vue'),
             path: 'fbo',
             title: 'Отгрузки на маркетплейсы',
             icon: Truck,
@@ -394,6 +395,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'returns',
+            page: () => import('@/pages/returns/ReturnsPage.vue'),
             path: 'returns',
             title: 'Возвраты',
             icon: Undo2,
@@ -406,6 +408,7 @@ export const CABINETS: CabinetDef[] = [
         sections: [
           {
             name: 'fulfillments',
+            page: () => import('@/pages/partners/FulfillmentsPage.vue'),
             path: 'fulfillments',
             title: 'Фулфилмент-центры',
             icon: Store,
@@ -417,6 +420,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'billing',
+            page: () => import('@/pages/billing/BillingPage.vue'),
             path: 'billing',
             title: 'Счета и начисления',
             icon: Wallet,
@@ -430,6 +434,7 @@ export const CABINETS: CabinetDef[] = [
         sections: [
           {
             name: 'integrations',
+            page: () => import('@/pages/integrations/IntegrationsPage.vue'),
             path: 'integrations',
             title: 'Интеграции',
             icon: Plug,
@@ -440,6 +445,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'settings',
+            page: () => import('@/pages/settings/SettingsPage.vue'),
             path: 'settings',
             title: 'Организация',
             icon: Settings,
