@@ -13,4 +13,8 @@ export const worker = setupWorker(...handlers)
 
 export function resetMockData() {
   db.reset()
+  // Дополнительные коллекции модулей (mocks/lib/collection.ts)
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith('wms.mock.')) localStorage.removeItem(key)
+  }
 }
