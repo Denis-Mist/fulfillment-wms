@@ -8,7 +8,7 @@ export default defineConfigWithVueTs(
     name: 'app/files-to-lint',
     files: ['**/*.{ts,mts,tsx,vue}'],
   },
-  globalIgnores(['**/dist/**', '**/coverage/**', 'public/mockServiceWorker.js', 'src/components.d.ts']),
+  globalIgnores(['**/dist/**', '**/coverage/**', 'public/mockServiceWorker.js', 'src/components.d.ts', 'playwright-report/**', 'test-results/**']),
   pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
   skipFormatting,
