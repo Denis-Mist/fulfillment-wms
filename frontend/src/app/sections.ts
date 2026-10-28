@@ -259,6 +259,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'analytics',
+            page: () => import('@/pages/analytics/AnalyticsPage.vue'),
             path: 'analytics',
             title: 'Аналитика и прогнозы',
             description: 'Интеллектуальные модули оптимизации и прогнозирования.',
