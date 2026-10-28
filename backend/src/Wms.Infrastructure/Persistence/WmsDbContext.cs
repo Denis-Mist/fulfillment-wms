@@ -23,6 +23,7 @@ public sealed class WmsDbContext(DbContextOptions<WmsDbContext> options) : DbCon
     public DbSet<StockItem> Stock => Set<StockItem>();
     public DbSet<InboundShipment> InboundShipments => Set<InboundShipment>();
     public DbSet<WarehouseTask> Tasks => Set<WarehouseTask>();
+    public DbSet<StaffProfile> StaffProfiles => Set<StaffProfile>();
     public DbSet<StockOperation> StockOperations => Set<StockOperation>();
     public DbSet<Order> Orders => Set<Order>();
 
