@@ -25,7 +25,7 @@ const contract = computed(() =>
   c.value
     ? [
         { label: 'Договор', value: `${c.value.contractNumber} от ${formatDate(c.value.startedAt)}` },
-        { label: 'Склады', value: c.value.warehouses.map((w) => w.name).join(', ') },
+        { label: 'Склады', value: c.value.warehouses.map((w) => w.name).join(', ') || '—' },
         { label: 'Хранение', value: `${formatMoney(c.value.tariff.storagePerLiterDay)} / л в сутки` },
         { label: 'Сборка заказа', value: formatMoney(c.value.tariff.pickPerOrder) },
         { label: 'Приёмка', value: `${formatMoney(c.value.tariff.receivingPerUnit)} / шт` },
