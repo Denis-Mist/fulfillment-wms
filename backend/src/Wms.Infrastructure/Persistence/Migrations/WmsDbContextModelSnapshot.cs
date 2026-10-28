@@ -588,6 +588,61 @@ namespace Wms.Infrastructure.Persistence.Migrations
                     b.ToTable("references", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Domain.Entities.StaffProfile", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<double>("Accuracy")
+                        .HasColumnType("double precision")
+                        .HasColumnName("accuracy");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean")
+                        .HasColumnName("active");
+
+                    b.Property<DateTimeOffset>("HiredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("hired_at");
+
+                    b.Property<int>("OpsPerHour")
+                        .HasColumnType("integer")
+                        .HasColumnName("ops_per_hour");
+
+                    b.Property<string>("RoleOverride")
+                        .HasColumnType("text")
+                        .HasColumnName("role_override");
+
+                    b.Property<string>("Shifts")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("shifts");
+
+                    b.Property<string>("Skills")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("skills");
+
+                    b.Property<string>("WarehouseId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warehouse_id");
+
+                    b.PrimitiveCollection<List<string>>("ZoneIds")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("zone_ids");
+
+                    b.HasKey("Id")
+                        .HasName("pk_staff_profiles");
+
+                    b.HasIndex("WarehouseId")
+                        .HasDatabaseName("ix_staff_profiles_warehouse_id");
+
+                    b.ToTable("staff_profiles", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Domain.Entities.StockItem", b =>
                 {
                     b.Property<string>("Id")

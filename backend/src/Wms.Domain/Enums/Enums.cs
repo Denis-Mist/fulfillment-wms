@@ -45,3 +45,22 @@ public enum ErrorReason { Defect, Shortage, Missort, Expired }
 public enum OrderStatus { New, Reserved, OutOfStock, Picking, Picked, Packed, Shipped, Cancelled }
 
 public enum SalesChannel { Wb, Ozon, Own }
+
+public enum Shift
+{
+    Day,
+    Night,
+    Off,
+    Vacation,
+}
+
+public enum Skill
+{
+    Receiving,
+    Picking,
+    Packing,
+    Marking,
+    Forklift,
+    Inventory,
+    Returns,
+}

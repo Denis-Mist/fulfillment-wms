@@ -55,6 +55,11 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         string Priority, string? AssigneeId, DateTimeOffset CreatedAt, DateTimeOffset? StartedAt, DateTimeOffset? FinishedAt, string[]? OrderIds,
         string? InboundId, SeedTaskItem[] Items, int[]? Progress);
     private sealed record TasksData(SeedTask[] Tasks);
+
+    private sealed record StaffData(SeedStaffProfile[] Profiles);
+
+    private sealed record SeedStaffProfile(string Id, string WarehouseId, string[] ZoneIds, string[] Skills, bool Active, string? RoleOverride,
+        int OpsPerHour, double Accuracy, DateTimeOffset HiredAt, string[] Shifts);
     private sealed record DirectoryData(SeedReference[] References, SeedRequest[] ClientRequests);
 
     /// <summary>Каждый раздел идемпотентен: заполняется, только если его таблица пуста.</summary>
@@ -68,6 +73,25 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         await SeedOperationsAsync(ct);
         await SeedOrdersAsync(ct);
         await SeedTasksAsync(ct);
+        await SeedStaffAsync(ct);
+    }
+
+    /// <summary>Кадровые профили (seedStaff() из staff.ts, Seeding/Data/staff.json); дата найма сдвигается как у заказов.</summary>
+    private async Task SeedStaffAsync(CancellationToken ct)
+    {
+        if (await db.StaffProfiles.AnyAsync(ct)) return;
+        var data = Load<StaffData>("staff.json");
+        var shift = clock.UtcNow - SnapshotAt;
+        if (shift < TimeSpan.Zero) shift = TimeSpan.Zero;
+        foreach (var p in data.Profiles)
+        {
+            var profile = new StaffProfile(p.Id, p.WarehouseId, p.ZoneIds, p.Skills.Select(SnakeCase.Parse<Skill>), p.Active, p.OpsPerHour, p.Accuracy,
+                p.HiredAt, p.Shifts.Select(SnakeCase.Parse<Shift>), p.RoleOverride is null ? null : SnakeCase.Parse<Role>(p.RoleOverride));
+            profile.ShiftTimes(shift);
+            db.StaffProfiles.Add(profile);
+        }
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Seeded {Profiles} staff profiles", data.Profiles.Length);
     }
 
     /// <summary>Задания склада (seedTasks() из tasks.ts, Seeding/Data/tasks.json); даты сдвигаются так же, как у заказов.</summary>
