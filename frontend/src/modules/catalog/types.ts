@@ -105,4 +105,6 @@ export interface ClientRequest {
   createdAt: string
   status: ClientRequestStatus
   decidedAt?: string
+  /** Организация продавца, если заявка подана из кабинета */
+  sellerId?: string
 }
