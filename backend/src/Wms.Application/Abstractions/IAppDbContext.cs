@@ -23,4 +23,6 @@ public interface IAppDbContext : IUnitOfWork
     DbSet<StorageLocation> Locations { get; }
     DbSet<Product> Products { get; }
     DbSet<StockItem> Stock { get; }
+    DbSet<InboundShipment> InboundShipments { get; }
+    DbSet<WarehouseTask> Tasks { get; }
 }

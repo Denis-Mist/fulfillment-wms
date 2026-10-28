@@ -36,6 +36,11 @@ public static class DependencyInjection
         services.AddScoped<IAuditLog, AuditLog>();
         services.AddScoped<IAuditEventSource, OrganizationRegistrationAuditSource>();
         services.AddScoped<IAuditEventSource, StoredAuditSource>();
+        services.AddScoped<IAuditEventSource, Inbound.InboundAuditSource>();
+        services.AddScoped<Inbound.InboundScope>();
+        services.AddScoped<Inbound.InboundQueryHandler>();
+        services.AddScoped<Inbound.InboundActionHandler>();
+        services.AddSingleton<Inbound.IReceivingInspectorFactory, Inbound.RandomReceivingInspectorFactory>();
         services.AddScoped<IAuditFeed, AuditFeed>();
         services.AddScoped<AuditQueryHandler>();
         services.AddScoped<ReferencesQueryHandler>();

@@ -21,6 +21,8 @@ public sealed class WmsDbContext(DbContextOptions<WmsDbContext> options) : DbCon
     public DbSet<StorageLocation> Locations => Set<StorageLocation>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<StockItem> Stock => Set<StockItem>();
+    public DbSet<InboundShipment> InboundShipments => Set<InboundShipment>();
+    public DbSet<WarehouseTask> Tasks => Set<WarehouseTask>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(WmsDbContext).Assembly);

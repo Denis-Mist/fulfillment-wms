@@ -21,3 +21,17 @@ public enum AuditCategory { Auth, Organization, Inbound, Order, Stock, Reference
 public enum ClientRequestStatus { Pending, Accepted, Declined }
 
 public enum ZoneType { Receiving, Storage, Picking, Packing, Shipping, Defect }
+
+public enum InboundStatus { Draft, InTransit, Arrived, Receiving, Received, Placed, Cancelled }
+
+public enum PackageType { Boxes, Pallets }
+
+public enum InboundEventType { Draft, InTransit, Arrived, Receiving, Received, Placed, Cancelled, Discrepancy, Comment }
+
+public enum InboundAction { Arrive, StartReceiving, CompleteReceiving, CompletePlacement, Cancel }
+
+public enum TaskType { Receiving, Putaway, Picking, Packing, Move, Inventory }
+
+public enum WarehouseTaskStatus { New, Assigned, InProgress, Done, Cancelled }
+
+public enum TaskPriority { Normal, High }
