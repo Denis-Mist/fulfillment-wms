@@ -46,7 +46,11 @@ internal sealed class WarehouseTaskConfiguration : IEntityTypeConfiguration<Ware
         b.HasIndex(t => t.WarehouseId);
         b.HasIndex(t => t.InboundId);
         b.OwnsMany(t => t.Items, i => i.ToJson("items"));
+        b.Property(t => t.OrderIds).HasColumnName("order_ids");
         b.Ignore(t => t.IsOpen);
+        b.Ignore(t => t.Units);
+        b.Ignore(t => t.DoneUnits);
+        b.Ignore(t => t.CurrentStep);
         SeqColumn.Add(b);
     }
 }

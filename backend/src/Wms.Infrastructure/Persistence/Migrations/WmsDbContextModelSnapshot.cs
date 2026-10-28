@@ -987,6 +987,11 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("number");
 
+                    b.PrimitiveCollection<List<string>>("OrderIds")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("order_ids");
+
                     b.Property<string>("OrganizationId")
                         .IsRequired()
                         .HasColumnType("text")
