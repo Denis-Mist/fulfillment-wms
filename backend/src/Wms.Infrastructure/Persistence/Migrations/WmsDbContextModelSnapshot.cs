@@ -305,6 +305,84 @@ namespace Wms.Infrastructure.Persistence.Migrations
                     b.ToTable("organization_settings", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Domain.Entities.Product", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Archived")
+                        .HasColumnType("boolean")
+                        .HasColumnName("archived");
+
+                    b.Property<string>("Barcode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("barcode");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("category");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<double>("Price")
+                        .HasColumnType("double precision")
+                        .HasColumnName("price");
+
+                    b.Property<bool>("RequiresMarking")
+                        .HasColumnType("boolean")
+                        .HasColumnName("requires_marking");
+
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("seller_id");
+
+                    b.Property<long>("Seq")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("seq");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Seq"));
+
+                    b.Property<string>("Sku")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sku");
+
+                    b.Property<bool>("TracksExpiry")
+                        .HasColumnType("boolean")
+                        .HasColumnName("tracks_expiry");
+
+                    b.Property<double>("VolumeLiters")
+                        .HasColumnType("double precision")
+                        .HasColumnName("volume_liters");
+
+                    b.Property<string>("WbBarcode")
+                        .HasColumnType("text")
+                        .HasColumnName("wb_barcode");
+
+                    b.Property<double>("WeightG")
+                        .HasColumnType("double precision")
+                        .HasColumnName("weight_g");
+
+                    b.HasKey("Id")
+                        .HasName("pk_products");
+
+                    b.HasIndex("SellerId")
+                        .HasDatabaseName("ix_products_seller_id");
+
+                    b.HasIndex("Seq")
+                        .HasDatabaseName("ix_products_seq");
+
+                    b.ToTable("products", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Domain.Entities.ReferenceItem", b =>
                 {
                     b.Property<string>("Id")
@@ -346,6 +424,125 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_references_kind_code");
 
                     b.ToTable("references", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Domain.Entities.StockItem", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<string>("LocationId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("location_id");
+
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("product_id");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<int>("Reserved")
+                        .HasColumnType("integer")
+                        .HasColumnName("reserved");
+
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("seller_id");
+
+                    b.Property<long>("Seq")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("seq");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Seq"));
+
+                    b.Property<string>("WarehouseId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_stock");
+
+                    b.HasIndex("LocationId")
+                        .HasDatabaseName("ix_stock_location_id");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("ix_stock_product_id");
+
+                    b.HasIndex("Seq")
+                        .HasDatabaseName("ix_stock_seq");
+
+                    b.HasIndex("WarehouseId")
+                        .HasDatabaseName("ix_stock_warehouse_id");
+
+                    b.ToTable("stock", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Domain.Entities.StorageLocation", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<double>("CapacityLiters")
+                        .HasColumnType("double precision")
+                        .HasColumnName("capacity_liters");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("code");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer")
+                        .HasColumnName("level");
+
+                    b.Property<long>("Seq")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("seq");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Seq"));
+
+                    b.Property<string>("WarehouseId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warehouse_id");
+
+                    b.Property<double>("X")
+                        .HasColumnType("double precision")
+                        .HasColumnName("x");
+
+                    b.Property<double>("Y")
+                        .HasColumnType("double precision")
+                        .HasColumnName("y");
+
+                    b.Property<string>("ZoneId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("zone_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_locations");
+
+                    b.HasIndex("Seq")
+                        .HasDatabaseName("ix_locations_seq");
+
+                    b.HasIndex("ZoneId")
+                        .HasDatabaseName("ix_locations_zone_id");
+
+                    b.HasIndex("WarehouseId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_locations_warehouse_id_code");
+
+                    b.ToTable("locations", (string)null);
                 });
 
             modelBuilder.Entity("Wms.Domain.Entities.TeamInvite", b =>
@@ -472,13 +669,69 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("organization_id");
 
+                    b.Property<long>("Seq")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("seq");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Seq"));
+
                     b.HasKey("Id")
                         .HasName("pk_warehouses");
 
                     b.HasIndex("OrganizationId")
                         .HasDatabaseName("ix_warehouses_organization_id");
 
+                    b.HasIndex("Seq")
+                        .HasDatabaseName("ix_warehouses_seq");
+
                     b.ToTable("warehouses", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Domain.Entities.Zone", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<long>("Seq")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("seq");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Seq"));
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<string>("WarehouseId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warehouse_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_zones");
+
+                    b.HasIndex("Seq")
+                        .HasDatabaseName("ix_zones_seq");
+
+                    b.HasIndex("WarehouseId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_zones_warehouse_id_code");
+
+                    b.ToTable("zones", (string)null);
                 });
 
             modelBuilder.Entity("Wms.Domain.Entities.Membership", b =>

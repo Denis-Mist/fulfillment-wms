@@ -31,6 +31,12 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
     private sealed record SeedReference(string Kind, string Code, string Name, string? Note);
     private sealed record SeedRequest(string CompanyName, string Inn, string City, string ContactName, string ContactPhone,
         int SkuEstimate, int OrdersPerDay, string[] Marketplaces, string Message);
+    private sealed record SeedZone(string Id, string WarehouseId, string Code, string Name, string Type);
+    private sealed record SeedLocation(string Id, string WarehouseId, string ZoneId, string Code, double X, double Y, int Level, double CapacityLiters);
+    private sealed record SeedProduct(string Id, string SellerId, string Sku, string Name, string Category, string Barcode, string? WbBarcode,
+        double Price, double WeightG, double VolumeLiters, bool TracksExpiry, bool RequiresMarking);
+    private sealed record SeedStock(string Id, string ProductId, string SellerId, string WarehouseId, string LocationId, int Quantity, int Reserved);
+    private sealed record CatalogData(SeedZone[] Zones, SeedLocation[] Locations, SeedProduct[] Products, SeedStock[] Stock);
     private sealed record DirectoryData(SeedReference[] References, SeedRequest[] ClientRequests);
 
     /// <summary>Каждый раздел идемпотентен: заполняется, только если его таблица пуста.</summary>
@@ -39,6 +45,25 @@ public sealed class DbSeeder(WmsDbContext db, IPasswordHasher hasher, IClock clo
         await SeedIdentityAsync(ct);
         await SeedPlatformAsync(ct);
         await SeedDirectoryAsync(ct);
+        await SeedCatalogAsync(ct);
+    }
+
+    /// <summary>Топология складов, товары и остатки (снимок seed.ts, Seeding/Data/catalog.json); порядок вставки = порядок моков.</summary>
+    private async Task SeedCatalogAsync(CancellationToken ct)
+    {
+        if (await db.Zones.AnyAsync(ct)) return;
+        var data = Load<CatalogData>("catalog.json");
+        db.Zones.AddRange(data.Zones.Select(z => new Zone(z.Id, z.WarehouseId, z.Code, z.Name, SnakeCase.Parse<ZoneType>(z.Type))));
+        await db.SaveChangesAsync(ct);
+        db.Locations.AddRange(data.Locations.Select(l => new StorageLocation(l.Id, l.WarehouseId, l.ZoneId, l.Code, l.X, l.Y, l.Level, l.CapacityLiters)));
+        await db.SaveChangesAsync(ct);
+        db.Products.AddRange(data.Products.Select(p => new Product(p.Id, p.SellerId, p.Sku, p.Name, p.Category, p.Barcode, p.WbBarcode,
+            p.Price, p.WeightG, p.VolumeLiters, p.TracksExpiry, p.RequiresMarking)));
+        await db.SaveChangesAsync(ct);
+        db.Stock.AddRange(data.Stock.Select(s => new StockItem(s.Id, s.ProductId, s.SellerId, s.WarehouseId, s.LocationId, s.Quantity, s.Reserved)));
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Seeded {Zones} zones, {Locations} locations, {Products} products, {Stock} stock rows",
+            data.Zones.Length, data.Locations.Length, data.Products.Length, data.Stock.Length);
     }
 
     private async Task SeedPlatformAsync(CancellationToken ct)

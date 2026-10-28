@@ -15,6 +15,7 @@ internal sealed class WarehouseConfiguration : IEntityTypeConfiguration<Warehous
         b.ToTable("warehouses");
         b.HasKey(w => w.Id);
         b.HasIndex(w => w.OrganizationId);
+        SeqColumn.Add(b);
     }
 }
 

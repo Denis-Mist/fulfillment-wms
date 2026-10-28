@@ -23,6 +23,10 @@ public sealed class TestAppDbContext() : DbContext(new DbContextOptionsBuilder<T
     public DbSet<TeamInvite> TeamInvites => Set<TeamInvite>();
     public DbSet<ClientRequest> ClientRequests => Set<ClientRequest>();
     public DbSet<NotificationRead> NotificationReads => Set<NotificationRead>();
+    public DbSet<Zone> Zones => Set<Zone>();
+    public DbSet<StorageLocation> Locations => Set<StorageLocation>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<StockItem> Stock => Set<StockItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

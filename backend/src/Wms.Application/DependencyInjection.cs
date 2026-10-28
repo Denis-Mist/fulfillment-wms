@@ -2,12 +2,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Wms.Application.Abstractions;
 using Wms.Application.Admin;
 using Wms.Application.Auth;
+using Wms.Application.Catalog;
 using Wms.Application.Clients;
+using Wms.Application.Common;
 using Wms.Application.Directory;
 using Wms.Application.Notifications;
 using Wms.Application.Partners;
 using Wms.Application.Search;
 using Wms.Application.Settings;
+using Wms.Application.Warehouses;
 
 namespace Wms.Application;
 
@@ -62,6 +65,25 @@ public static class DependencyInjection
         services.AddScoped<INotificationSource, PendingOrganizationsNotificationSource>();
         services.AddScoped<NotificationsHandler>();
         services.AddScoped<GlobalSearchHandler>();
+        services.AddScoped<ISearchProvider, ProductSearchProvider>();
+
+        // Warehouses
+        services.AddScoped<WarehouseScope>();
+        services.AddScoped<WarehouseListHandler>();
+        services.AddScoped<ZonesQueryHandler>();
+        services.AddScoped<CreateZoneHandler>();
+        services.AddScoped<LocationsQueryHandler>();
+        services.AddScoped<CreateLocationHandler>();
+        services.AddScoped<WarehouseMapQueryHandler>();
+        services.AddScoped<WarehouseProductsQueryHandler>();
+        services.AddScoped<PutawayCheckHandler>();
+
+        // Catalog
+        services.AddScoped<CatalogReader>();
+        services.AddScoped<ProductListHandler>();
+        services.AddScoped<ProductFacetsHandler>();
+        services.AddScoped<ProductDetailsHandler>();
+        services.AddScoped<ProductCommandsHandler>();
         return services;
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Wms.Application.Abstractions;
+using Wms.Application.Catalog;
 using Wms.Infrastructure.Persistence;
 using Wms.Infrastructure.Persistence.Repositories;
 using Wms.Infrastructure.Security;
@@ -19,7 +20,9 @@ public static class DependencyInjection
         services.AddDbContext<WmsDbContext>(o => o.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<WmsDbContext>());
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<WmsDbContext>());
-        services.AddScoped<IOperationalMetrics, NullOperationalMetrics>();
+        services.AddScoped<OperationalMetrics>();
+        services.AddScoped<IOperationalMetrics>(sp => sp.GetRequiredService<OperationalMetrics>());
+        services.AddScoped<IProductSalesSource>(sp => sp.GetRequiredService<OperationalMetrics>());
         services.AddSingleton<ITemporaryPasswordGenerator, TemporaryPasswordGenerator>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
