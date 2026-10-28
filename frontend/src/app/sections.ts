@@ -133,6 +133,7 @@ export const CABINETS: CabinetDef[] = [
         sections: [
           {
             name: 'stock',
+            page: () => import('@/pages/stock/StockPage.vue'),
             path: 'stock',
             title: 'Остатки',
             description: 'Остатки по ячейкам, клиентам, партиям и статусам.',
@@ -145,6 +146,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'operations',
+            page: () => import('@/pages/operations/OperationsPage.vue'),
             path: 'operations',
             title: 'Внутренние операции',
             description: 'Перемещения, пополнение, инвентаризация и списания.',
@@ -326,6 +328,7 @@ export const CABINETS: CabinetDef[] = [
           },
           {
             name: 'stock',
+            page: () => import('@/pages/stock/StockPage.vue'),
             path: 'stock',
             title: 'Остатки',
             icon: Boxes,
