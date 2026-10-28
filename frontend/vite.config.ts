@@ -20,6 +20,10 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    // ECharts — крупная, но изолированная зависимость, грузится лениво с дашбордами
+    chunkSizeWarningLimit: 700,
+  },
   server: {
     host: '127.0.0.1',
     port: 5173,

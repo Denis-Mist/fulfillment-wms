@@ -1,7 +1,16 @@
 <script setup lang="ts" generic="T extends { id: string }">
 import type { DataTablePageEvent, DataTableRowClickEvent, DataTableSortEvent } from 'primevue/datatable'
 import { SearchX } from '@lucide/vue'
+import { computed } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import EmptyState from './EmptyState.vue'
+
+const isMobile = useMediaQuery('(max-width: 639px)')
+const paginatorTemplate = computed(() =>
+  isMobile.value
+    ? 'PrevPageLink CurrentPageReport NextPageLink'
+    : 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport',
+)
 
 withDefaults(
   defineProps<{
@@ -51,7 +60,7 @@ function onRowClick(event: DataTableRowClickEvent) {
       :sort-order="sortOrder"
       data-key="id"
       :rows-per-page-options="[25, 50, 100]"
-      paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+      :paginator-template="paginatorTemplate"
       current-page-report-template="{first}–{last} из {totalRecords}"
       row-hover
       scrollable
