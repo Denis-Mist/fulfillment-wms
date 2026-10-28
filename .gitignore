@@ -23,3 +23,6 @@ Thumbs.db
 .ai
 .cursor
 AGENTS.md
+frontend/playwright-report/
+frontend/test-results/
+frontend/blob-report/
