@@ -65,6 +65,8 @@ api.MapFboEndpoints();
 api.MapReturnsEndpoints();
 api.MapBillingEndpoints();
 api.MapIntegrationsEndpoints();
+api.MapDashboardEndpoints();
+api.MapAnalyticsEndpoints();
 
 if (app.Configuration.GetValue("Database:MigrateOnStartup", true))
     await app.Services.MigrateAndSeedAsync(app.Configuration.GetValue("Database:Seed", true));

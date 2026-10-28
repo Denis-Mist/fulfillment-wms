@@ -845,6 +845,48 @@ namespace Wms.Infrastructure.Persistence.Migrations
                     b.ToTable("references", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Domain.Entities.SlottingApplied", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("AppliedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("applied_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_slotting_applied");
+
+                    b.ToTable("slotting_applied", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Domain.Entities.StaffPlan", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Algorithm")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("algorithm");
+
+                    b.Property<DateTimeOffset>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at");
+
+                    b.Property<string>("ApprovedBy")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("approved_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_staff_plans");
+
+                    b.ToTable("staff_plans", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Domain.Entities.StaffProfile", b =>
                 {
                     b.Property<string>("Id")

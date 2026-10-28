@@ -123,3 +123,7 @@ public enum IntegrationChannel { Wb, Ozon }
 public enum IntegrationStatus { Connected, Disconnected }
 
 public enum IntegrationLogKind { Orders, Stock, Error, Connect }
+
+public enum ForecastAlgorithm { HoltWinters, MovingAverage }
+
+public enum SlottingAlgorithm { AbcAffinity, Abc }
