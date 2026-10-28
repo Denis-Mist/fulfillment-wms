@@ -6,6 +6,7 @@ using Wms.Infrastructure.Persistence;
 using Wms.Infrastructure.Persistence.Repositories;
 using Wms.Infrastructure.Security;
 using Wms.Infrastructure.Seeding;
+using Wms.Infrastructure.Operational;
 
 namespace Wms.Infrastructure;
 
@@ -17,6 +18,9 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("ConnectionStrings:Wms is not configured");
         services.AddDbContext<WmsDbContext>(o => o.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<WmsDbContext>());
+        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<WmsDbContext>());
+        services.AddScoped<IOperationalMetrics, NullOperationalMetrics>();
+        services.AddSingleton<ITemporaryPasswordGenerator, TemporaryPasswordGenerator>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 

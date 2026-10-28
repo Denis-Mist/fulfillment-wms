@@ -1,0 +1,186 @@
+{
+ "references": [
+  {
+   "kind": "units",
+   "code": "PCS",
+   "name": "Штука",
+   "note": "шт"
+  },
+  {
+   "kind": "units",
+   "code": "SET",
+   "name": "Комплект",
+   "note": "компл"
+  },
+  {
+   "kind": "units",
+   "code": "BOX",
+   "name": "Короб",
+   "note": "кор"
+  },
+  {
+   "kind": "units",
+   "code": "PLT",
+   "name": "Паллета",
+   "note": "пал"
+  },
+  {
+   "kind": "units",
+   "code": "KG",
+   "name": "Килограмм",
+   "note": "кг"
+  },
+  {
+   "kind": "cell_types",
+   "code": "SHELF_S",
+   "name": "Полка малая",
+   "note": "до 300 л, до 25 кг"
+  },
+  {
+   "kind": "cell_types",
+   "code": "SHELF_L",
+   "name": "Полка большая",
+   "note": "до 600 л, до 60 кг"
+  },
+  {
+   "kind": "cell_types",
+   "code": "PALLET",
+   "name": "Паллетное место",
+   "note": "1200×800, до 800 кг"
+  },
+  {
+   "kind": "cell_types",
+   "code": "MEZ",
+   "name": "Мезонин",
+   "note": "мелкоштучный товар"
+  },
+  {
+   "kind": "cell_types",
+   "code": "TOTE",
+   "name": "Пластиковый контейнер",
+   "note": "600×400×300"
+  },
+  {
+   "kind": "carriers",
+   "code": "WB",
+   "name": "Wildberries",
+   "note": "FBS, FBO"
+  },
+  {
+   "kind": "carriers",
+   "code": "OZON",
+   "name": "Ozon",
+   "note": "FBS, FBO"
+  },
+  {
+   "kind": "carriers",
+   "code": "YM",
+   "name": "Яндекс Маркет",
+   "note": "FBS"
+  },
+  {
+   "kind": "carriers",
+   "code": "CDEK",
+   "name": "СДЭК",
+   "note": "курьерская доставка"
+  },
+  {
+   "kind": "carriers",
+   "code": "PEK",
+   "name": "ПЭК",
+   "note": "межгород, паллеты"
+  },
+  {
+   "kind": "services",
+   "code": "RCV_UNIT",
+   "name": "Приёмка поштучная",
+   "note": "за единицу"
+  },
+  {
+   "kind": "services",
+   "code": "STORE_L",
+   "name": "Хранение",
+   "note": "за литр в сутки"
+  },
+  {
+   "kind": "services",
+   "code": "PICK",
+   "name": "Сборка заказа",
+   "note": "за заказ + строку"
+  },
+  {
+   "kind": "services",
+   "code": "PACK",
+   "name": "Упаковка",
+   "note": "по типу тары"
+  },
+  {
+   "kind": "services",
+   "code": "MARK",
+   "name": "Маркировка",
+   "note": "за этикетку"
+  },
+  {
+   "kind": "services",
+   "code": "FBO",
+   "name": "Подготовка поставки FBO",
+   "note": "за короб"
+  }
+ ],
+ "clientRequests": [
+  {
+   "companyName": "ИП Волкова А. С.",
+   "inn": "771234567890",
+   "city": "Москва",
+   "contactName": "Анна Волкова",
+   "contactPhone": "+7 916 204-11-87",
+   "skuEstimate": 120,
+   "ordersPerDay": 60,
+   "marketplaces": [
+    "wb",
+    "ozon"
+   ],
+   "message": "Текстиль для дома, ищем склад рядом с МКАД. Нужна упаковка в фирменные пакеты."
+  },
+  {
+   "companyName": "ООО «Эко Снек»",
+   "inn": "5024198765",
+   "city": "Красногорск",
+   "contactName": "Дмитрий Орлов",
+   "contactPhone": "+7 925 118-40-02",
+   "skuEstimate": 45,
+   "ordersPerDay": 180,
+   "marketplaces": [
+    "ozon",
+    "yandex"
+   ],
+   "message": "Снеки с коротким сроком годности — нужен учёт партий и FEFO."
+  },
+  {
+   "companyName": "ООО «ГаджетПро»",
+   "inn": "7725456123",
+   "city": "Москва",
+   "contactName": "Игорь Ли",
+   "contactPhone": "+7 903 777-12-30",
+   "skuEstimate": 300,
+   "ordersPerDay": 90,
+   "marketplaces": [
+    "wb"
+   ],
+   "message": "Электроника с маркировкой «Честный знак», FBO-поставки на WB."
+  },
+  {
+   "companyName": "ИП Сафин Р. Р.",
+   "inn": "165912345678",
+   "city": "Казань",
+   "contactName": "Ринат Сафин",
+   "contactPhone": "+7 987 300-55-19",
+   "skuEstimate": 30,
+   "ordersPerDay": 25,
+   "marketplaces": [
+    "wb"
+   ],
+   "message": "Детские игрушки, старт продаж в следующем месяце."
+  }
+ ]
+}

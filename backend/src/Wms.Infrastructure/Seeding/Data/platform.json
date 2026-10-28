@@ -1,0 +1,418 @@
+{
+ "contracts": [
+  {
+   "id": "ctr_s1_fc1",
+   "fulfillmentId": "org_fc1",
+   "sellerId": "org_s1",
+   "warehouseIds": [
+    "wh_pdl1",
+    "wh_khm1"
+   ],
+   "startedAt": "2026-02-20T21:00:00.000Z"
+  },
+  {
+   "id": "ctr_s1_fc2",
+   "fulfillmentId": "org_fc2",
+   "sellerId": "org_s1",
+   "warehouseIds": [
+    "wh_shu1"
+   ],
+   "startedAt": "2026-06-19T21:00:00.000Z"
+  },
+  {
+   "id": "ctr_s2_fc1",
+   "fulfillmentId": "org_fc1",
+   "sellerId": "org_s2",
+   "warehouseIds": [
+    "wh_pdl1",
+    "wh_kzn1"
+   ],
+   "startedAt": "2026-05-30T21:00:00.000Z"
+  },
+  {
+   "id": "ctr_s3_fc2",
+   "fulfillmentId": "org_fc2",
+   "sellerId": "org_s3",
+   "warehouseIds": [
+    "wh_shu1",
+    "wh_prn1"
+   ],
+   "startedAt": "2026-01-17T21:00:00.000Z"
+  },
+  {
+   "id": "ctr_s3_fc1",
+   "fulfillmentId": "org_fc1",
+   "sellerId": "org_s3",
+   "warehouseIds": [
+    "wh_khm1"
+   ],
+   "startedAt": "2026-05-21T21:00:00.000Z"
+  },
+  {
+   "id": "ctr_s4_fc3",
+   "fulfillmentId": "org_fc3",
+   "sellerId": "org_s4",
+   "warehouseIds": [
+    "wh_krd1"
+   ],
+   "startedAt": "2026-02-16T21:00:00.000Z"
+  },
+  {
+   "id": "ctr_s4_fc1",
+   "fulfillmentId": "org_fc1",
+   "sellerId": "org_s4",
+   "warehouseIds": [
+    "wh_pdl1"
+   ],
+   "startedAt": "2026-03-27T21:00:00.000Z"
+  },
+  {
+   "id": "ctr_s5_fc1",
+   "fulfillmentId": "org_fc1",
+   "sellerId": "org_s5",
+   "warehouseIds": [
+    "wh_pdl1",
+    "wh_khm1"
+   ],
+   "startedAt": "2026-03-20T21:00:00.000Z"
+  },
+  {
+   "id": "ctr_s6_fc1",
+   "fulfillmentId": "org_fc1",
+   "sellerId": "org_s6",
+   "warehouseIds": [
+    "wh_kzn1"
+   ],
+   "startedAt": "2026-06-17T21:00:00.000Z"
+  },
+  {
+   "id": "ctr_s7_fc2",
+   "fulfillmentId": "org_fc2",
+   "sellerId": "org_s7",
+   "warehouseIds": [
+    "wh_prn1"
+   ],
+   "startedAt": "2026-02-05T21:00:00.000Z"
+  },
+  {
+   "id": "ctr_s8_fc1",
+   "fulfillmentId": "org_fc1",
+   "sellerId": "org_s8",
+   "warehouseIds": [
+    "wh_pdl1"
+   ],
+   "startedAt": "2026-01-18T21:00:00.000Z"
+  },
+  {
+   "id": "ctr_s8_fc3",
+   "fulfillmentId": "org_fc3",
+   "sellerId": "org_s8",
+   "warehouseIds": [
+    "wh_krd1"
+   ],
+   "startedAt": "2026-03-07T21:00:00.000Z"
+  }
+ ],
+ "warehouses": [
+  {
+   "id": "wh_pdl1",
+   "organizationId": "org_fc1",
+   "name": "Подольск-1",
+   "code": "PDL1",
+   "city": "Подольск",
+   "address": "Окружная ул., 4, стр. 2",
+   "areaSqm": 12000,
+   "isActive": true
+  },
+  {
+   "id": "wh_khm1",
+   "organizationId": "org_fc1",
+   "name": "Химки",
+   "code": "KHM1",
+   "city": "Химки",
+   "address": "Ленинградское ш., 29",
+   "areaSqm": 7500,
+   "isActive": true
+  },
+  {
+   "id": "wh_kzn1",
+   "organizationId": "org_fc1",
+   "name": "Казань",
+   "code": "KZN1",
+   "city": "Казань",
+   "address": "ул. Тэцевская, 35",
+   "areaSqm": 5000,
+   "isActive": true
+  },
+  {
+   "id": "wh_shu1",
+   "organizationId": "org_fc2",
+   "name": "Шушары",
+   "code": "SHU1",
+   "city": "Санкт-Петербург",
+   "address": "Московское ш., 231",
+   "areaSqm": 9000,
+   "isActive": true
+  },
+  {
+   "id": "wh_prn1",
+   "organizationId": "org_fc2",
+   "name": "Парнас",
+   "code": "PRN1",
+   "city": "Санкт-Петербург",
+   "address": "6-й Верхний пер., 12",
+   "areaSqm": 4200,
+   "isActive": true
+  },
+  {
+   "id": "wh_krd1",
+   "organizationId": "org_fc3",
+   "name": "Краснодар",
+   "code": "KRD1",
+   "city": "Краснодар",
+   "address": "ул. Ростовское ш., 14/5",
+   "areaSqm": 6000,
+   "isActive": true
+  }
+ ],
+ "settings": [
+  {
+   "id": "org_fc1",
+   "profile": {
+    "name": "СкладПро Фулфилмент",
+    "inn": "7714382910",
+    "kpp": "771401001",
+    "ogrn": "1966359132434",
+    "legalAddress": "г. Москва, ул. Промышленная, д. 41",
+    "contactEmail": "office@fc1.demo.ru",
+    "contactPhone": "+7 957 231-60-68",
+    "bankName": "АО «Т-Банк»",
+    "bik": "044525853",
+    "account": "40702810466654741870",
+    "corrAccount": "30101810713982480242"
+   },
+   "slaRisk": true
+  },
+  {
+   "id": "org_fc2",
+   "profile": {
+    "name": "Логистик Плюс",
+    "inn": "7811650274",
+    "kpp": "781101001",
+    "ogrn": "1903483764053",
+    "legalAddress": "г. Санкт-Петербург, ул. Логистическая, д. 8",
+    "contactEmail": "office@fc2.demo.ru",
+    "contactPhone": "+7 918 447-62-51",
+    "bankName": "АО «Альфа-Банк»",
+    "bik": "044523231",
+    "account": "40702810738260747025",
+    "corrAccount": "30101810183778278704"
+   },
+   "slaRisk": true
+  },
+  {
+   "id": "org_fc3",
+   "profile": {
+    "name": "ФФ Юг",
+    "inn": "2311298456",
+    "kpp": "231101001",
+    "ogrn": "1971519956031",
+    "legalAddress": "г. Краснодар, ул. Складская, д. 42",
+    "contactEmail": "office@fc3.demo.ru",
+    "contactPhone": "+7 985 944-01-58",
+    "bankName": "ПАО «Точка»",
+    "bik": "044528423",
+    "account": "40702810594208321138",
+    "corrAccount": "30101810222256069859"
+   },
+   "slaRisk": true
+  },
+  {
+   "id": "org_s1",
+   "profile": {
+    "name": "Уютный дом",
+    "inn": "503214567890",
+    "kpp": "",
+    "ogrn": "1400600945968",
+    "legalAddress": "г. Москва, ул. Промышленная, д. 10",
+    "contactEmail": "office@shop4.demo.ru",
+    "contactPhone": "+7 984 377-01-02",
+    "bankName": "Банк ВТБ (ПАО)",
+    "bik": "044526316",
+    "account": "40702810440211003999",
+    "corrAccount": "30101810374520415060"
+   },
+   "slaRisk": false
+  },
+  {
+   "id": "org_s2",
+   "profile": {
+    "name": "Кидс Ворлд",
+    "inn": "7728456123",
+    "kpp": "772801001",
+    "ogrn": "1542850084132",
+    "legalAddress": "г. Москва, ул. Индустриальная, д. 38",
+    "contactEmail": "office@shop5.demo.ru",
+    "contactPhone": "+7 924 445-58-74",
+    "bankName": "АО «Т-Банк»",
+    "bik": "044524288",
+    "account": "40702810795164511058",
+    "corrAccount": "30101810358258124953"
+   },
+   "slaRisk": false
+  },
+  {
+   "id": "org_s3",
+   "profile": {
+    "name": "ТехноМир",
+    "inn": "7805123987",
+    "kpp": "780501001",
+    "ogrn": "1118098879633",
+    "legalAddress": "г. Санкт-Петербург, ул. Промышленная, д. 10",
+    "contactEmail": "office@shop6.demo.ru",
+    "contactPhone": "+7 929 833-22-92",
+    "bankName": "АО «Т-Банк»",
+    "bik": "044525784",
+    "account": "40702810430205503064",
+    "corrAccount": "30101810768181341428"
+   },
+   "slaRisk": false
+  },
+  {
+   "id": "org_s4",
+   "profile": {
+    "name": "Спортлайф",
+    "inn": "231245678901",
+    "kpp": "",
+    "ogrn": "1194940739253",
+    "legalAddress": "г. Краснодар, ул. Промышленная, д. 1",
+    "contactEmail": "office@shop7.demo.ru",
+    "contactPhone": "+7 959 087-29-74",
+    "bankName": "Банк ВТБ (ПАО)",
+    "bik": "044525430",
+    "account": "40702810194597755520",
+    "corrAccount": "30101810891622511455"
+   },
+   "slaRisk": false
+  },
+  {
+   "id": "org_s5",
+   "profile": {
+    "name": "Бьюти Лаб",
+    "inn": "7701987654",
+    "kpp": "770101001",
+    "ogrn": "1501990841137",
+    "legalAddress": "г. Москва, ул. Промышленная, д. 24",
+    "contactEmail": "office@shop8.demo.ru",
+    "contactPhone": "+7 976 449-47-59",
+    "bankName": "АО «Альфа-Банк»",
+    "bik": "044524461",
+    "account": "40702810651668648564",
+    "corrAccount": "30101810183180708789"
+   },
+   "slaRisk": false
+  },
+  {
+   "id": "org_s6",
+   "profile": {
+    "name": "ЗооМаркет",
+    "inn": "1655432109",
+    "kpp": "165501001",
+    "ogrn": "1946469173942",
+    "legalAddress": "г. Казань, ул. Индустриальная, д. 21",
+    "contactEmail": "office@shop9.demo.ru",
+    "contactPhone": "+7 976 393-38-80",
+    "bankName": "ПАО «Точка»",
+    "bik": "044527070",
+    "account": "40702810785440464425",
+    "corrAccount": "30101810729979203371"
+   },
+   "slaRisk": false
+  },
+  {
+   "id": "org_s7",
+   "profile": {
+    "name": "Чайная лавка",
+    "inn": "781609876543",
+    "kpp": "",
+    "ogrn": "1154494743257",
+    "legalAddress": "г. Санкт-Петербург, ул. Складская, д. 11",
+    "contactEmail": "office@shop10.demo.ru",
+    "contactPhone": "+7 928 655-10-39",
+    "bankName": "АО «Альфа-Банк»",
+    "bik": "044523692",
+    "account": "40702810762072150090",
+    "corrAccount": "30101810979191433225"
+   },
+   "slaRisk": false
+  },
+  {
+   "id": "org_s8",
+   "profile": {
+    "name": "Стиль",
+    "inn": "7709345612",
+    "kpp": "770901001",
+    "ogrn": "1204035649331",
+    "legalAddress": "г. Москва, ул. Индустриальная, д. 1",
+    "contactEmail": "office@shop11.demo.ru",
+    "contactPhone": "+7 917 655-10-56",
+    "bankName": "АО «Т-Банк»",
+    "bik": "044524642",
+    "account": "40702810004992446808",
+    "corrAccount": "30101810166761018208"
+   },
+   "slaRisk": false
+  },
+  {
+   "id": "org_p1",
+   "profile": {
+    "name": "Сибирь Фулфилмент",
+    "inn": "5406789012",
+    "kpp": "540601001",
+    "ogrn": "1857518690517",
+    "legalAddress": "г. Новосибирск, ул. Индустриальная, д. 59",
+    "contactEmail": "office@fc12.demo.ru",
+    "contactPhone": "+7 961 121-38-87",
+    "bankName": "Банк ВТБ (ПАО)",
+    "bik": "044525562",
+    "account": "40702810140267503536",
+    "corrAccount": "30101810750482507848"
+   },
+   "slaRisk": true
+  },
+  {
+   "id": "org_p2",
+   "profile": {
+    "name": "ЭкоБьюти",
+    "inn": "7743210987",
+    "kpp": "774301001",
+    "ogrn": "1465461343874",
+    "legalAddress": "г. Москва, ул. Логистическая, д. 5",
+    "contactEmail": "office@shop13.demo.ru",
+    "contactPhone": "+7 967 634-78-52",
+    "bankName": "Банк ВТБ (ПАО)",
+    "bik": "044522491",
+    "account": "40702810917989156134",
+    "corrAccount": "30101810146554250400"
+   },
+   "slaRisk": false
+  },
+  {
+   "id": "org_p3",
+   "profile": {
+    "name": "Мастер Инструмент",
+    "inn": "6658123456",
+    "kpp": "665801001",
+    "ogrn": "1288539093626",
+    "legalAddress": "г. Екатеринбург, ул. Складская, д. 30",
+    "contactEmail": "office@shop14.demo.ru",
+    "contactPhone": "+7 988 881-73-07",
+    "bankName": "АО «Альфа-Банк»",
+    "bik": "044528960",
+    "account": "40702810711717331495",
+    "corrAccount": "30101810228907664785"
+   },
+   "slaRisk": false
+  }
+ ]
+}
