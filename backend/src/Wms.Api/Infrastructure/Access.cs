@@ -55,12 +55,11 @@ public static class ListQuery
         return new PageQuery(Num("page"), Num("pageSize"), q["search"].FirstOrDefault(), q["sortField"].FirstOrDefault(), order);
     }
 
-    /// <summary>Фильтр-перечисление в snake_case; неизвестное значение — 400.</summary>
+    /// <summary>Фильтр-перечисление в snake_case; неизвестное значение игнорируется (фильтр не применяется).</summary>
     public static T? Enum<T>(HttpRequest request, string key) where T : struct, System.Enum
     {
         var raw = request.Query[key].FirstOrDefault();
-        if (string.IsNullOrEmpty(raw)) return null;
-        return SnakeCaseName.TryParse<T>(raw, out var value) ? value : throw AppException.BadRequest("Некорректный запрос", $"Неизвестное значение {key}");
+        return !string.IsNullOrEmpty(raw) && SnakeCaseName.TryParse<T>(raw, out var value) ? value : null;
     }
 
     public static string? String(HttpRequest request, string key) =>

@@ -19,3 +19,5 @@ public enum ReferenceKind { Units, CellTypes, Carriers, Services }
 public enum AuditCategory { Auth, Organization, Inbound, Order, Stock, Reference, User }
 
 public enum ClientRequestStatus { Pending, Accepted, Declined }
+
+public enum ZoneType { Receiving, Storage, Picking, Packing, Shipping, Defect }

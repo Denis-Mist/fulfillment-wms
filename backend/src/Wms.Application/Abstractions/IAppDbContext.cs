@@ -19,4 +19,8 @@ public interface IAppDbContext : IUnitOfWork
     DbSet<TeamInvite> TeamInvites { get; }
     DbSet<ClientRequest> ClientRequests { get; }
     DbSet<NotificationRead> NotificationReads { get; }
+    DbSet<Zone> Zones { get; }
+    DbSet<StorageLocation> Locations { get; }
+    DbSet<Product> Products { get; }
+    DbSet<StockItem> Stock { get; }
 }
