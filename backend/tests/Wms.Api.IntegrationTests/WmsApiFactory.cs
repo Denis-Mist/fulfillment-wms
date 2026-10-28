@@ -20,7 +20,7 @@ public sealed class WmsApiFactory : WebApplicationFactory<Program>, IAsyncLifeti
             _connectionString = $"{external};Database=wms_test_{Guid.NewGuid():N}";
             return;
         }
-        _container = new PostgreSqlBuilder().WithImage("postgres:17-alpine").Build();
+        _container = new PostgreSqlBuilder("postgres:17-alpine").Build();
         await _container.StartAsync();
         _connectionString = _container.GetConnectionString();
     }
