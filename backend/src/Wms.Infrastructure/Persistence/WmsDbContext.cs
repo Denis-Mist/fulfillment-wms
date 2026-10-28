@@ -29,6 +29,8 @@ public sealed class WmsDbContext(DbContextOptions<WmsDbContext> options) : DbCon
     public DbSet<Tariff> Tariffs => Set<Tariff>();
     public DbSet<BillingAct> BillingActs => Set<BillingAct>();
     public DbSet<MarketplaceIntegration> Integrations => Set<MarketplaceIntegration>();
+    public DbSet<StaffPlan> StaffPlans => Set<StaffPlan>();
+    public DbSet<SlottingApplied> SlottingApplied => Set<SlottingApplied>();
     public DbSet<StockOperation> StockOperations => Set<StockOperation>();
     public DbSet<Order> Orders => Set<Order>();
 

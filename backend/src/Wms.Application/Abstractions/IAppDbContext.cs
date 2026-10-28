@@ -31,6 +31,8 @@ public interface IAppDbContext : IUnitOfWork
     DbSet<Tariff> Tariffs { get; }
     DbSet<BillingAct> BillingActs { get; }
     DbSet<MarketplaceIntegration> Integrations { get; }
+    DbSet<StaffPlan> StaffPlans { get; }
+    DbSet<SlottingApplied> SlottingApplied { get; }
     DbSet<StockOperation> StockOperations { get; }
     DbSet<Order> Orders { get; }
 }
