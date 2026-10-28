@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyState from '@/shared/ui/EmptyState.vue'
 import { computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { Building2, CalendarCheck, PackageCheck, ShieldAlert, ShoppingCart, Truck, Users, Warehouse } from '@lucide/vue'
@@ -106,6 +107,7 @@ const trendOption = computed<ChartOption>(() => {
 
       <SectionCard title="Крупнейшие ФЦ" description="По количеству заказов за 30 дней" flush>
         <div v-if="isPending" class="space-y-2 p-5"><Skeleton v-for="i in 5" :key="i" height="2.5rem" /></div>
+        <EmptyState v-else-if="!data?.topFulfillments?.length" compact title="Данных пока нет" />
         <ul v-else class="divide-y divide-surface-100 dark:divide-surface-800">
           <li v-for="(fc, index) in data?.topFulfillments" :key="fc.id" class="flex items-center gap-3 px-5 py-3">
             <span class="grid size-7 shrink-0 place-items-center rounded-lg bg-surface-100 text-xs font-semibold text-secondary dark:bg-surface-800">
@@ -125,6 +127,7 @@ const trendOption = computed<ChartOption>(() => {
           <Button as="router-link" :to="to('audit')" label="Весь журнал" size="small" text />
         </template>
         <div v-if="isPending" class="space-y-2 p-5"><Skeleton v-for="i in 4" :key="i" height="2.5rem" /></div>
+        <EmptyState v-else-if="!data?.recentEvents?.length" compact title="Событий пока нет" />
         <ul v-else class="divide-y divide-surface-100 dark:divide-surface-800">
           <li v-for="event in data?.recentEvents" :key="event.id" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3">
             <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="TONE_CLASSES[AUDIT_CATEGORIES[event.category].tone].badge">
