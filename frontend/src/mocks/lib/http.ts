@@ -1,5 +1,4 @@
 import { delay, HttpResponse, type PathParams } from 'msw'
-import type { z } from 'zod'
 import type { Role } from '@/modules/auth/types'
 import type { Paged, SortOrder } from '@/shared/api/types'
 import { db } from '../db/store'
@@ -29,7 +28,8 @@ export class BodyError extends Error {
 /** Безопасное чтение JSON: пустое/битое тело или не объект → 400 */
 export async function readJson(request: Request): Promise<unknown> {
   const text = await request.text().catch(() => '')
-  if (!text.trim()) throw new BodyError(400, 'Пустое тело запроса', [{ field: '', message: 'Ожидается JSON-объект' }])
+  // Как реальный API: пустое тело трактуется как {}
+  if (!text.trim()) return {}
   let value: unknown
   try {
     value = JSON.parse(text)
@@ -42,18 +42,6 @@ export async function readJson(request: Request): Promise<unknown> {
   return value
 }
 
-/** readJson + zod: несоответствие схеме → 422 со списком полей */
-export async function parseBody<S extends z.ZodType>(request: Request, schema: S): Promise<z.infer<S>> {
-  const result = schema.safeParse(await readJson(request))
-  if (!result.success) {
-    throw new BodyError(
-      422,
-      'Ошибка валидации',
-      result.error.issues.map((i) => ({ field: i.path.join('.'), message: i.message })),
-    )
-  }
-  return result.data
-}
 
 /** BodyError → 400/422; TypeError из-за отсутствующих полей ({}-тело) → 422, а не 500 */
 export async function handleBodyErrors(run: () => Response | Promise<Response>): Promise<Response> {

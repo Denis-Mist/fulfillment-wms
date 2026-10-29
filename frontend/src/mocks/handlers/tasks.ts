@@ -20,8 +20,7 @@ import { DAY, HOUR } from '../db/seed'
 import { db } from '../db/store'
 import type { LocationRecord, OrderRecord } from '../db/types'
 import { localCollection } from '../lib/collection'
-import { parseBody, readJson, countBy, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
-import { orderIdsSchema, routeSchema } from '../lib/schemas'
+import { readJson, countBy, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
 import { lookups } from '../lib/mappers'
 import { createRandom } from '../lib/random'
 import { visibleWarehouseIds } from '../lib/scope'
@@ -722,7 +721,7 @@ export const taskHandlers = [
     api('/picking/preview'),
     withAuth(
       async ({ ctx, request }) => {
-        const { orderIds } = await parseBody(request, orderIdsSchema)
+        const { orderIds = [] } = (await readJson(request)) as { orderIds?: string[] }
         const pool = new Map(candidates(ctx).map((o) => [o.id, o]))
         const orders = orderIds.map((id) => pool.get(id)).filter((o): o is OrderRecord => !!o)
         return HttpResponse.json(preview(pickItems(orders)))
@@ -735,10 +734,12 @@ export const taskHandlers = [
     api('/picking/batches'),
     withAuth(
       async ({ ctx, request }) => {
-        const { orderIds, algorithm } = (await parseBody(request, routeSchema)) as unknown as {
-          orderIds: string[]
+        const { orderIds = [], algorithm } = (await readJson(request)) as {
+          orderIds?: string[]
           algorithm: RouteAlgorithm
         }
+        if (!orderIds.length)
+          return problem(422, 'Выберите заказы', 'Отметьте хотя бы один заказ для формирования батча.')
         const pool = new Map(candidates(ctx).map((o) => [o.id, o]))
         const orders = orderIds.map((id) => pool.get(id)).filter((o): o is OrderRecord => !!o)
         if (!orders.length || orders.length !== orderIds.length) {

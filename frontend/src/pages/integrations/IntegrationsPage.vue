@@ -268,7 +268,7 @@ const log = computed(() =>
           />
           <ChannelBadge :channel="e.channel" />
           <span
-            class="min-w-0 flex-1 truncate text-sm"
+            class="min-w-0 flex-1 break-words text-sm"
             :class="e.kind === 'error' ? 'text-rose-600' : 'text-heading'"
             >{{ e.message }}</span
           >

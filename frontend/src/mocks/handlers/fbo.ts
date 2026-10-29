@@ -13,8 +13,7 @@ import type {
 import { DAY, HOUR } from '../db/seed'
 import { db } from '../db/store'
 import { localCollection } from '../lib/collection'
-import { parseBody, countBy, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
-import { fboInputSchema, statusToSchema } from '../lib/schemas'
+import { readJson, countBy, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
 import { lookups } from '../lib/mappers'
 import { createRandom } from '../lib/random'
 import { canSee, visibleWarehouseIds } from '../lib/scope'
@@ -245,13 +244,13 @@ export const fboHandlers = [
     api('/fbo'),
     withAuth(
       async ({ ctx, request }) => {
-        const input = (await parseBody(request, fboInputSchema)) as unknown as FboInput
+        const input = (await readJson(request)) as Partial<FboInput>
         if (!ctx.org) return problem(403, 'Недостаточно прав')
         const visible = visibleWarehouseIds(ctx)
-        if (!visible?.has(input.warehouseId)) return problem(422, 'Выберите склад фулфилмента')
-        if (!FBO_DESTINATIONS[input.marketplace]?.includes(input.destination))
+        if (!visible?.has(input.warehouseId ?? '')) return problem(422, 'Выберите склад фулфилмента')
+        if (!(input.marketplace && input.destination && FBO_DESTINATIONS[input.marketplace]?.includes(input.destination)))
           return problem(422, 'Выберите склад маркетплейса')
-        const lines = input.lines.filter((x) => x.quantity > 0)
+        const lines = (input.lines ?? []).filter((x) => x.quantity > 0)
         if (!lines.length) return problem(422, 'Добавьте товары в заявку')
         for (const line of lines) {
           const available = db.data.stock
@@ -279,8 +278,8 @@ export const fboHandlers = [
           destination: input.destination,
           status: 'draft',
           sellerId: ctx.org.id,
-          warehouseId: input.warehouseId,
-          plannedAt: input.plannedAt,
+          warehouseId: input.warehouseId!,
+          plannedAt: input.plannedAt ?? new Date().toISOString(),
           createdAt: new Date().toISOString(),
           lines: lines.map((x) => ({ ...x, packed: 0 })),
           history: [{ at: new Date().toISOString(), status: 'draft', by: ctx.user.fullName }],
@@ -325,8 +324,9 @@ export const fboHandlers = [
     api('/fbo/:id/advance'),
     withAuth(
       async ({ ctx, params, request }) => {
-        const { to } = (await parseBody(request, statusToSchema)) as unknown as { to: FboStatus }
+        const { to } = (await readJson(request)) as { to?: FboStatus }
         return mutate(ctx, param(params, 'id'), (r) => {
+          if (!to) return problem(422, 'Укажите статус')
           if (FBO_NEXT[r.status]?.to !== to) return problem(409, 'Недопустимый переход статуса')
           const next = step(r, to, ctx.user.fullName)
           if (to === 'ready') next.lines = next.lines.map((x) => ({ ...x, packed: x.quantity }))

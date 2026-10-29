@@ -31,7 +31,6 @@ function submit() {
 
 <template>
   <div class="space-y-4">
-    <h1 class="sr-only">Сканер</h1>
     <form class="flex gap-2" @submit.prevent="submit">
       <InputText
         v-model="code"
