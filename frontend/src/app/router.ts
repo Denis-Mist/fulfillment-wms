@@ -89,6 +89,8 @@ router.beforeEach(async (to) => {
   await session.init()
   const home = () => ({ name: CABINET_HOME[session.cabinet ?? 'fc'] })
 
+  // Профиль не загрузился (5xx/сеть): остаёмся на маршруте, App.vue покажет экран ошибки с «Повторить»
+  if (session.initError && session.token) return true
   if (to.meta.public) {
     if (to.meta.guestOnly && session.isAuthenticated) return home()
     return true

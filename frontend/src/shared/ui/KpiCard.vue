@@ -37,20 +37,20 @@ const isGood = computed(() => (delta.value ?? 0) === 0 || (props.invert ? delta.
   <component
     :is="to ? RouterLink : 'div'"
     :to="to"
-    class="surface-card group flex flex-col gap-3 p-5 transition-shadow"
+    class="surface-card group flex min-w-0 flex-col gap-3 p-4 transition-shadow sm:p-5"
     :class="to && 'hover:shadow-elevated'"
   >
     <div class="flex items-center justify-between gap-3">
-      <span class="line-clamp-2 text-sm leading-snug font-medium text-secondary">{{ label }}</span>
+      <span class="min-w-0 text-sm leading-snug font-medium break-words text-secondary">{{ label }}</span>
       <span class="grid size-9 shrink-0 place-items-center rounded-xl" :class="[toneClasses.soft, toneClasses.text]">
         <component :is="icon" class="size-[18px]" />
       </span>
     </div>
     <Skeleton v-if="loading" height="2rem" width="55%" />
-    <div v-else class="tabular truncate text-[26px] leading-none font-semibold tracking-tight text-heading">
+    <div v-else class="tabular text-xl leading-tight font-semibold tracking-tight break-words text-heading sm:text-[26px] sm:leading-none">
       {{ value }}
     </div>
-    <div class="flex min-h-5 items-center gap-1.5 text-xs">
+    <div class="flex min-h-5 flex-wrap items-center gap-1.5 text-xs">
       <template v-if="!loading && delta !== null">
         <span
           class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-semibold"

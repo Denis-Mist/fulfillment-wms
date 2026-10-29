@@ -105,7 +105,7 @@
  * Тач-цели ≥ 44×44 px (WCAG 2.5.5, Apple HIG) на узких экранах и сенсорных устройствах (ТСД).
  * Задаём в px: корневой шрифт 14px, и size-10 даёт только 35px. min-* перекрывает фиксированные размеры.
  */
-@media (max-width: 639.98px), (pointer: coarse) {
+@media (max-width: 1023.98px), (pointer: coarse) {
   button,
   [role='button'],
   a.p-button,

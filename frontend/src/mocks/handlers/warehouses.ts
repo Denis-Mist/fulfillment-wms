@@ -10,7 +10,7 @@ import type {
 } from '@/modules/warehouses/types'
 import { db } from '../db/store'
 import type { LocationRecord, StockRecord } from '../db/types'
-import { listParams, type MockContext, paginate, param, problem, sortItems, withAuth } from '../lib/http'
+import { readJson, listParams, type MockContext, paginate, param, problem, sortItems, withAuth } from '../lib/http'
 import { visibleWarehouseIds } from '../lib/scope'
 import { api } from './api'
 
@@ -90,7 +90,7 @@ export const warehouseHandlers = [
     withAuth(async ({ ctx, params, request }) => {
       const warehouse = warehouseFor(ctx, param(params, 'id'))
       if (!warehouse) return problem(404, 'Склад не найден')
-      const input = (await request.json()) as ZoneInput
+      const input = (await readJson(request)) as ZoneInput
       const code = input.code.trim().toUpperCase()
       if (!/^[A-Z0-9]{2,6}$/.test(code)) return problem(400, 'Код зоны: 2–6 латинских букв или цифр')
       if (db.data.zones.some((z) => z.warehouseId === warehouse.id && z.code === code)) {
@@ -131,7 +131,7 @@ export const warehouseHandlers = [
     withAuth(async ({ ctx, params, request }) => {
       const warehouse = warehouseFor(ctx, param(params, 'id'))
       if (!warehouse) return problem(404, 'Склад не найден')
-      const input = (await request.json()) as LocationInput
+      const input = (await readJson(request)) as LocationInput
       const aisle = input.aisle.trim().toUpperCase()
       if (!/^[A-Z]{1,2}$/.test(aisle)) return problem(400, 'Проход: 1–2 латинские буквы')
       if (input.rack < 1 || input.level < 1 || input.capacityLiters <= 0) return problem(400, 'Проверьте стеллаж, ярус и вместимость')
@@ -204,7 +204,7 @@ export const warehouseHandlers = [
     withAuth(async ({ ctx, params, request }) => {
       const warehouse = warehouseFor(ctx, param(params, 'id'))
       if (!warehouse) return problem(404, 'Склад не найден')
-      const input = (await request.json()) as PutawayCheckInput
+      const input = (await readJson(request)) as PutawayCheckInput
       const location = db.data.locations.find((l) => l.id === input.locationId && l.warehouseId === warehouse.id)
       const product = db.data.products.find((p) => p.id === input.productId)
       if (!location || !product) return problem(400, 'Укажите ячейку и товар')

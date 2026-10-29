@@ -21,6 +21,8 @@ export const useSessionStore = defineStore('session', () => {
   const warehouseId = useStorage<string>('wms.warehouseId', '')
   const user = ref<CurrentUser | null>(null)
   let initPromise: Promise<void> | null = null
+  /** Ошибка восстановления сессии (5xx/сеть): токен есть, пользователя нет — App покажет экран «Повторить» (FE-S2-1) */
+  const initError = ref<unknown>(null)
 
   const isAuthenticated = computed(() => !!token.value && !!user.value)
 
@@ -60,6 +62,7 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   function clear() {
+    initError.value = null
     token.value = ''
     user.value = null
     organizationId.value = ''
@@ -70,23 +73,32 @@ export const useSessionStore = defineStore('session', () => {
   function init() {
     initPromise ??= (async () => {
       if (!token.value) return
-      // Разлогиниваем только при явном отказе (401/403); 404/5xx/сеть — повторяем, токен не трогаем (BUG-08)
-      for (let attempt = 0; attempt < 3; attempt++) {
+      // Разлогиниваем только при явном отказе (401/403); 404/5xx/сеть — пара быстрых повторов, затем экран ошибки
+      let lastError: unknown = null
+      for (let attempt = 0; attempt < 2; attempt++) {
         try {
           setUser(await authApi.me())
+          initError.value = null
           return
         } catch (error) {
           if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
             clear()
+            initError.value = null
             return
           }
-          await new Promise((r) => setTimeout(r, 400 * (attempt + 1)))
+          lastError = error
+          if (attempt === 0) await new Promise((r) => setTimeout(r, 400))
         }
       }
-      // Сервер недоступен: без пользователя роутер отправит на вход, но токен сохранён до следующей загрузки
-      initPromise = null
+      initError.value = lastError ?? new Error('Не удалось загрузить профиль')
     })()
     return initPromise
+  }
+
+  /** «Повторить» на экране ошибки: заново запрашиваем /auth/me без перезагрузки */
+  async function retryInit() {
+    initPromise = null
+    await init()
   }
 
   async function login(request: LoginRequest) {
@@ -126,6 +138,8 @@ export const useSessionStore = defineStore('session', () => {
     cabinet,
     isRestricted,
     init,
+    initError,
+    retryInit,
     login,
     register,
     refreshUser,

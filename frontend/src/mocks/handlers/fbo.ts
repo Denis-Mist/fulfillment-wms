@@ -13,16 +13,8 @@ import type {
 import { DAY, HOUR } from '../db/seed'
 import { db } from '../db/store'
 import { localCollection } from '../lib/collection'
-import {
-  countBy,
-  listParams,
-  paginate,
-  param,
-  problem,
-  sortItems,
-  withAuth,
-  type MockContext,
-} from '../lib/http'
+import { parseBody, countBy, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
+import { fboInputSchema, statusToSchema } from '../lib/schemas'
 import { lookups } from '../lib/mappers'
 import { createRandom } from '../lib/random'
 import { canSee, visibleWarehouseIds } from '../lib/scope'
@@ -253,7 +245,7 @@ export const fboHandlers = [
     api('/fbo'),
     withAuth(
       async ({ ctx, request }) => {
-        const input = (await request.json()) as FboInput
+        const input = (await parseBody(request, fboInputSchema)) as unknown as FboInput
         if (!ctx.org) return problem(403, 'Недостаточно прав')
         const visible = visibleWarehouseIds(ctx)
         if (!visible?.has(input.warehouseId)) return problem(422, 'Выберите склад фулфилмента')
@@ -333,7 +325,7 @@ export const fboHandlers = [
     api('/fbo/:id/advance'),
     withAuth(
       async ({ ctx, params, request }) => {
-        const { to } = (await request.json()) as { to: FboStatus }
+        const { to } = (await parseBody(request, statusToSchema)) as unknown as { to: FboStatus }
         return mutate(ctx, param(params, 'id'), (r) => {
           if (FBO_NEXT[r.status]?.to !== to) return problem(409, 'Недопустимый переход статуса')
           const next = step(r, to, ctx.user.fullName)

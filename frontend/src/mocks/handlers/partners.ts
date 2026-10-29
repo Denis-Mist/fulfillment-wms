@@ -3,7 +3,7 @@ import { SELLER_ROLES } from '@/modules/auth/roles'
 import type { ConnectRequestInput, FcService, FulfillmentCard } from '@/modules/partners/types'
 import { db } from '../db/store'
 import type { OrgRecord } from '../db/types'
-import { param, problem, withAuth } from '../lib/http'
+import { readJson, param, problem, withAuth } from '../lib/http'
 import { createRandom } from '../lib/random'
 import { api } from './api'
 import { requests } from './catalog'
@@ -76,7 +76,7 @@ export const partnersHandlers = [
         const current = cardFor(fc, ctx.org.id)
         if (current.connection === 'connected') return problem(409, 'Договор уже заключён')
         if (current.connection === 'pending') return problem(409, 'Заявка уже на рассмотрении')
-        const input = (await request.json()) as ConnectRequestInput
+        const input = (await readJson(request)) as ConnectRequestInput
         if (!(input.skuEstimate > 0) || !(input.ordersPerDay >= 0))
           return problem(422, 'Укажите ассортимент и объём заказов')
         if (!input.marketplaces?.length) return problem(422, 'Выберите хотя бы один маркетплейс')

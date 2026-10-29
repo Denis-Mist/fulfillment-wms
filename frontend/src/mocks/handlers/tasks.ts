@@ -20,16 +20,8 @@ import { DAY, HOUR } from '../db/seed'
 import { db } from '../db/store'
 import type { LocationRecord, OrderRecord } from '../db/types'
 import { localCollection } from '../lib/collection'
-import {
-  countBy,
-  listParams,
-  paginate,
-  param,
-  problem,
-  sortItems,
-  withAuth,
-  type MockContext,
-} from '../lib/http'
+import { parseBody, readJson, countBy, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
+import { orderIdsSchema, routeSchema } from '../lib/schemas'
 import { lookups } from '../lib/mappers'
 import { createRandom } from '../lib/random'
 import { visibleWarehouseIds } from '../lib/scope'
@@ -655,7 +647,7 @@ export const taskHandlers = [
         const visible = visibleWarehouseIds(ctx)
         if (!t || (visible && !visible.has(t.warehouseId))) return problem(404, 'Задание не найдено')
         if (t.status === 'done' || t.status === 'cancelled') return problem(409, 'Задание уже закрыто')
-        const { userId } = (await request.json()) as { userId: string | null }
+        const { userId } = (await readJson(request)) as { userId: string | null }
         if (userId) {
           const role = roleIn(userId, t.organizationId)
           if (!role || !TASK_TYPES[t.type].roles.includes(role)) {
@@ -730,7 +722,7 @@ export const taskHandlers = [
     api('/picking/preview'),
     withAuth(
       async ({ ctx, request }) => {
-        const { orderIds } = (await request.json()) as { orderIds: string[] }
+        const { orderIds } = await parseBody(request, orderIdsSchema)
         const pool = new Map(candidates(ctx).map((o) => [o.id, o]))
         const orders = orderIds.map((id) => pool.get(id)).filter((o): o is OrderRecord => !!o)
         return HttpResponse.json(preview(pickItems(orders)))
@@ -743,7 +735,7 @@ export const taskHandlers = [
     api('/picking/batches'),
     withAuth(
       async ({ ctx, request }) => {
-        const { orderIds, algorithm } = (await request.json()) as {
+        const { orderIds, algorithm } = (await parseBody(request, routeSchema)) as unknown as {
           orderIds: string[]
           algorithm: RouteAlgorithm
         }
@@ -839,7 +831,7 @@ export const taskHandlers = [
       const t = ownTask(ctx, param(params, 'id'))
       if (t instanceof Response) return t
       if (t.status !== 'in_progress') return problem(409, 'Задание не в работе')
-      const { code } = (await request.json()) as { code: string }
+      const { code } = (await readJson(request)) as { code: string }
       const value = code.trim()
       const details = toDetails(t)
       const step = details.steps.find((s) => s.done < s.quantity)

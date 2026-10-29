@@ -1,24 +1,24 @@
 import { http, HttpResponse } from 'msw'
 import type { LoginRequest, RegisterRequest } from '@/modules/auth/types'
 import { db } from '../db/store'
-import { latency, problem, tokenFor, withAuth } from '../lib/http'
+import { handleBodyErrors, readJson, latency, problem, tokenFor, withAuth } from '../lib/http'
 import { toCurrentUser } from '../lib/mappers'
 import { api } from './api'
 
 export const authHandlers = [
-  http.post(api('/auth/login'), async ({ request }) => {
+  http.post(api('/auth/login'), async ({ request }) => handleBodyErrors(async () => {
     await latency()
-    const body = (await request.json()) as LoginRequest
+    const body = (await readJson(request)) as LoginRequest
     const user = db.data.users.find((u) => u.email.toLowerCase() === body.email?.trim().toLowerCase())
     if (!user || user.password !== body.password) {
       return problem(401, 'Неверный email или пароль', 'Проверьте данные и попробуйте ещё раз.')
     }
     return HttpResponse.json({ accessToken: tokenFor(user.id), user: toCurrentUser(user) })
-  }),
+  })),
 
-  http.post(api('/auth/register'), async ({ request }) => {
+  http.post(api('/auth/register'), async ({ request }) => handleBodyErrors(async () => {
     await latency()
-    const body = (await request.json()) as RegisterRequest
+    const body = (await readJson(request)) as RegisterRequest
     const email = body.user?.email?.trim().toLowerCase()
     if (!email || !body.user.password || !body.organization?.name) {
       return problem(400, 'Заполнены не все обязательные поля')
@@ -51,7 +51,7 @@ export const authHandlers = [
     }
     db.upsert('users', user)
     return HttpResponse.json({ accessToken: tokenFor(user.id), user: toCurrentUser(user) }, { status: 201 })
-  }),
+  })),
 
   http.get(
     api('/auth/me'),

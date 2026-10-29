@@ -4,7 +4,7 @@ import type { Employee, EmployeeInput, Shift, Skill, StaffResponse } from '@/mod
 import { DAY } from '../db/seed'
 import { db } from '../db/store'
 import { localCollection } from '../lib/collection'
-import { param, problem, withAuth, type MockContext } from '../lib/http'
+import { readJson, param, problem, withAuth, type MockContext } from '../lib/http'
 import { lookups } from '../lib/mappers'
 import { createRandom } from '../lib/random'
 import { api } from './api'
@@ -144,7 +144,7 @@ export const staffHandlers = [
       async ({ ctx, params, request }) => {
         const rec = own(ctx, param(params, 'id'))
         if (!rec) return problem(404, 'Сотрудник не найден')
-        const input = (await request.json()) as EmployeeInput
+        const input = (await readJson(request)) as EmployeeInput
         if (!db.data.warehouses.some((w) => w.id === input.warehouseId && w.organizationId === ctx.org!.id))
           return problem(422, 'Выберите склад')
         if (rec.id === ctx.user.id && !input.active) return problem(422, 'Нельзя деактивировать себя')
@@ -172,7 +172,7 @@ export const staffHandlers = [
       async ({ ctx, params, request }) => {
         const rec = own(ctx, param(params, 'id'))
         if (!rec) return problem(404, 'Сотрудник не найден')
-        const { day, shift } = (await request.json()) as { day: number; shift: Shift }
+        const { day, shift } = (await readJson(request)) as { day: number; shift: Shift }
         if (!(day >= 0 && day < 7)) return problem(422, 'Некорректный день')
         const shifts = [...rec.shifts]
         shifts[day] = shift

@@ -8,7 +8,7 @@ import type {
   IntegrationSettingsInput,
 } from '@/modules/integrations/types'
 import { localCollection } from '../lib/collection'
-import { param, problem, withAuth } from '../lib/http'
+import { readJson, param, problem, withAuth } from '../lib/http'
 import { createRandom } from '../lib/random'
 import { api } from './api'
 
@@ -99,7 +99,7 @@ export const integrationsHandlers = [
       async ({ ctx, params, request }) => {
         const ch = channelOf(params)
         if (!ch || !ctx.org) return problem(404, 'Неизвестный маркетплейс')
-        const { apiKey, clientId } = (await request.json()) as ConnectInput
+        const { apiKey, clientId } = (await readJson(request)) as ConnectInput
         const key = apiKey?.trim() ?? ''
         if (key.length < 20)
           return problem(422, 'Ключ API слишком короткий', 'Скопируйте ключ целиком из личного кабинета')
@@ -211,7 +211,7 @@ export const integrationsHandlers = [
       async ({ ctx, params, request }) => {
         const ch = channelOf(params)
         if (!ch || !ctx.org) return problem(404, 'Неизвестный маркетплейс')
-        const input = (await request.json()) as IntegrationSettingsInput
+        const input = (await readJson(request)) as IntegrationSettingsInput
         if (![5, 15, 30, 60].includes(input.syncIntervalMin)) return problem(422, 'Недопустимый интервал')
         const store = storeFor(ctx.org.id)
         const row = store.find(ch)!

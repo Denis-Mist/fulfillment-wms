@@ -1,4 +1,5 @@
 import { delay, HttpResponse, type PathParams } from 'msw'
+import type { z } from 'zod'
 import type { Role } from '@/modules/auth/types'
 import type { Paged, SortOrder } from '@/shared/api/types'
 import { db } from '../db/store'
@@ -12,6 +13,63 @@ export interface MockContext {
 
 export function problem(status: number, title: string, detail?: string) {
   return HttpResponse.json({ type: `https://httpstatuses.io/${status}`, title, status, detail }, { status })
+}
+
+/** Ошибка тела запроса: превращается в 400/422 вместо 500 (см. handleBodyErrors) */
+export class BodyError extends Error {
+  constructor(
+    public status: 400 | 422,
+    public title: string,
+    public errors?: { field: string; message: string }[],
+  ) {
+    super(title)
+  }
+}
+
+/** Безопасное чтение JSON: пустое/битое тело или не объект → 400 */
+export async function readJson(request: Request): Promise<unknown> {
+  const text = await request.text().catch(() => '')
+  if (!text.trim()) throw new BodyError(400, 'Пустое тело запроса', [{ field: '', message: 'Ожидается JSON-объект' }])
+  let value: unknown
+  try {
+    value = JSON.parse(text)
+  } catch {
+    throw new BodyError(400, 'Некорректный JSON в теле запроса')
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new BodyError(400, 'Тело запроса должно быть JSON-объектом')
+  }
+  return value
+}
+
+/** readJson + zod: несоответствие схеме → 422 со списком полей */
+export async function parseBody<S extends z.ZodType>(request: Request, schema: S): Promise<z.infer<S>> {
+  const result = schema.safeParse(await readJson(request))
+  if (!result.success) {
+    throw new BodyError(
+      422,
+      'Ошибка валидации',
+      result.error.issues.map((i) => ({ field: i.path.join('.'), message: i.message })),
+    )
+  }
+  return result.data
+}
+
+/** BodyError → 400/422; TypeError из-за отсутствующих полей ({}-тело) → 422, а не 500 */
+export async function handleBodyErrors(run: () => Response | Promise<Response>): Promise<Response> {
+  try {
+    return await run()
+  } catch (error) {
+    if (error instanceof BodyError) {
+      const detail = error.errors?.map((e) => (e.field ? `${e.field}: ${e.message}` : e.message)).join('; ')
+      return HttpResponse.json(
+        { type: `https://httpstatuses.io/${error.status}`, title: error.title, status: error.status, detail, errors: error.errors },
+        { status: error.status },
+      )
+    }
+    if (error instanceof TypeError) return problem(422, 'Некорректные данные запроса', 'Не хватает обязательных полей.')
+    throw error
+  }
 }
 
 const TOKEN_PREFIX = 'mock.'
@@ -55,7 +113,7 @@ export function withAuth(
       return problem(403, 'Организация не активна', 'Доступ откроется после проверки администратором.')
     }
     if (options.roles && !options.roles.includes(ctx.role)) return problem(403, 'Недостаточно прав')
-    return resolver({ request, params, ctx, url: new URL(request.url) })
+    return handleBodyErrors(() => resolver({ request, params, ctx, url: new URL(request.url) }))
   }
 }
 
