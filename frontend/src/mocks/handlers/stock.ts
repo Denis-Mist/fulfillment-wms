@@ -14,7 +14,7 @@ import { db } from '../db/store'
 import { DAY } from '../db/seed'
 import type { StockRecord } from '../db/types'
 import { localCollection } from '../lib/collection'
-import { listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
+import { readJson, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
 import { lookups } from '../lib/mappers'
 import { createRandom } from '../lib/random'
 import { canSee, visibleWarehouseIds } from '../lib/scope'
@@ -158,7 +158,7 @@ function record(
 }
 
 async function body<T>(request: Request): Promise<T> {
-  return (await request.json()) as T
+  return (await readJson(request)) as T
 }
 
 function stockFor(ctx: MockContext, id: string): StockRecord | Response {

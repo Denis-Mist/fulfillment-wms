@@ -13,7 +13,7 @@ import { DAY } from '../db/seed'
 import { db } from '../db/store'
 import type { ContractRecord } from '../db/types'
 import { localCollection } from '../lib/collection'
-import { listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
+import { readJson, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
 import { lookups } from '../lib/mappers'
 import { createRandom } from '../lib/random'
 import { api } from './api'
@@ -352,7 +352,7 @@ export const billingHandlers = [
       async ({ ctx, params, request }) => {
         const id = param(params, 'id')
         if (!ownContract(ctx, id)) return problem(404, 'Договор не найден')
-        const body = (await request.json()) as Tariff
+        const body = (await readJson(request)) as Tariff
         for (const [k, v] of Object.entries(body)) {
           if (typeof v !== 'number' || !(v >= 0)) return problem(422, 'Некорректный тариф', k)
         }

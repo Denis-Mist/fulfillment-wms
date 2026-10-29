@@ -14,7 +14,8 @@ import { db } from '../db/store'
 import { DAY } from '../db/seed'
 import type { ContractRecord, ProductRecord } from '../db/types'
 import { localCollection } from '../lib/collection'
-import { listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
+import { parseBody, readJson, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
+import { productImportSchema, productSchema } from '../lib/schemas'
 import { lookups } from '../lib/mappers'
 import { visibleWarehouseIds } from '../lib/scope'
 import { api } from './api'
@@ -259,7 +260,7 @@ export const catalogHandlers = [
     api('/catalog/products/import'),
     withAuth(
       async ({ ctx, request }) => {
-        const { rows } = (await request.json()) as { rows: ProductInput[] }
+        const { rows } = (await parseBody(request, productImportSchema)) as unknown as { rows: ProductInput[] }
         const result: ImportResult = { created: 0, updated: 0, errors: [] }
         rows.forEach((row, index) => {
           const existing = db.data.products.find(
@@ -341,7 +342,7 @@ export const catalogHandlers = [
     api('/catalog/products'),
     withAuth(
       async ({ ctx, request }) => {
-        const input = (await request.json()) as ProductInput
+        const input = (await parseBody(request, productSchema)) as unknown as ProductInput
         const error = validate(input, ctx.org!.id)
         if (error) return problem(422, error)
         const record = toRecord(input, ctx.org!.id, newId())
@@ -358,7 +359,7 @@ export const catalogHandlers = [
       async ({ ctx, request, params }) => {
         const product = visibleProducts(ctx).find((p) => p.id === param(params, 'id'))
         if (!product) return problem(404, 'Товар не найден')
-        const input = (await request.json()) as ProductInput
+        const input = (await readJson(request)) as ProductInput
         const error = validate(input, product.sellerId, product.id)
         if (error) return problem(422, error)
         const record = toRecord(input, product.sellerId, product.id)

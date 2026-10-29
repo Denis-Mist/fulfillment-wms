@@ -16,7 +16,8 @@ import { DAY } from '../db/seed'
 import { db } from '../db/store'
 import type { LocationRecord } from '../db/types'
 import { localCollection } from '../lib/collection'
-import { problem, withAuth, type MockContext } from '../lib/http'
+import { parseBody, problem, withAuth, type MockContext } from '../lib/http'
+import { applyIdsSchema, forecastApproveSchema } from '../lib/schemas'
 import { lookups } from '../lib/mappers'
 import { createRandom } from '../lib/random'
 import { visibleWarehouseIds } from '../lib/scope'
@@ -215,7 +216,7 @@ export const analyticsHandlers = [
     api('/analytics/forecast/approve'),
     withAuth(
       async ({ ctx, request }) => {
-        const body = (await request.json()) as { warehouseId?: string; algorithm: ForecastAlgorithm }
+        const body = (await parseBody(request, forecastApproveSchema)) as unknown as { warehouseId?: string; algorithm: ForecastAlgorithm }
         const record = plans.upsert({
           id: planKey(ctx, body.warehouseId ?? null),
           approvedAt: new Date().toISOString(),
@@ -383,7 +384,7 @@ export const analyticsHandlers = [
     api('/analytics/slotting/apply'),
     withAuth(
       async ({ request }) => {
-        const body = (await request.json()) as { ids: string[] }
+        const body = await parseBody(request, applyIdsSchema)
         if (!body.ids?.length) return problem(422, 'Не выбраны рекомендации')
         const at = new Date().toISOString()
         for (const id of body.ids) applied.upsert({ id, appliedAt: at })

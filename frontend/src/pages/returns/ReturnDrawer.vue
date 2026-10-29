@@ -30,6 +30,15 @@ watch(r, (v) => {
   )
   comment.value = v?.comment ?? ''
 })
+// FE-S2-4: оценка обязательна для каждой позиции — без неё бэкенд отвечает 422
+const gradeTouched = ref(false)
+watch(() => props.id, () => (gradeTouched.value = false))
+const missingGrades = computed(() => (r.value?.lines ?? []).filter((l) => !grades.value[l.productId]).map((l) => l.productId))
+function submitInspect() {
+  gradeTouched.value = true
+  if (missingGrades.value.length) return
+  inspect.mutate()
+}
 const gradeOptions = Object.entries(RETURN_GRADES).map(([value, m]) => ({ value, label: m.label }))
 
 const done = (title: string) => ({
@@ -112,6 +121,8 @@ const info = computed(() =>
               option-value="value"
               placeholder="Состояние"
               class="w-full sm:w-44"
+              :invalid="gradeTouched && !grades[l.productId]"
+              :aria-invalid="gradeTouched && !grades[l.productId]"
             />
             <ToneBadge
               v-else-if="l.grade"
@@ -123,6 +134,9 @@ const info = computed(() =>
         </ul>
       </div>
 
+      <Message v-if="canOperate && r.status === 'received' && gradeTouched && missingGrades.length" severity="error" size="small">
+        Укажите состояние для всех позиций (осталось: {{ missingGrades.length }})
+      </Message>
       <div v-if="canOperate && r.status === 'received'">
         <label class="mb-1 block text-sm font-medium">Комментарий к оценке</label>
         <Textarea
@@ -145,7 +159,7 @@ const info = computed(() =>
           v-if="r.status === 'received'"
           label="Сохранить оценку"
           :loading="inspect.isPending.value"
-          @click="inspect.mutate()"
+          @click="submitInspect"
         />
         <Button
           v-if="r.status === 'inspected'"

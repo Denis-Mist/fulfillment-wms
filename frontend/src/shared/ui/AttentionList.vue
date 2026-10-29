@@ -36,8 +36,8 @@ const tone = (value: AttentionTone) => TONE_CLASSES[toneMap[value]]
           {{ formatNumber(item.count) }}
         </span>
         <span class="min-w-0 flex-1">
-          <span class="block truncate text-sm font-medium text-heading">{{ item.title }}</span>
-          <span class="block truncate text-xs text-secondary">{{ item.description }}</span>
+          <span class="block break-words text-sm font-medium text-heading">{{ item.title }}</span>
+          <span class="block break-words text-xs text-secondary">{{ item.description }}</span>
         </span>
         <ChevronRight class="size-4 text-surface-400 transition-transform group-hover:translate-x-0.5" />
       </RouterLink>

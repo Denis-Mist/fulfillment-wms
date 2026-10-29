@@ -11,7 +11,8 @@ import type {
 } from '@/modules/settings/types'
 import { db } from '../db/store'
 import { localCollection } from '../lib/collection'
-import { param, problem, withAuth, type MockContext } from '../lib/http'
+import { parseBody, param, problem, withAuth, type MockContext } from '../lib/http'
+import { cardRulesSchema, inviteSchema, notificationPrefsSchema, orgProfileSchema } from '../lib/schemas'
 import { createRandom } from '../lib/random'
 import { api } from './api'
 
@@ -94,7 +95,7 @@ export const settingsHandlers = [
     api('/settings/profile'),
     withAuth(
       async ({ ctx, request }) => {
-        const p = (await request.json()) as OrgProfile
+        const p = (await parseBody(request, orgProfileSchema)) as unknown as OrgProfile
         if (!p.name.trim()) return problem(422, 'Укажите название организации')
         if (!/^\d{9}$/.test(p.bik)) return problem(422, 'БИК должен состоять из 9 цифр')
         if (!/^\d{20}$/.test(p.account)) return problem(422, 'Расчётный счёт должен состоять из 20 цифр')
@@ -108,7 +109,7 @@ export const settingsHandlers = [
 
   http.put(
     api('/settings/card-rules'),
-    withAuth(async ({ ctx, request }) => save(ctx, { cardRules: (await request.json()) as CardRules }), {
+    withAuth(async ({ ctx, request }) => save(ctx, { cardRules: (await parseBody(request, cardRulesSchema)) as unknown as CardRules }), {
       roles: ['fc_owner', 'fc_manager'],
     }),
   ),
@@ -116,7 +117,7 @@ export const settingsHandlers = [
   http.put(
     api('/settings/notifications'),
     withAuth(async ({ ctx, request }) =>
-      save(ctx, { notifications: (await request.json()) as NotificationPrefs }),
+      save(ctx, { notifications: (await parseBody(request, notificationPrefsSchema)) as unknown as NotificationPrefs }),
     ),
   ),
 
@@ -153,7 +154,7 @@ export const settingsHandlers = [
     api('/settings/team/invite'),
     withAuth(
       async ({ ctx, request }) => {
-        const input = (await request.json()) as InviteInput
+        const input = (await parseBody(request, inviteSchema)) as unknown as InviteInput
         const email = input.email.trim().toLowerCase()
         if (!/^\S+@\S+\.\S+$/.test(email)) return problem(422, 'Некорректный email')
         const expected = ctx.org!.type === 'fulfillment' ? ['fc', 'worker'] : ['seller']

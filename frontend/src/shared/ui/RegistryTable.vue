@@ -3,6 +3,7 @@ import type { DataTablePageEvent, DataTableRowClickEvent, DataTableSortEvent } f
 import { SearchX } from '@lucide/vue'
 import { computed } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
+import { useRoute } from 'vue-router'
 import EmptyState from './EmptyState.vue'
 
 const isMobile = useMediaQuery('(max-width: 639px)')
@@ -15,7 +16,7 @@ const paginatorTemplate = computed(() =>
     : 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport',
 )
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     items: T[]
     total: number
@@ -34,6 +35,14 @@ withDefaults(
     emptyTitle: 'Ничего не найдено',
     emptyDescription: 'Попробуйте изменить фильтры или поисковый запрос.',
   },
+)
+
+// FE-S2-5: при активном поиске (useRegistry держит его в ?search=) пустой список — «Ничего не найдено»
+const route = useRoute()
+const searchQuery = computed(() => (typeof route.query.search === 'string' ? route.query.search.trim() : ''))
+const shownTitle = computed(() => (searchQuery.value ? 'Ничего не найдено' : props.emptyTitle))
+const shownDescription = computed(() =>
+  searchQuery.value ? `По запросу «${searchQuery.value}» ничего нет. Измените запрос или сбросьте фильтры.` : props.emptyDescription,
 )
 
 const slots = defineSlots<{
@@ -61,7 +70,7 @@ function onRowClick(event: DataTableRowClickEvent) {
       <Skeleton v-for="i in 6" :key="i" height="6rem" border-radius="1rem" />
     </div>
     <div v-else-if="!items.length" class="surface-card">
-      <EmptyState :icon="SearchX" :title="emptyTitle" :description="emptyDescription" compact>
+      <EmptyState :icon="SearchX" :title="shownTitle" :description="shownDescription" compact>
         <slot name="empty-action" />
       </EmptyState>
     </div>
@@ -119,7 +128,7 @@ function onRowClick(event: DataTableRowClickEvent) {
         <div v-if="loading" class="space-y-3 py-2">
           <Skeleton v-for="i in 8" :key="i" height="2.25rem" />
         </div>
-        <EmptyState v-else :icon="SearchX" :title="emptyTitle" :description="emptyDescription" compact>
+        <EmptyState v-else :icon="SearchX" :title="shownTitle" :description="shownDescription" compact>
           <slot name="empty-action" />
         </EmptyState>
       </template>
