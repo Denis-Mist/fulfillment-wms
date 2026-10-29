@@ -25,8 +25,9 @@ public static class FboEndpoints
                 ListQuery.String(http.Request, "warehouseId")), ct))).RequireAccess();
         f.MapGet("/{id}", async (HttpContext http, string id, FboHandler h, CancellationToken ct) =>
             Results.Ok(await h.DetailsAsync(http.Ctx(), id, ct))).RequireAccess();
-        f.MapPost("", async (HttpContext http, FboInput body, FboHandler h, CancellationToken ct) =>
+        f.MapPost("", async (HttpContext http, FboHandler h, CancellationToken ct) =>
         {
+            var body = await Body.ReadOrEmptyAsync<FboInput>(http, ct);
             var created = await h.CreateAsync(http.Ctx(), body, ct);
             return Results.Created($"/api/fbo/{created.Id}", created);
         }).RequireAccess(Sellers);
@@ -34,8 +35,8 @@ public static class FboEndpoints
             Results.Ok(await h.SubmitAsync(http.Ctx(), id, ct))).RequireAccess(Sellers);
         f.MapPost("/{id}/cancel", async (HttpContext http, string id, FboHandler h, CancellationToken ct) =>
             Results.Ok(await h.CancelAsync(http.Ctx(), id, ct))).RequireAccess(Sellers);
-        f.MapPost("/{id}/advance", async (HttpContext http, string id, AdvanceBody body, FboHandler h, CancellationToken ct) =>
-            Results.Ok(await h.AdvanceAsync(http.Ctx(), id, body.To, ct))).RequireAccess(FcOps);
+        f.MapPost("/{id}/advance", async (HttpContext http, string id, FboHandler h, CancellationToken ct) =>
+            Results.Ok(await h.AdvanceAsync(http.Ctx(), id, (await Body.ReadOrEmptyAsync<AdvanceBody>(http, ct)).To, ct))).RequireAccess(FcOps);
         return api;
     }
 }

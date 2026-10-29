@@ -52,6 +52,8 @@ public sealed class PickingHandler(IAppDbContext db, IUnitOfWork uow, WarehouseS
 
     public async Task<TaskDetailsDto> CreateBatchAsync(RequestContext ctx, IReadOnlyList<string> orderIds, string? algorithm, CancellationToken ct)
     {
+        if (orderIds.Count == 0)
+            throw AppException.Unprocessable("Выберите заказы", "Отметьте хотя бы один заказ для формирования батча.");
         var pool = (await CandidateOrdersAsync(ctx, null, ct, tracking: true)).ToDictionary(o => o.Id);
         var orders = orderIds.Where(pool.ContainsKey).Select(id => pool[id]).ToList();
         if (orders.Count == 0 || orders.Count != orderIds.Count)

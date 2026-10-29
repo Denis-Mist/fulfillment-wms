@@ -97,7 +97,9 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
 
     public async Task<PlanDto> ApproveAsync(RequestContext ctx, ApproveInput input, CancellationToken ct)
     {
-        if (!SnakeCaseName.TryParse<ForecastAlgorithm>(input.Algorithm, out var algorithm))
+        // Как мок: без algorithm план утверждается (алгоритм по умолчанию); неизвестное значение — 422.
+        var algorithm = ForecastAlgorithm.HoltWinters;
+        if (!string.IsNullOrEmpty(input.Algorithm) && !SnakeCaseName.TryParse(input.Algorithm, out algorithm))
             throw AppException.Unprocessable("Неизвестный алгоритм", "algorithm");
         var key = StaffPlan.KeyFor(ctx.OrganizationId, string.IsNullOrEmpty(input.WarehouseId) ? null : input.WarehouseId);
         var by = await db.Users.AsNoTracking().Where(u => u.Id == ctx.UserId).Select(u => u.FullName).FirstOrDefaultAsync(ct) ?? string.Empty;

@@ -17,13 +17,13 @@ public static class AnalyticsEndpoints
         g.MapGet("/forecast", async (HttpContext http, AnalyticsHandler h, CancellationToken ct) =>
             Results.Ok(await h.ForecastAsync(http.Ctx(), ListQuery.String(http.Request, "warehouseId"), Int(http.Request, "horizon"),
                 ListQuery.Enum<ForecastAlgorithm>(http.Request, "algorithm"), ct))).RequireAccess(Management);
-        g.MapPost("/forecast/approve", async (HttpContext http, ApproveInput body, AnalyticsHandler h, CancellationToken ct) =>
-            Results.Ok(await h.ApproveAsync(http.Ctx(), body, ct))).RequireAccess(Management);
+        g.MapPost("/forecast/approve", async (HttpContext http, AnalyticsHandler h, CancellationToken ct) =>
+            Results.Ok(await h.ApproveAsync(http.Ctx(), (await Body.ReadOrEmptyAsync<ApproveInput>(http, ct)), ct))).RequireAccess(Management);
         g.MapGet("/slotting", async (HttpContext http, AnalyticsHandler h, CancellationToken ct) =>
             Results.Ok(await h.SlottingAsync(http.Ctx(), ListQuery.String(http.Request, "warehouseId"),
                 ListQuery.Enum<SlottingAlgorithm>(http.Request, "algorithm"), ct))).RequireAccess(Management);
-        g.MapPost("/slotting/apply", async (ApplyInput body, AnalyticsHandler h, CancellationToken ct) =>
-            Results.Ok(await h.ApplyAsync(body, ct))).RequireAccess(Management);
+        g.MapPost("/slotting/apply", async (HttpContext http, AnalyticsHandler h, CancellationToken ct) =>
+            Results.Ok(await h.ApplyAsync(await Body.ReadOrEmptyAsync<ApplyInput>(http, ct), ct))).RequireAccess(Management);
         g.MapGet("/kpi", async (HttpContext http, AnalyticsHandler h, CancellationToken ct) =>
             Results.Ok(await h.KpiAsync(http.Ctx(), ListQuery.String(http.Request, "warehouseId"), ListQuery.String(http.Request, "sellerId"),
                 Int(http.Request, "period"), ct))).RequireAccess(Management);

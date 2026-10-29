@@ -22,8 +22,8 @@ public static class ReturnsEndpoints
             Results.Ok(await h.DetailsAsync(http.Ctx(), id, ct))).RequireAccess();
         g.MapPost("/{id}/receive", async (HttpContext http, string id, ReturnsHandler h, CancellationToken ct) =>
             Results.Ok(await h.ReceiveAsync(http.Ctx(), id, ct))).RequireAccess(FcOps);
-        g.MapPost("/{id}/inspect", async (HttpContext http, string id, InspectInput body, ReturnsHandler h, CancellationToken ct) =>
-            Results.Ok(await h.InspectAsync(http.Ctx(), id, body, ct))).RequireAccess(FcOps);
+        g.MapPost("/{id}/inspect", async (HttpContext http, string id, ReturnsHandler h, CancellationToken ct) =>
+            Results.Ok(await h.InspectAsync(http.Ctx(), id, (await Body.ReadOrEmptyAsync<InspectInput>(http, ct)), ct))).RequireAccess(FcOps);
         g.MapPost("/{id}/close", async (HttpContext http, string id, ReturnsHandler h, CancellationToken ct) =>
             Results.Ok(await h.CloseAsync(http.Ctx(), id, ct))).RequireAccess(FcOps);
         return api;

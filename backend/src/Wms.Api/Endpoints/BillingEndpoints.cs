@@ -28,8 +28,8 @@ public static class BillingEndpoints
             Results.Ok(await h.PayAsync(http.Ctx(), id, ct))).RequireAccess(Finance);
         g.MapGet("/tariffs/{id}", async (HttpContext http, string id, BillingHandler h, CancellationToken ct) =>
             Results.Ok(await h.TariffAsync(http.Ctx(), id, ct))).RequireAccess();
-        g.MapPut("/tariffs/{id}", async (HttpContext http, string id, TariffInput body, BillingHandler h, CancellationToken ct) =>
-            Results.Ok(await h.UpdateTariffAsync(http.Ctx(), id, body, ct))).RequireAccess(TariffEditors);
+        g.MapPut("/tariffs/{id}", async (HttpContext http, string id, BillingHandler h, CancellationToken ct) =>
+            Results.Ok(await h.UpdateTariffAsync(http.Ctx(), id, (await Body.ReadOrEmptyAsync<TariffInput>(http, ct)), ct))).RequireAccess(TariffEditors);
         return api;
     }
 }

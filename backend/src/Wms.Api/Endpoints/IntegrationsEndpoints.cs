@@ -15,14 +15,14 @@ public static class IntegrationsEndpoints
         var g = api.MapGroup("/integrations").WithTags("Integrations");
         g.MapGet("", async (HttpContext http, IntegrationsHandler h, CancellationToken ct) =>
             Results.Ok(await h.ListAsync(http.Ctx(), ct))).RequireAccess(Sellers);
-        g.MapPost("/{channel}/connect", async (HttpContext http, string channel, ConnectInput body, IntegrationsHandler h, CancellationToken ct) =>
-            Results.Ok(await h.ConnectAsync(http.Ctx(), channel, body, ct))).RequireAccess(Manage);
+        g.MapPost("/{channel}/connect", async (HttpContext http, string channel, IntegrationsHandler h, CancellationToken ct) =>
+            Results.Ok(await h.ConnectAsync(http.Ctx(), channel, (await Body.ReadOrEmptyAsync<ConnectInput>(http, ct)), ct))).RequireAccess(Manage);
         g.MapPost("/{channel}/disconnect", async (HttpContext http, string channel, IntegrationsHandler h, CancellationToken ct) =>
             Results.Ok(await h.DisconnectAsync(http.Ctx(), channel, ct))).RequireAccess(Manage);
         g.MapPost("/{channel}/sync", async (HttpContext http, string channel, IntegrationsHandler h, CancellationToken ct) =>
             Results.Ok(await h.SyncAsync(http.Ctx(), channel, ct))).RequireAccess(Sellers);
-        g.MapPut("/{channel}", async (HttpContext http, string channel, IntegrationSettingsInput body, IntegrationsHandler h, CancellationToken ct) =>
-            Results.Ok(await h.UpdateAsync(http.Ctx(), channel, body, ct))).RequireAccess(Manage);
+        g.MapPut("/{channel}", async (HttpContext http, string channel, IntegrationsHandler h, CancellationToken ct) =>
+            Results.Ok(await h.UpdateAsync(http.Ctx(), channel, (await Body.ReadOrEmptyAsync<IntegrationSettingsInput>(http, ct)), ct))).RequireAccess(Manage);
         return api;
     }
 }

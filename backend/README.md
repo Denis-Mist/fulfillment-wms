@@ -177,3 +177,10 @@ dotnet ef database update -p src/Wms.Infrastructure -s src/Wms.Api
 - `slotting/apply` с пустым списком `ids` → 422.
 - Дашборд ФЦ для селлера и наоборот → 403; аналитика доступна только fc_owner/fc_manager.
 - Расхождения по поставкам — по доменному `HasDiscrepancy`.
+
+### Исправления QA (BE-01…BE-06)
+- Регистрация: email по формату, пароль ≥ 6 символов (как zod-схема RegisterPage.vue), лимиты длины полей; ошибки — 400 ProblemDetails с `errors` по полям (`organization.name`, `user.email`, …).
+- Тело запроса всегда читается после проверки доступа (`Body.ReadOrEmptyAsync`): 401 → 403 (нет организации / не активна / роль) → 400 (кривой JSON). Пустое тело = `{}`.
+- `POST /picking/batches` без заказов (`[]`, `{}`, пустое тело) → 422 «Выберите заказы».
+- `POST /analytics/forecast/approve` без `algorithm` → 200, алгоритм по умолчанию `holt_winters` (как мок); неизвестный алгоритм — по-прежнему 422.
+- Общий лимит строк во всех телах запросов: 256 символов, для свободного текста (`comment`, `note(s)`, `message`, `reason`, `description`) и `apiKey`/`token` — 2000; превышение → 422 «Слишком длинное значение» с `errors` по путям полей. Страховка: переполнение varchar в БД → 422 вместо 500.

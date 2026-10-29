@@ -66,6 +66,8 @@ public class TaskHandlersTests : IDisposable
         Assert.Equal("ORD_1, ORD_2", batch.Reference);
         Assert.Equal(["A-01-1", "B-01-1"], batch.Steps.Select(s => s.LocationCode));
         Assert.Equal(409, (await Assert.ThrowsAsync<AppException>(() => Picking.CreateBatchAsync(Office, ["ord_1"], null, default))).Status);
+        var empty = await Assert.ThrowsAsync<AppException>(() => Picking.CreateBatchAsync(Office, [], null, default));
+        Assert.Equal((422, "Выберите заказы"), (empty.Status, empty.Title));
         Assert.Single(await Picking.CandidatesAsync(Office, null, default));
 
         Assert.Equal(422, (await Assert.ThrowsAsync<AppException>(() => Commands.AssignAsync(Office, batch.Id, "usr_r", default))).Status);
