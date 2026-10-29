@@ -15,8 +15,7 @@ import { DAY } from '../db/seed'
 import { db } from '../db/store'
 import type { UserRecord } from '../db/types'
 import { localCollection } from '../lib/collection'
-import { parseBody, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
-import { referenceSchema } from '../lib/schemas'
+import { readJson, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
 import { api } from './api'
 
 const adminOnly = { roles: ['platform_admin' as const] }
@@ -301,7 +300,8 @@ export const adminPlatformHandlers = [
   http.post(
     api('/admin/references'),
     withAuth(async ({ request, ctx }) => {
-      const input = (await parseBody(request, referenceSchema)) as unknown as ReferenceInput
+      const raw = (await readJson(request)) as Partial<ReferenceInput>
+      const input = { ...raw, code: raw.code ?? '', name: raw.name ?? '' } as ReferenceInput
       const code = input.code.trim().toUpperCase()
       if (!/^[A-Z0-9_]{2,12}$/.test(code)) return problem(400, 'Код: 2–12 латинских букв, цифр или «_»')
       if (!input.name.trim()) return problem(400, 'Укажите название')

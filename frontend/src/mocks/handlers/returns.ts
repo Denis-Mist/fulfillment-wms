@@ -13,8 +13,7 @@ import type {
 import { HOUR } from '../db/seed'
 import { db } from '../db/store'
 import { localCollection } from '../lib/collection'
-import { parseBody, countBy, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
-import { inspectSchema } from '../lib/schemas'
+import { readJson, countBy, listParams, paginate, param, problem, sortItems, withAuth, type MockContext } from '../lib/http'
 import { lookups } from '../lib/mappers'
 import { createRandom } from '../lib/random'
 import { canSee } from '../lib/scope'
@@ -224,7 +223,8 @@ export const returnsHandlers = [
     api('/returns/:id/inspect'),
     withAuth(
       async ({ ctx, params, request }) => {
-        const input = (await parseBody(request, inspectSchema)) as unknown as InspectInput
+        const raw = (await readJson(request)) as Partial<InspectInput>
+        const input = { ...raw, grades: raw.grades ?? {} } as InspectInput
         return mutate(ctx, param(params, 'id'), (r) => {
           if (r.status !== 'received') return problem(409, 'Оценка доступна после приёмки')
           if (r.lines.some((l) => !input.grades[l.productId]))

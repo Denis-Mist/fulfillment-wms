@@ -20,7 +20,7 @@ const sections = computed(() => cabinetDef('worker').groups.flatMap((g) => g.sec
     >
       <AppLogo compact />
       <div class="min-w-0 px-3 text-center leading-tight">
-        <div class="truncate text-sm font-semibold text-heading">{{ route.meta.title }}</div>
+        <h1 class="text-sm font-semibold text-heading">{{ route.meta.title }}</h1>
         <div class="truncate text-[11px] text-secondary">
           {{ session.activeMembership?.organizationName }}
         </div>

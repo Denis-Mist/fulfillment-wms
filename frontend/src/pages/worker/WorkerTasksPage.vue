@@ -109,7 +109,6 @@ function simulate() {
 
 <template>
   <div>
-    <h1 class="sr-only">Мои задания</h1>
     <!-- Выполнение задания -->
     <div v-if="openId" class="space-y-4">
       <button type="button" class="inline-flex items-center gap-1 text-sm text-secondary" @click="back">

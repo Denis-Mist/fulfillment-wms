@@ -11,8 +11,7 @@ import type {
 } from '@/modules/settings/types'
 import { db } from '../db/store'
 import { localCollection } from '../lib/collection'
-import { parseBody, param, problem, withAuth, type MockContext } from '../lib/http'
-import { cardRulesSchema, inviteSchema, notificationPrefsSchema, orgProfileSchema } from '../lib/schemas'
+import { readJson, param, problem, withAuth, type MockContext } from '../lib/http'
 import { createRandom } from '../lib/random'
 import { api } from './api'
 
@@ -95,7 +94,8 @@ export const settingsHandlers = [
     api('/settings/profile'),
     withAuth(
       async ({ ctx, request }) => {
-        const p = (await parseBody(request, orgProfileSchema)) as unknown as OrgProfile
+        const raw = (await readJson(request)) as Partial<OrgProfile>
+        const p = { ...raw, name: raw.name ?? '', bik: raw.bik ?? '', account: raw.account ?? '', corrAccount: raw.corrAccount ?? '', contactEmail: raw.contactEmail ?? '' } as OrgProfile
         if (!p.name.trim()) return problem(422, 'Укажите название организации')
         if (!/^\d{9}$/.test(p.bik)) return problem(422, 'БИК должен состоять из 9 цифр')
         if (!/^\d{20}$/.test(p.account)) return problem(422, 'Расчётный счёт должен состоять из 20 цифр')
@@ -109,7 +109,7 @@ export const settingsHandlers = [
 
   http.put(
     api('/settings/card-rules'),
-    withAuth(async ({ ctx, request }) => save(ctx, { cardRules: (await parseBody(request, cardRulesSchema)) as unknown as CardRules }), {
+    withAuth(async ({ ctx, request }) => save(ctx, { cardRules: { ...current(ctx)?.cardRules, ...((await readJson(request)) as Partial<CardRules>) } as CardRules }), {
       roles: ['fc_owner', 'fc_manager'],
     }),
   ),
@@ -117,7 +117,7 @@ export const settingsHandlers = [
   http.put(
     api('/settings/notifications'),
     withAuth(async ({ ctx, request }) =>
-      save(ctx, { notifications: (await parseBody(request, notificationPrefsSchema)) as unknown as NotificationPrefs }),
+      save(ctx, { notifications: { ...current(ctx)?.notifications, ...((await readJson(request)) as Partial<NotificationPrefs>) } as NotificationPrefs }),
     ),
   ),
 
@@ -154,11 +154,12 @@ export const settingsHandlers = [
     api('/settings/team/invite'),
     withAuth(
       async ({ ctx, request }) => {
-        const input = (await parseBody(request, inviteSchema)) as unknown as InviteInput
-        const email = input.email.trim().toLowerCase()
+        if (!ctx.org) return problem(404, 'Организация не найдена')
+        const input = (await readJson(request)) as Partial<InviteInput>
+        const email = (input.email ?? '').trim().toLowerCase()
         if (!/^\S+@\S+\.\S+$/.test(email)) return problem(422, 'Некорректный email')
         const expected = ctx.org!.type === 'fulfillment' ? ['fc', 'worker'] : ['seller']
-        if (!expected.includes(cabinetForRole(input.role)))
+        if (!expected.includes(cabinetForRole(input.role as InviteInput['role'])))
           return problem(422, 'Роль недоступна для организации')
         const taken =
           db.data.users.some(
@@ -169,7 +170,7 @@ export const settingsHandlers = [
           id: `inv_${Date.now()}`,
           organizationId: ctx.org!.id,
           email,
-          role: input.role,
+          role: input.role!,
           invitedAt: new Date().toISOString(),
         }
         invites.upsert(rec)

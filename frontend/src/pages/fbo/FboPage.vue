@@ -146,7 +146,7 @@ const overdue = (item: FboListItem) =>
           option-value="value"
           placeholder="Все маркетплейсы"
           show-clear
-          class="w-full sm:w-52"
+          class="w-full sm:w-60"
           @update:model-value="registry.setFilter('marketplace', $event ?? undefined)"
         />
         <Select
