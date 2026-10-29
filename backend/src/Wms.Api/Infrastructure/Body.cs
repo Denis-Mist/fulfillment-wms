@@ -7,7 +7,7 @@ namespace Wms.Api.Infrastructure;
 
 /// <summary>
 /// Тело читается после проверки доступа (как в моках: сначала withAuth, потом request.json()).
-/// Пустое тело → null, кривой JSON → 400.
+/// Пустое (в т.ч. chunked/пробельное) тело → null, кривой JSON → 400.
 /// </summary>
 public static class Body
 {
@@ -17,7 +17,12 @@ public static class Body
         var options = http.RequestServices.GetRequiredService<IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>().Value.SerializerOptions;
         try
         {
-            var node = await JsonNode.ParseAsync(http.Request.Body, cancellationToken: ct);
+            // Длина может быть неизвестна (chunked): пустое/пробельное тело тоже считается отсутствующим.
+            using var buffer = new MemoryStream();
+            await http.Request.Body.CopyToAsync(buffer, ct);
+            if (buffer.ToArray().All(b => b is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n')) return null;
+            buffer.Position = 0;
+            var node = await JsonNode.ParseAsync(buffer, cancellationToken: ct);
             EnsureLengths(node);
             return node is null ? null : node.Deserialize<T>(options);
         }
