@@ -19,7 +19,9 @@ public sealed class RegisterHandler(
     public async Task<AuthResponse> HandleAsync(RegisterRequest request, CancellationToken ct)
     {
         var errors = validator.Validate(request);
-        if (errors.Count > 0) throw AppException.BadRequest("Заполнены не все обязательные поля", errors: errors);
+        if (errors.Count > 0)
+            throw AppException.BadRequest(RegisterRequestValidator.OnlyMissing(errors) ? "Заполнены не все обязательные поля" : "Проверьте поля формы",
+                errors: errors);
 
         var email = User.NormalizeEmail(request.User!.Email!);
         if (await users.EmailExistsAsync(email, ct))

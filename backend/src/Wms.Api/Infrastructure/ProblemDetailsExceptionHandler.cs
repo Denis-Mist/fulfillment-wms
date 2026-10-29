@@ -15,6 +15,9 @@ public sealed class ProblemDetailsExceptionHandler(IProblemDetailsService proble
         {
             AppException app => Problems.Create(app.Status, app.Title, app.Detail, app.Errors),
             DomainException domain => Problems.Create(400, "Некорректный запрос", domain.Message),
+            // Страховка: строка не влезла в колонку БД (varchar) — это ошибка ввода, а не 500.
+            Microsoft.EntityFrameworkCore.DbUpdateException { InnerException: Npgsql.PostgresException { SqlState: "22001" } } =>
+                Problems.Create(422, TextLimits.TooLongTitle, "Значение одного из полей превышает допустимую длину."),
             BadHttpRequestException bad => Problems.Create(400, "Некорректный запрос", bad.Message),
             _ => null,
         };

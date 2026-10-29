@@ -17,10 +17,13 @@ public static class StaffEndpoints
         var s = api.MapGroup("/staff").WithTags("Staff");
         s.MapGet("", async (HttpContext http, StaffHandler h, CancellationToken ct) =>
             Results.Ok(await h.ListAsync(http.Ctx(), ListQuery.String(http.Request, "warehouseId"), ct))).RequireAccess();
-        s.MapPut("/{id}", async (HttpContext http, string id, EmployeeInput body, StaffHandler h, CancellationToken ct) =>
-            Results.Ok(await h.UpdateAsync(http.Ctx(), id, body, ct))).RequireAccess(Editors);
-        s.MapPost("/{id}/shifts", async (HttpContext http, string id, ShiftBody body, StaffHandler h, CancellationToken ct) =>
-            Results.Ok(await h.SetShiftAsync(http.Ctx(), id, body.Day, body.Shift, ct))).RequireAccess(Managers);
+        s.MapPut("/{id}", async (HttpContext http, string id, StaffHandler h, CancellationToken ct) =>
+            Results.Ok(await h.UpdateAsync(http.Ctx(), id, (await Body.ReadOrEmptyAsync<EmployeeInput>(http, ct)), ct))).RequireAccess(Editors);
+        s.MapPost("/{id}/shifts", async (HttpContext http, string id, StaffHandler h, CancellationToken ct) =>
+        {
+            var body = await Body.ReadOrEmptyAsync<ShiftBody>(http, ct);
+            return Results.Ok(await h.SetShiftAsync(http.Ctx(), id, body.Day, body.Shift, ct));
+        }).RequireAccess(Managers);
         return api;
     }
 }

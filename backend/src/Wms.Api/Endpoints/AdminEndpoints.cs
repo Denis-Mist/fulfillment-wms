@@ -32,8 +32,8 @@ public static class AdminEndpoints
 
         admin.MapGet("/references", async (HttpRequest req, ReferencesQueryHandler h, CancellationToken ct) =>
             Results.Ok(await h.HandleAsync(ListQuery.Enum<ReferenceKind>(req, "kind"), ct)));
-        admin.MapPost("/references", async (HttpContext http, ReferenceInput body, CreateReferenceHandler h, CancellationToken ct) =>
-            Results.Json(await h.HandleAsync(http.Ctx(), body, ct), statusCode: StatusCodes.Status201Created));
+        admin.MapPost("/references", async (HttpContext http, CreateReferenceHandler h, CancellationToken ct) =>
+            Results.Json(await h.HandleAsync(http.Ctx(), (await Body.ReadOrEmptyAsync<ReferenceInput>(http, ct)), ct), statusCode: StatusCodes.Status201Created));
         admin.MapPost("/references/{id}/toggle", async (HttpContext http, string id, ToggleReferenceHandler h, CancellationToken ct) =>
             Results.Ok(await h.HandleAsync(http.Ctx(), id, ct)));
 
