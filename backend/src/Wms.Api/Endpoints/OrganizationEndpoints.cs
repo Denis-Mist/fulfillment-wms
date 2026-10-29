@@ -43,10 +43,10 @@ public static class OrganizationEndpoints
             Results.Ok(await h.UpdateProfileAsync(http.Ctx(), await Body.ReadAsync<Wms.Domain.Entities.OrgProfile>(http, ct), ct)))
             .RequireAccess(SettingsRoles.Owners);
         settings.MapPut("/card-rules", async (HttpContext http, OrgSettingsHandler h, CancellationToken ct) =>
-            Results.Ok(await h.UpdateCardRulesAsync(http.Ctx(), await Body.ReadAsync<Wms.Domain.Entities.CardRules>(http, ct), ct)))
+            Results.Ok(await h.UpdateCardRulesAsync(http.Ctx(), await Body.ReadOrEmptyAsync<Wms.Domain.Entities.CardRules>(http, ct), ct)))
             .RequireAccess(SettingsRoles.CardRuleEditors);
         settings.MapPut("/notifications", async (HttpContext http, OrgSettingsHandler h, CancellationToken ct) =>
-            Results.Ok(await h.UpdateNotificationsAsync(http.Ctx(), await Body.ReadAsync<Wms.Domain.Entities.NotificationPrefs>(http, ct), ct)))
+            Results.Ok(await h.UpdateNotificationsAsync(http.Ctx(), await Body.ReadOrEmptyAsync<Wms.Domain.Entities.NotificationPrefs>(http, ct), ct)))
             .RequireAccess();
         settings.MapGet("/team", async (HttpContext http, TeamQueryHandler h, CancellationToken ct) =>
             Results.Ok(await h.HandleAsync(http.Ctx(), ct))).RequireAccess();

@@ -31,7 +31,7 @@ public sealed record TariffInput(decimal? ReceivingPerUnit, decimal? StoragePerM
 public sealed record ChargeQuery(PageQuery Page, string? ContractId, BillingService? Service);
 
 /// <summary>Биллинг фулфилмента (mocks/handlers/billing.ts): договоры, тарифы, начисления и акты.</summary>
-public sealed class BillingHandler(IAppDbContext db, IUnitOfWork uow, IClock clock)
+public sealed class BillingHandler(IAppDbContext db, IUnitOfWork uow, IClock clock, IBillingStore store)
 {
     public async Task<IReadOnlyList<BillingContractDto>> ContractsAsync(RequestContext ctx, CancellationToken ct)
     {
@@ -92,8 +92,7 @@ public sealed class BillingHandler(IAppDbContext db, IUnitOfWork uow, IClock clo
         var draft = (await ActsAsync(ctx, null, ct)).FirstOrDefault(a => a.Id == id && a.Status == ActStatus.Draft)
                     ?? throw AppException.NotFound("Черновик акта не найден");
         var act = new BillingAct($"act_{draft.ContractId}_{draft.Period}", draft.ContractId, draft.Period, draft.Amount, ActStatus.Issued, clock.UtcNow, null);
-        db.BillingActs.Add(act);
-        await uow.SaveChangesAsync(ct);
+        if (!await store.TryAddActAsync(act, ct)) throw AppException.Conflict("Акт уже выставлен", "Обновите список актов.");
         return ToDto(act, draft.CounterpartyName);
     }
 
@@ -112,12 +111,13 @@ public sealed class BillingHandler(IAppDbContext db, IUnitOfWork uow, IClock clo
     public async Task<TariffDto> TariffAsync(RequestContext ctx, string contractId, CancellationToken ct)
     {
         await OwnContractAsync(ctx, contractId, ct);
-        return ToDto(await db.Tariffs.AsNoTracking().FirstAsync(t => t.ContractId == contractId, ct));
+        return ToDto(await db.Tariffs.AsNoTracking().FirstOrDefaultAsync(t => t.ContractId == contractId, ct) ?? Tariff.Default(contractId));
     }
 
     public async Task<TariffDto> UpdateTariffAsync(RequestContext ctx, string contractId, TariffInput input, CancellationToken ct)
     {
         await OwnContractAsync(ctx, contractId, ct);
+        await store.AddMissingAsync([Tariff.Default(contractId)], [], ct);
         var tariff = await db.Tariffs.FirstAsync(t => t.ContractId == contractId, ct);
         static decimal Req(decimal? v, string field) => v ?? throw AppException.Unprocessable("Некорректный тариф", field);
         try
@@ -168,29 +168,35 @@ public sealed class BillingHandler(IAppDbContext db, IUnitOfWork uow, IClock clo
         return result;
     }
 
-    /// <summary>Видимые договоры; при первом обращении договору заводятся тариф по умолчанию и акты за три прошлых месяца.</summary>
+    /// <summary>Видимые договоры (только чтение — без побочных эффектов).</summary>
     private async Task<(List<Contract> Contracts, Dictionary<string, string> Names)> VisibleAsync(RequestContext ctx, CancellationToken ct)
     {
         var query = db.Contracts.AsNoTracking();
         if (ctx.IsFulfillment) query = query.Where(c => c.FulfillmentId == ctx.OrganizationId);
         else if (!ctx.IsPlatformAdmin) query = query.Where(c => c.SellerId == ctx.OrganizationId);
         var contracts = (await query.ToListAsync(ct)).OrderBy(c => c.Id, StringComparer.Ordinal).ToList();
-        await EnsureBillingAsync(contracts, ct);
         var names = await db.Organizations.AsNoTracking().ToDictionaryAsync(o => o.Id, o => o.Name, ct);
         return (contracts, names);
     }
 
-    private async Task EnsureBillingAsync(List<Contract> contracts, CancellationToken ct)
+    /// <summary>
+    /// Заводит договорам без тарифа тариф по умолчанию и акты за три прошлых месяца.
+    /// Вызывается при старте (после сида), а не из чтений; запись идемпотентна (ON CONFLICT DO NOTHING).
+    /// </summary>
+    public async Task ProvisionAsync(CancellationToken ct)
     {
+        var contracts = (await db.Contracts.AsNoTracking().ToListAsync(ct)).OrderBy(c => c.Id, StringComparer.Ordinal).ToList();
         var ids = contracts.Select(c => c.Id).ToList();
         var known = (await db.Tariffs.AsNoTracking().Where(t => ids.Contains(t.ContractId)).Select(t => t.ContractId).ToListAsync(ct)).ToHashSet();
         var missing = contracts.Where(c => !known.Contains(c.Id)).ToList();
         if (missing.Count == 0) return;
         var now = clock.UtcNow;
         var charges = await BuildAsync(missing, now, ct);
+        var tariffs = new List<Tariff>();
+        var acts = new List<BillingAct>();
         foreach (var c in missing)
         {
-            db.Tariffs.Add(Tariff.Default(c.Id));
+            tariffs.Add(Tariff.Default(c.Id));
             for (var m = 3; m >= 1; m--)
             {
                 var monthStart = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero).AddMonths(-m);
@@ -199,11 +205,11 @@ public sealed class BillingHandler(IAppDbContext db, IUnitOfWork uow, IClock clo
                     MidpointRounding.AwayFromZero);
                 if (amount == 0) continue;
                 var issued = monthStart.AddMonths(1).AddDays(2);
-                db.BillingActs.Add(new BillingAct($"act_{c.Id}_{period}", c.Id, period, amount, m > 1 ? ActStatus.Paid : ActStatus.Issued, issued,
+                acts.Add(new BillingAct($"act_{c.Id}_{period}", c.Id, period, amount, m > 1 ? ActStatus.Paid : ActStatus.Issued, issued,
                     m > 1 ? issued.AddDays(6) : null));
             }
         }
-        await uow.SaveChangesAsync(ct);
+        await store.AddMissingAsync(tariffs, acts, ct);
     }
 
     private static string Counterparty(RequestContext ctx, Contract c, Dictionary<string, string> names) =>

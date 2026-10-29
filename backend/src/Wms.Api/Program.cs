@@ -39,7 +39,7 @@ builder.Services.AddAuthorization(Policies.Register);
 
 const string CorsPolicy = "frontend";
 builder.Services.AddCors(o => o.AddPolicy(CorsPolicy, p => p
-    .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? ["http://localhost:5173"])
+    .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? DefaultCorsOrigins)
     .AllowAnyHeader().AllowAnyMethod()));
 
 var app = builder.Build();
@@ -69,8 +69,18 @@ api.MapDashboardEndpoints();
 api.MapAnalyticsEndpoints();
 
 if (app.Configuration.GetValue("Database:MigrateOnStartup", true))
+{
     await app.Services.MigrateAndSeedAsync(app.Configuration.GetValue("Database:Seed", true));
+    // Акты/тарифы договоров создаются один раз при старте, а не лениво в GET-запросах биллинга.
+    await using var scope = app.Services.CreateAsyncScope();
+    await scope.ServiceProvider.GetRequiredService<Wms.Application.Billing.BillingHandler>().ProvisionAsync(default);
+}
 
 app.Run();
 
-public partial class Program;
+public partial class Program
+{
+    /// <summary>Источники фронтенда по умолчанию (Vite dev/preview), если Cors:Origins не задан в конфигурации.</summary>
+    internal static readonly string[] DefaultCorsOrigins =
+        ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174"];
+}

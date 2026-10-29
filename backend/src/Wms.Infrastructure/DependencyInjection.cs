@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IProductSalesSource>(sp => sp.GetRequiredService<OperationalMetrics>());
         services.AddSingleton<ITemporaryPasswordGenerator, TemporaryPasswordGenerator>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IBillingStore, Persistence.Repositories.BillingStore>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.Section));
