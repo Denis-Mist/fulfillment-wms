@@ -168,8 +168,7 @@ dotnet ef database update -p src/Wms.Infrastructure -s src/Wms.Api
 - Месяцы/дни считаются в UTC (мок — локальное время браузера).
 - Интеграции хранятся в `marketplace_integrations` (журнал — jsonb, ≤30 записей); демо-состояние сидируется при первом GET организации. Ключ API после `POST /integrations/{channel}/connect` сохраняется в `api_key_cipher` (AES-GCM) и в ответах не возвращается — только `keyMask`. Сидовые подключения ключа не содержат: `POST /integrations/wb/sync` без повторного connect даёт 422 «Ключ API не сохранён».
 - WB и Ozon: `sync` ходит в HTTP API. Для WB в Development по умолчанию sandbox; у Ozon официального sandbox URL нет — используется `https://api-seller.ozon.ru` в режиме чтения.
-- В ответ интеграций добавлены поля `environment` (`sandbox` | `production`), `lastError`, `lastHttpStatus`. После ошибки API статус становится `error`. Неизвестный канал → 404.
-- Неизвестный канал → 404, неизвестные значения фильтров (`service`) игнорируются.
+- В ответ интеграций добавлены поля `environment` (`sandbox` | `production`), `lastError`, `lastHttpStatus`. После ошибки API статус становится `error` (раньше бэкенд отдавал только `connected` / `disconnected`). Неизвестный канал → 404, неизвестные значения фильтров (`service`) игнорируются.
 
 ### PR8 — дашборды и аналитика: отклонения от моков
 - Границы дней/периодов считаются в UTC (мок — локальное время браузера); даты в ответах — ISO с `Z`.
@@ -296,3 +295,16 @@ dotnet ef database update -p src/Wms.Infrastructure -s src/Wms.Api
 | Остатки | `/v1/warehouse/list`, затем `/v2/products/stocks` | POST, только если разрешена запись |
 
 Заголовки: `Client-Id` и `Api-Key`. Ошибки — те же 422/502 ProblemDetails с текстом Ozon в `detail`.
+
+### Поля интеграций для фронтенда
+
+Контракт `GET /api/integrations`, `POST /integrations/{channel}/connect|sync|disconnect` и `PUT /integrations/{channel}` остаётся совместимым: прежние поля (`channel`, `status`, `keyMask`, `clientId`, `connectedAt`, `lastSyncAt`, `autoImportFbs`, `pushStock`, `syncIntervalMin`, `log`) не менялись. Добавлены только новые:
+
+| Поле | Тип | Когда появляется |
+|---|---|---|
+| `environment` | `"sandbox"` \| `"production"` | Всегда. Для WB в Development по умолчанию `sandbox`. Можно передать в теле `connect` или `PUT` (`environment`). |
+| `lastError` | `string` | После неудачного `sync`; при успехе поле отсутствует (`null` не сериализуется). |
+| `lastHttpStatus` | `number` | HTTP-статус ответа маркетплейса (например 401 или 200) или отсутствует. |
+| `status` | дополнительно `"error"` | После ошибки API. Кабинет остаётся подключённым (ключ сохранён), повторный `sync` допустим. |
+
+`api_key` / сам ключ в ответах никогда не возвращается — только `keyMask` (`••••` + 4 последних символа). Для `connect` на Ozon по-прежнему нужны `apiKey` и `clientId`.
