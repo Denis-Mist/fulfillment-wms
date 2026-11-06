@@ -10,6 +10,7 @@ public sealed record IntegrationLogEntry(string Id, DateTimeOffset At, Integrati
 public sealed partial class MarketplaceIntegration
 {
     public const int LogLimit = 30;
+    public const int ErrorLimit = 1000;
     public static readonly int[] Intervals = [5, 15, 30, 60];
     private readonly List<IntegrationLogEntry> _log = [];
 
@@ -17,7 +18,8 @@ public sealed partial class MarketplaceIntegration
 
     public MarketplaceIntegration(string organizationId, IntegrationChannel channel)
     {
-        OrganizationId = organizationId; Channel = channel; Status = IntegrationStatus.Disconnected; SyncIntervalMin = 15;
+        OrganizationId = organizationId; Channel = channel; Status = IntegrationStatus.Disconnected;
+        SyncIntervalMin = 15; Environment = MarketplaceEnvironment.Sandbox;
     }
 
     public string OrganizationId { get; private set; } = null!;
@@ -30,18 +32,26 @@ public sealed partial class MarketplaceIntegration
     public bool AutoImportFbs { get; private set; }
     public bool PushStock { get; private set; }
     public int SyncIntervalMin { get; private set; }
+    public MarketplaceEnvironment Environment { get; private set; }
+    public string? LastError { get; private set; }
+    public int? LastHttpStatus { get; private set; }
+    /// <summary>Зашифрованный ключ API; в DTO не попадает.</summary>
+    public string? ApiKeyCipher { get; private set; }
     public IReadOnlyList<IntegrationLogEntry> Log => _log;
+
+    public bool HasApiKey => !string.IsNullOrEmpty(ApiKeyCipher);
 
     /// <summary>Восстановление демо-состояния (сид).</summary>
     public void Restore(string keyMask, string? clientId, DateTimeOffset connectedAt, DateTimeOffset lastSyncAt, bool pushStock, IEnumerable<IntegrationLogEntry> log)
     {
         Status = IntegrationStatus.Connected; KeyMask = keyMask; ClientId = clientId; ConnectedAt = connectedAt; LastSyncAt = lastSyncAt;
-        AutoImportFbs = true; PushStock = pushStock;
+        AutoImportFbs = true; PushStock = pushStock; Environment = MarketplaceEnvironment.Sandbox;
+        ApiKeyCipher = null; LastError = null; LastHttpStatus = null;
         _log.Clear();
         _log.AddRange(log.Take(LogLimit));
     }
 
-    public void Connect(string? apiKey, string? clientId, DateTimeOffset now)
+    public void Connect(string? apiKey, string? clientId, DateTimeOffset now, MarketplaceEnvironment environment = MarketplaceEnvironment.Sandbox)
     {
         var key = apiKey?.Trim() ?? string.Empty;
         if (key.Length < 20) throw new DomainValidationException("Ключ API слишком короткий", "Скопируйте ключ целиком из личного кабинета");
@@ -52,30 +62,52 @@ public sealed partial class MarketplaceIntegration
         KeyMask = $"••••{key[^4..]}";
         ClientId = Channel == IntegrationChannel.Ozon ? client : null;
         ConnectedAt = now; LastSyncAt = now; AutoImportFbs = true;
+        Environment = environment;
+        LastError = null; LastHttpStatus = null;
         Prepend([new IntegrationLogEntry($"{Prefix}_{now.ToUnixTimeMilliseconds()}", now, IntegrationLogKind.Connect, "Кабинет подключён, ключ проверен")]);
     }
+
+    public void SetApiKeyCipher(string? cipher) => ApiKeyCipher = cipher;
 
     public void Disconnect()
     {
         Status = IntegrationStatus.Disconnected; KeyMask = null; ClientId = null; AutoImportFbs = false; PushStock = false;
+        ApiKeyCipher = null; LastError = null; LastHttpStatus = null;
     }
 
-    public void Sync(int orders, int skus, DateTimeOffset now)
+    public void Sync(int orders, int skus, DateTimeOffset now) =>
+        RecordSyncSuccess(orders, PushStock ? skus : null, now, null);
+
+    public void RecordSyncSuccess(int orders, int? pushedSkus, DateTimeOffset now, int? httpStatus)
     {
         EnsureConnected();
         var ms = now.ToUnixTimeMilliseconds();
         var entries = new List<IntegrationLogEntry>();
-        if (PushStock) entries.Add(new($"{Prefix}_{ms}_s", now, IntegrationLogKind.Stock, $"Остатки выгружены: {skus} SKU", skus));
+        if (pushedSkus is int skus)
+            entries.Add(new($"{Prefix}_{ms}_s", now, IntegrationLogKind.Stock, $"Остатки выгружены: {skus} SKU", skus));
         entries.Add(new($"{Prefix}_{ms}_o", now, IntegrationLogKind.Orders, $"Загружено заказов FBS: {orders}", orders));
-        LastSyncAt = now;
+        Status = IntegrationStatus.Connected;
+        LastSyncAt = now; LastError = null; LastHttpStatus = httpStatus;
         Prepend(entries);
     }
 
-    public void UpdateSettings(bool autoImportFbs, bool pushStock, int syncIntervalMin)
+    public void RecordSyncFailure(string message, int? httpStatus, DateTimeOffset now)
+    {
+        EnsureConnected();
+        var text = string.IsNullOrWhiteSpace(message) ? "Ошибка API маркетплейса" : message.Trim();
+        if (text.Length > ErrorLimit) text = text[..ErrorLimit];
+        Status = IntegrationStatus.Error;
+        LastError = text;
+        LastHttpStatus = httpStatus;
+        Prepend([new IntegrationLogEntry($"{Prefix}_{now.ToUnixTimeMilliseconds()}_e", now, IntegrationLogKind.Error, text)]);
+    }
+
+    public void UpdateSettings(bool autoImportFbs, bool pushStock, int syncIntervalMin, MarketplaceEnvironment? environment = null)
     {
         if (!Intervals.Contains(syncIntervalMin)) throw new DomainValidationException("Недопустимый интервал");
         EnsureConnected();
         AutoImportFbs = autoImportFbs; PushStock = pushStock; SyncIntervalMin = syncIntervalMin;
+        if (environment is { } env) Environment = env;
     }
 
     private string Prefix => Channel == IntegrationChannel.Wb ? "wb" : "ozon";

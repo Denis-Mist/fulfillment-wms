@@ -476,6 +476,10 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("channel");
 
+                    b.Property<string>("ApiKeyCipher")
+                        .HasColumnType("text")
+                        .HasColumnName("api_key_cipher");
+
                     b.Property<bool>("AutoImportFbs")
                         .HasColumnType("boolean")
                         .HasColumnName("auto_import_fbs");
@@ -488,9 +492,23 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("connected_at");
 
+                    b.Property<string>("Environment")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("environment");
+
                     b.Property<string>("KeyMask")
                         .HasColumnType("text")
                         .HasColumnName("key_mask");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("last_error");
+
+                    b.Property<int?>("LastHttpStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("last_http_status");
 
                     b.Property<DateTimeOffset?>("LastSyncAt")
                         .HasColumnType("timestamp with time zone")

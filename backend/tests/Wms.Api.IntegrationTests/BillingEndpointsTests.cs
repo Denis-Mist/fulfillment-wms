@@ -58,8 +58,10 @@ public class BillingEndpointsTests(WmsApiFactory factory) : IClassFixture<WmsApi
         Assert.Equal(2, list.GetArrayLength());
         Assert.Equal("wb", list[0].GetProperty("channel").GetString());
         Assert.Equal("connected", list[0].GetProperty("status").GetString());
-        var synced = await Json(await seller.PostAsync("/api/integrations/wb/sync", null));
-        Assert.Equal("orders", synced.GetProperty("log")[1].GetProperty("kind").GetString());
+        Assert.Equal("sandbox", list[0].GetProperty("environment").GetString());
+        var syncNoKey = await seller.PostAsync("/api/integrations/wb/sync", null);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, syncNoKey.StatusCode);
+        Assert.Equal("Ключ API не сохранён", (await Json(syncNoKey)).GetProperty("title").GetString());
         Assert.Equal(HttpStatusCode.UnprocessableEntity, (await seller.PutAsJsonAsync("/api/integrations/wb", new { autoImportFbs = true, pushStock = true, syncIntervalMin = 7 })).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await seller.PostAsync("/api/integrations/yandex/sync", null)).StatusCode);
         var off = await Json(await seller.PostAsync("/api/integrations/wb/disconnect", null));
@@ -67,6 +69,11 @@ public class BillingEndpointsTests(WmsApiFactory factory) : IClassFixture<WmsApi
         Assert.Equal(HttpStatusCode.Conflict, (await seller.PostAsync("/api/integrations/wb/sync", null)).StatusCode);
         var on = await Json(await seller.PostAsJsonAsync("/api/integrations/wb/connect", new { apiKey = "abcdefghijklmnopqrstuvwxyz" }));
         Assert.Equal("••••wxyz", on.GetProperty("keyMask").GetString());
+        Assert.Equal("sandbox", on.GetProperty("environment").GetString());
+        var synced = await Json(await seller.PostAsync("/api/integrations/wb/sync", null));
+        Assert.Equal("orders", synced.GetProperty("log")[0].GetProperty("kind").GetString());
+        Assert.Equal(3, synced.GetProperty("log")[0].GetProperty("count").GetInt32());
+        Assert.Equal(200, synced.GetProperty("lastHttpStatus").GetInt32());
         var fc = await As("director@demo.ru");
         Assert.Equal(HttpStatusCode.Forbidden, (await fc.GetAsync("/api/integrations")).StatusCode);
     }

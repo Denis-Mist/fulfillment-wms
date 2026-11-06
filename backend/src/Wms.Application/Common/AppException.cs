@@ -16,4 +16,6 @@ public class AppException(int status, string title, string? detail = null,
     public static AppException NotFound(string title, string? detail = null) => new(404, title, detail);
     public static AppException Conflict(string title, string? detail = null) => new(409, title, detail);
     public static AppException Unprocessable(string title, string? detail = null) => new(422, title, detail);
+    public static AppException BadGateway(string title, string? detail = null) => new(502, title, detail);
 }
+

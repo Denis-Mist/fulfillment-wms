@@ -120,7 +120,9 @@ public enum ActStatus { Draft, Issued, Paid }
 
 public enum IntegrationChannel { Wb, Ozon }
 
-public enum IntegrationStatus { Connected, Disconnected }
+public enum IntegrationStatus { Connected, Error, Disconnected }
+
+public enum MarketplaceEnvironment { Sandbox, Production }
 
 public enum IntegrationLogKind { Orders, Stock, Error, Connect }
 
