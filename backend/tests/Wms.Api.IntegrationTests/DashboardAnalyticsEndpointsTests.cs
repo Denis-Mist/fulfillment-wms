@@ -87,7 +87,7 @@ public class DashboardAnalyticsEndpointsTests(WmsApiFactory factory) : IClassFix
         var sumAll = hist.Sum(p => p.GetProperty("actual").GetInt32());
         Assert.True(sumAll > 0, $"expected seeded orders in history, got {sumAll}");
 
-        var one = await Json(await fc.GetAsync("/api/analytics/forecast?warehouseId=wh_shu1&horizon=7"));
+        var one = await Json(await fc.GetAsync("/api/analytics/forecast?warehouseId=wh_pdl1&horizon=7"));
         var sumOne = one.GetProperty("series").EnumerateArray().Take(56).Sum(p => p.GetProperty("actual").GetInt32());
         Assert.True(sumOne > 0);
         Assert.True(sumOne < sumAll);
