@@ -56,6 +56,16 @@ public sealed class WarehouseTask
     public List<TaskItem> Items { get; private set; } = [];
     /// <summary>Заказы задания отбора/упаковки (батч).</summary>
     public List<string> OrderIds { get; private set; } = [];
+    /// <summary>Длина оптимизированного маршрута (м), считается при формировании партии.</summary>
+    public double? OptimizedDistance { get; private set; }
+    /// <summary>Длина базового маршрута по кодам ячеек (м).</summary>
+    public double? BaselineDistance { get; private set; }
+    /// <summary>Оценка времени обхода выбранным алгоритмом, минуты.</summary>
+    public int? EstimatedMinutes { get; private set; }
+    /// <summary>Суммарный объём позиций партии, литры.</summary>
+    public double? VolumeLiters { get; private set; }
+    /// <summary>Вместимость тары, относительно которой считалась партия.</summary>
+    public double? ToteCapacityLiters { get; private set; }
 
     public const int MaxActivePerWorker = 3;
 
@@ -76,6 +86,17 @@ public sealed class WarehouseTask
         {
             OrderIds = orderIds.ToList(), Algorithm = RouteAlgorithms.Parse(algorithm),
         };
+
+    /// <summary>Сохранить рассчитанные показатели партии (маршрут, объём, тара).</summary>
+    public void RecordMetrics(double optimizedDistance, double baselineDistance, int estimatedMinutes,
+        double volumeLiters, double toteCapacityLiters)
+    {
+        OptimizedDistance = optimizedDistance;
+        BaselineDistance = baselineDistance;
+        EstimatedMinutes = estimatedMinutes;
+        VolumeLiters = volumeLiters;
+        ToteCapacityLiters = toteCapacityLiters;
+    }
 
     /// <summary>Задание упаковки собранного заказа.</summary>
     public static WarehouseTask PackingFor(string id, string number, string warehouseId, string organizationId, DateTimeOffset now,

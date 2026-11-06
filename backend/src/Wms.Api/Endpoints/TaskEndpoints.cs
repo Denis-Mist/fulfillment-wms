@@ -11,7 +11,7 @@ public static class TaskEndpoints
 
     public sealed record WarehouseBody(string? WarehouseId);
     public sealed record AssignBody(string? UserId);
-    public sealed record OrderIdsBody(string[]? OrderIds, string? Algorithm);
+    public sealed record OrderIdsBody(string[]? OrderIds, string? Algorithm, bool? Auto = null, string? WarehouseId = null);
     public sealed record ScanBody(string? Code);
 
     /// <summary>Тело отбора: не-объект (например, <c>[]</c>) трактуется как «заказы не выбраны» → 422 из обработчика.</summary>
@@ -48,13 +48,26 @@ public static class TaskEndpoints
         var p = api.MapGroup("/picking").WithTags("Picking").RequireAccess(Office);
         p.MapGet("/candidates", async (HttpContext http, PickingHandler h, CancellationToken ct) =>
             Results.Ok(await h.CandidatesAsync(http.Ctx(), ListQuery.String(http.Request, "warehouseId"), ct)));
+        p.MapGet("/suggestions", async (HttpContext http, PickingHandler h, CancellationToken ct) =>
+            Results.Ok(await h.SuggestAsync(http.Ctx(), ListQuery.String(http.Request, "warehouseId"), ct)));
         p.MapPost("/preview", async (HttpContext http, PickingHandler h, CancellationToken ct) =>
             Results.Ok(await h.PreviewAsync(http.Ctx(), (await ReadOrderIdsAsync(http, ct)).OrderIds ?? [], ct)));
         p.MapPost("/batches", async (HttpContext http, PickingHandler h, CancellationToken ct) =>
         {
             var body = await ReadOrderIdsAsync(http, ct);
+            if (body.Auto == true)
+            {
+                var result = await h.CreateAutoBatchesAsync(http.Ctx(), body.WarehouseId, body.Algorithm, ct);
+                return Results.Created("/api/picking/batches", result);
+            }
             var task = await h.CreateBatchAsync(http.Ctx(), body.OrderIds ?? [], body.Algorithm, ct);
             return Results.Created($"/api/tasks/{task.Id}", task);
+        });
+        p.MapPost("/batches/auto", async (HttpContext http, PickingHandler h, CancellationToken ct) =>
+        {
+            var body = await Body.ReadOrEmptyAsync<OrderIdsBody>(http, ct);
+            var result = await h.CreateAutoBatchesAsync(http.Ctx(), body.WarehouseId, body.Algorithm, ct);
+            return Results.Created("/api/picking/batches", result);
         });
 
         var w = api.MapGroup("/work").WithTags("Work").RequireAccess();

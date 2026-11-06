@@ -40,6 +40,11 @@ public sealed record TaskDetailsDto : TaskListItemDto
     public string Algorithm { get; init; } = RouteAlgorithms.Optimized;
     public double RouteDistance { get; init; }
     public double BaselineDistance { get; init; }
+    public double? OptimizedDistance { get; init; }
+    public double? VolumeLiters { get; init; }
+    public double? ToteCapacityLiters { get; init; }
+    public double? ToteFill { get; init; }
+    public int? EstimatedMinutes { get; init; }
     public IReadOnlyList<Role> EligibleRoles { get; init; } = [];
 }
 
@@ -105,12 +110,24 @@ public sealed class TaskLookups
         }).ToList();
         var points = t.Items.Select(i => Locations.GetValueOrDefault(i.LocationId)).OfType<StorageLocation>()
             .Select(l => new RouteNode(l.Code, l.X, l.Y)).ToList();
+        var computedBaseline = RoutePlanner.Length(RoutePlanner.Baseline(points, p => p));
+        var computedOptimized = RoutePlanner.Length(RoutePlanner.Optimized(points, p => p));
+        var baseline = t.BaselineDistance ?? computedBaseline;
+        var optimized = t.OptimizedDistance ?? computedOptimized;
         return Fill(new TaskDetailsDto
         {
             Steps = steps,
             Algorithm = t.Algorithm,
             RouteDistance = RoutePlanner.Length(points),
-            BaselineDistance = RoutePlanner.Length(RoutePlanner.Baseline(points, p => p)),
+            BaselineDistance = baseline,
+            OptimizedDistance = optimized,
+            VolumeLiters = t.VolumeLiters,
+            ToteCapacityLiters = t.ToteCapacityLiters,
+            ToteFill = t.VolumeLiters is { } volume && t.ToteCapacityLiters is { } cap
+                ? BatchOptimizer.ToteFill(volume, cap) : null,
+            EstimatedMinutes = t.EstimatedMinutes ?? RoutePlanner.EstimatedMinutes(
+                t.Algorithm == RouteAlgorithms.Baseline ? baseline : optimized,
+                t.Units, t.Items.Count),
             EligibleRoles = TaskRules.EligibleRoles(t.Type),
         }, t, now);
     }

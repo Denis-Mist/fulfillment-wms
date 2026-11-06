@@ -47,6 +47,11 @@ internal sealed class WarehouseTaskConfiguration : IEntityTypeConfiguration<Ware
         b.HasIndex(t => t.InboundId);
         b.OwnsMany(t => t.Items, i => i.ToJson("items"));
         b.Property(t => t.OrderIds).HasColumnName("order_ids");
+        b.Property(t => t.OptimizedDistance).HasColumnName("optimized_distance");
+        b.Property(t => t.BaselineDistance).HasColumnName("baseline_distance");
+        b.Property(t => t.EstimatedMinutes).HasColumnName("estimated_minutes");
+        b.Property(t => t.VolumeLiters).HasColumnName("volume_liters");
+        b.Property(t => t.ToteCapacityLiters).HasColumnName("tote_capacity_liters");
         b.Ignore(t => t.IsOpen);
         b.Ignore(t => t.Units);
         b.Ignore(t => t.DoneUnits);
