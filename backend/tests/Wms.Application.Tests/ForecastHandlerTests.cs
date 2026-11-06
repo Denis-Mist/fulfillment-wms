@@ -49,7 +49,7 @@ public class ForecastHandlerTests : IDisposable
     [Fact]
     public async Task Forecast_counts_real_orders_per_utc_day_and_ignores_cancelled_today_and_old()
     {
-        var all = await Handler.ForecastAsync(Fc, null, 7, ForecastAlgorithm.HoltWinters, default);
+        var all = await Handler.ForecastAsync(Fc, null, 7, "holt_winters", default);
         Assert.Equal(56 + 7, all.Series.Count);
         Assert.Equal("2.0.0", all.Meta.Version);
         Assert.StartsWith("orders-7-picks-2-snap-2026-10-01", all.Meta.DataVersion);
@@ -58,7 +58,7 @@ public class ForecastHandlerTests : IDisposable
         Assert.DoesNotContain(all.Series, p => p.Date == Start && p.Actual is not null);
         Assert.All(all.Staffing.Where(s => s.Orders > 0), s => Assert.Equal(Forecasting.Round(s.Orders * 3), s.Units));
 
-        var one = await Handler.ForecastAsync(Fc, "wh_1", 7, ForecastAlgorithm.MovingAverage, default);
+        var one = await Handler.ForecastAsync(Fc, "wh_1", 7, "moving_average", default);
         Assert.Equal(5, PeakActual(one, -10));
         Assert.StartsWith("orders-5-picks-2-snap-", one.Meta.DataVersion);
         Assert.Equal("moving_average", one.Meta.Algorithm);
@@ -90,6 +90,13 @@ public class ForecastHandlerTests : IDisposable
     {
         var ex = await Assert.ThrowsAsync<AppException>(() => Handler.ForecastAsync(Fc, "wh_missing", 7, null, default));
         Assert.Equal(404, ex.Status);
+    }
+
+    [Fact]
+    public async Task Forecast_unknown_algorithm_is_unprocessable()
+    {
+        var ex = await Assert.ThrowsAsync<AppException>(() => Handler.ForecastAsync(Fc, "wh_1", 7, "unknown", default));
+        Assert.Equal((422, "Неизвестный алгоритм"), (ex.Status, ex.Title));
     }
 
     private static int PeakActual(ForecastResult result, int daysFromToday) =>

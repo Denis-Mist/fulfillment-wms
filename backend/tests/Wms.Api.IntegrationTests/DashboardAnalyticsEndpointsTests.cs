@@ -46,7 +46,7 @@ public class DashboardAnalyticsEndpointsTests(WmsApiFactory factory) : IClassFix
     public async Task Forecast_slotting_and_kpi()
     {
         var fc = await As("director@demo.ru");
-        var f = await Json(await fc.GetAsync("/api/analytics/forecast?horizon=50&algorithm=bogus"));
+        var f = await Json(await fc.GetAsync("/api/analytics/forecast?horizon=50"));
         Assert.Equal(28, f.GetProperty("horizon").GetInt32());
         Assert.Equal("holt_winters", f.GetProperty("meta").GetProperty("algorithm").GetString());
         Assert.Equal(56 + 28, f.GetProperty("series").GetArrayLength());

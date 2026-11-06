@@ -46,7 +46,7 @@ public class SlottingHandlerTests : IDisposable
     [Fact]
     public async Task Slotting_uses_capacity_and_real_picks_not_tiny_cell()
     {
-        var result = await Handler.SlottingAsync(Fc, "wh_1", SlottingAlgorithm.Abc, default);
+        var result = await Handler.SlottingAsync(Fc, "wh_1", "abc", default);
         Assert.Equal("2.0.0", result.Meta.Version);
         var move = Assert.Single(result.Moves);
         Assert.Equal("stk_hot", move.Id[move.Id.LastIndexOf("stk_", StringComparison.Ordinal)..]);
@@ -62,7 +62,7 @@ public class SlottingHandlerTests : IDisposable
     [Fact]
     public async Task Apply_moves_only_free_stock_and_keeps_reserved()
     {
-        var planned = await Handler.SlottingAsync(Fc, "wh_1", SlottingAlgorithm.Abc, default);
+        var planned = await Handler.SlottingAsync(Fc, "wh_1", "abc", default);
         var id = Assert.Single(planned.Moves).Id;
         var applied = await Handler.ApplyAsync(Fc, new ApplyInput([id]), default);
         Assert.Equal(1, applied.Applied);
@@ -76,5 +76,26 @@ public class SlottingHandlerTests : IDisposable
         var atFar = remaining.Single(s => s.LocationId == "loc_far");
         Assert.Equal(2, atFar.Quantity);
         Assert.Equal(2, atFar.Reserved);
+    }
+
+    [Fact]
+    public async Task Slotting_unknown_algorithm_is_unprocessable()
+    {
+        var ex = await Assert.ThrowsAsync<AppException>(() => Handler.SlottingAsync(Fc, "wh_1", "unknown", default));
+        Assert.Equal((422, "Неизвестный алгоритм"), (ex.Status, ex.Title));
+    }
+
+    [Fact]
+    public async Task Apply_does_not_record_unknown_recommendation_ids()
+    {
+        var missing = await Handler.ApplyAsync(Fc, new ApplyInput(["slot_does_not_exist"]), default);
+        Assert.Equal(0, missing.Applied);
+        Assert.Empty(_db.SlottingApplied);
+
+        var planned = await Handler.SlottingAsync(Fc, "wh_1", "abc", default);
+        var id = Assert.Single(planned.Moves).Id;
+        var mixed = await Handler.ApplyAsync(Fc, new ApplyInput([id, "slot_fake_xxx"]), default);
+        Assert.Equal(1, mixed.Applied);
+        Assert.Equal(id, Assert.Single(_db.SlottingApplied).Id);
     }
 }
