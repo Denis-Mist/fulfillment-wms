@@ -44,6 +44,9 @@ internal sealed class MarketplaceIntegrationConfiguration : IEntityTypeConfigura
         b.HasKey(i => new { i.OrganizationId, i.Channel });
         b.Property(i => i.Channel).HasConversion(new SnakeCaseEnumConverter<IntegrationChannel>());
         b.Property(i => i.Status).HasConversion(new SnakeCaseEnumConverter<IntegrationStatus>());
+        b.Property(i => i.Environment).HasConversion(new SnakeCaseEnumConverter<MarketplaceEnvironment>());
+        b.Property(i => i.ApiKeyCipher).HasColumnName("api_key_cipher");
+        b.Property(i => i.LastError).HasMaxLength(1000);
         // Журнал — jsonb-документ целиком (вставка в начало списка несовместима с ключами owned-коллекций EF).
         b.Property<List<IntegrationLogEntry>>("_log").HasColumnName("log").HasColumnType("jsonb")
             .HasConversion(new ValueConverter<List<IntegrationLogEntry>, string>(

@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Wms.Application.Integrations;
 using Testcontainers.PostgreSql;
 
 namespace Wms.Api.IntegrationTests;
@@ -30,6 +33,10 @@ public sealed class WmsApiFactory : WebApplicationFactory<Program>, IAsyncLifeti
         builder.UseSetting("ConnectionStrings:Wms", _connectionString);
         builder.UseSetting("Database:MigrateOnStartup", "true");
         builder.UseSetting("Database:Seed", "true");
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<IMarketplaceClientResolver, TestMarketplaceClientResolver>();
+        });
     }
 
     async Task IAsyncLifetime.DisposeAsync()

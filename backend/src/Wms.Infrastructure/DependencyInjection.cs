@@ -8,6 +8,8 @@ using Wms.Infrastructure.Persistence.Repositories;
 using Wms.Infrastructure.Security;
 using Wms.Infrastructure.Seeding;
 using Wms.Infrastructure.Operational;
+using Wms.Infrastructure.Marketplaces;
+using Wms.Application.Integrations;
 
 namespace Wms.Infrastructure;
 
@@ -33,6 +35,12 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IIdGenerator, IdGenerator>();
+        services.Configure<MarketplaceOptions>(configuration.GetSection(MarketplaceOptions.Section));
+        services.AddSingleton<ISecretProtector, AesSecretProtector>();
+        services.AddSingleton<IMarketplaceSettings, MarketplaceSettings>();
+        services.AddHttpClient(MarketplaceClientNames.Wb, c => c.Timeout = TimeSpan.FromSeconds(30));
+        services.AddHttpClient(MarketplaceClientNames.Ozon, c => c.Timeout = TimeSpan.FromSeconds(30));
+        services.AddSingleton<IMarketplaceClientResolver, MarketplaceClientResolver>();
         services.AddScoped<DbSeeder>();
         return services;
     }

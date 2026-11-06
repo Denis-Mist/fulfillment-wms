@@ -166,7 +166,9 @@ dotnet ef database update -p src/Wms.Infrastructure -s src/Wms.Api
 - Начисления (`/billing/charges`, `/billing/summary`) считаются детерминированно из реальных заказов/приёмок и синтетического суточного потока, но ГПСЧ (mulberry32) засевается хешем ключа (договор/день/заказ), поэтому суммы не совпадают с моком побайтно.
 - Тарифы и акты хранятся в PostgreSQL (`tariffs`, `billing_acts`), а не в localStorage; создаются лениво при первом обращении: тариф по умолчанию по формуле мока, акты за 3 прошлых месяца (выставлены 3-го числа следующего месяца, старше одного месяца — оплачены через 6 дней). Черновик текущего месяца — виртуальный `draft_{contractId}`.
 - Месяцы/дни считаются в UTC (мок — локальное время браузера).
-- Интеграции WB/Ozon хранятся в `marketplace_integrations` (журнал — jsonb, ≤30 записей); демо-состояние сидируется при первом GET организации. Обмен с маркетплейсами имитируется (`sync` даёт случайные 0–6 заказов и 60–159 SKU), ключ API не сохраняется — только маска.
+- Интеграции хранятся в `marketplace_integrations` (журнал — jsonb, ≤30 записей); демо-состояние сидируется при первом GET организации. Ключ API после `POST /integrations/{channel}/connect` сохраняется в `api_key_cipher` (AES-GCM) и в ответах не возвращается — только `keyMask`. Сидовые подключения ключа не содержат: `POST /integrations/wb/sync` без повторного connect даёт 422 «Ключ API не сохранён».
+- WB: `sync` ходит в HTTP API (sandbox в Development). Ozon по-прежнему имитируется (случайные 0–6 заказов и 60–159 SKU) до отдельного PR.
+- В ответ интеграций добавлены поля `environment` (`sandbox` | `production`), `lastError`, `lastHttpStatus`. После ошибки API статус становится `error`. Неизвестный канал → 404.
 - Неизвестный канал → 404, неизвестные значения фильтров (`service`) игнорируются.
 
 ### PR8 — дашборды и аналитика: отклонения от моков
@@ -248,3 +250,28 @@ dotnet ef database update -p src/Wms.Infrastructure -s src/Wms.Api
 - **BE-FR-3**: `POST /analytics/slotting/apply` записывает в `slotting_applied` и считает в `applied` только реально выполненные перемещения. Неизвестные id игнорируются (`applied: 0` для `["slot_does_not_exist"]`).
 - **BE-FR-4**: `POST /tasks/{id}/assign` с несуществующим `userId` → 404 «Сотрудник не найден». Неподходящая роль по-прежнему даёт 422.
 
+
+### Интеграции: Wildberries sandbox
+
+Тестовый токен выпускается в личном кабинете продавца WB: в настройках API выберите scope **Test**. Он работает только с sandbox-хостами и не трогает реальный магазин. Документация: https://dev.wildberries.ru/sandbox и https://dev.wildberries.ru/docs/openapi/api-information.
+
+Переменные окружения:
+
+- `WB_TEST_TOKEN` — для ручного smoke-теста `WbSandboxSmokeTests` (без переменной тест сразу выходит и не падает в CI).
+- `Marketplace:ProtectionKey` (иначе `Jwt:SigningKey`) — ключ шифрования `api_key_cipher`.
+- `Marketplace:AllowProductionStockPush` — разрешить выгрузку остатков на боевые хосты (по умолчанию `false`). В sandbox выгрузка идёт, если у подключения включён `pushStock`.
+- `Marketplace:DefaultEnvironment` — если не задано: `sandbox` в Development, `production` в остальных средах. Можно передать `environment` в теле `connect` / `PUT /integrations/{channel}`.
+
+Что дергает WMS при `POST /api/integrations/wb/sync` (после `connect`):
+
+| Шаг | Хост (sandbox) | Метод |
+|---|---|---|
+| Проверка токена | `marketplace-api-sandbox.wildberries.ru/ping` | GET |
+| Новые заказы FBS | `.../api/v3/orders/new` (если пусто — `.../api/v3/orders` за 7 дней) | GET |
+| Карточки | `content-api-sandbox.wildberries.ru/content/v2/get/cards/list` | POST |
+| Склады и остатки | `.../api/v3/warehouses`, `PUT .../api/v3/stocks/{id}` | GET / PUT |
+| Тестовый заказ | `POST .../api/v3/test/fbs/orders/make` | метод клиента есть, обычный sync его не вызывает |
+
+Боевые хосты — те же пути на `marketplace-api.wildberries.ru` и `content-api.wildberries.ru`. Заголовок `Authorization` — сам токен, как в документации WB. Ошибки API возвращаются как ProblemDetails 422 (ответ 4xx) или 502 (сеть / 5xx) с текстом маркетплейса в `detail`; то же пишется в `lastError` / журнал.
+
+`connect` ключ только сохраняет и не пингует маркетплейс. Секреты в git не коммитятся.

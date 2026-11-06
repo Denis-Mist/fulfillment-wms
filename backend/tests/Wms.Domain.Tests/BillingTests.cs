@@ -36,14 +36,21 @@ public class BillingTests
         Assert.Throws<DomainConflictException>(() => i.Sync(1, 1, Now));
         Assert.Throws<DomainValidationException>(() => i.Connect("short", "1234", Now));
         Assert.Throws<DomainValidationException>(() => i.Connect(new string('k', 24), "abc", Now));
-        i.Connect(new string('k', 20) + "WXYZ", "123456", Now);
+        i.Connect(new string('k', 20) + "WXYZ", "123456", Now, MarketplaceEnvironment.Sandbox);
         Assert.Equal("••••WXYZ", i.KeyMask);
+        Assert.Equal(MarketplaceEnvironment.Sandbox, i.Environment);
         Assert.Throws<DomainValidationException>(() => i.UpdateSettings(true, true, 7));
-        i.UpdateSettings(true, true, 30);
+        i.UpdateSettings(true, true, 30, MarketplaceEnvironment.Production);
+        Assert.Equal(MarketplaceEnvironment.Production, i.Environment);
         for (var n = 0; n < 20; n++) i.Sync(2, 70, Now);
         Assert.Equal(MarketplaceIntegration.LogLimit, i.Log.Count);
         Assert.Equal(IntegrationLogKind.Stock, i.Log[0].Kind);
+        i.RecordSyncFailure("Wildberries (HTTP 401): unauthorized", 401, Now);
+        Assert.Equal(IntegrationStatus.Error, i.Status);
+        Assert.Equal(401, i.LastHttpStatus);
+        Assert.Equal(IntegrationLogKind.Error, i.Log[0].Kind);
         i.Disconnect();
         Assert.Equal(IntegrationStatus.Disconnected, i.Status);
+        Assert.Null(i.ApiKeyCipher);
     }
 }
