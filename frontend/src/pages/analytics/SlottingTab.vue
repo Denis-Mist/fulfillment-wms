@@ -22,8 +22,8 @@ const qc = useQueryClient()
 const enabled = useStorage('wms.analytics.slottingEnabled', true)
 const algorithm = useStorage<SlottingAlgorithm>('wms.analytics.slottingAlgorithm', 'abc_affinity')
 const algorithmOptions = [
-  { value: 'abc_affinity', label: 'ABC + совместные покупки' },
-  { value: 'abc', label: 'Только ABC' },
+  { value: 'abc_affinity', label: 'ABC + сродство' },
+  { value: 'abc', label: 'Базовый ABC' },
 ]
 const warehouseId = computed(() => session.warehouseId || undefined)
 const selected = ref<string[]>([])
@@ -157,7 +157,7 @@ const ABC_TONE: Record<AbcClass, string> = {
           <EmptyState compact :icon="Route" title="Размещение оптимально" description="Рекомендаций нет" />
         </div>
         <div v-else class="overflow-x-auto">
-          <table class="w-full min-w-[46rem] text-sm">
+          <table class="w-full min-w-[56rem] text-sm">
             <thead class="text-left text-xs text-secondary uppercase">
               <tr class="border-b border-default">
                 <th class="w-10 px-5 py-2">
@@ -166,6 +166,8 @@ const ABC_TONE: Record<AbcClass, string> = {
                 <th class="px-3 py-2 font-medium">Товар</th>
                 <th class="px-3 py-2 font-medium">ABC</th>
                 <th class="px-3 py-2 text-right font-medium">Отборов / 30 дн</th>
+                <th class="px-3 py-2 text-right font-medium">Объём / масса</th>
+                <th class="px-3 py-2 text-right font-medium">Вместимость</th>
                 <th class="px-3 py-2 font-medium">Перемещение</th>
                 <th class="px-5 py-2 text-right font-medium">Экономия</th>
               </tr>
@@ -194,6 +196,16 @@ const ABC_TONE: Record<AbcClass, string> = {
                   }}</span>
                 </td>
                 <td class="tabular px-3 py-2.5 text-right">{{ m.picks30d }}</td>
+                <td class="tabular px-3 py-2.5 text-right text-xs text-secondary whitespace-nowrap">
+                  <template v-if="m.volumeLiters != null">{{ formatNumber(m.volumeLiters, 1) }} л</template>
+                  <template v-if="m.weightG != null">
+                    · {{ m.weightG >= 1000 ? `${formatNumber(m.weightG / 1000, 1)} кг` : `${m.weightG} г` }}
+                  </template>
+                  <template v-if="m.volumeLiters == null && m.weightG == null">—</template>
+                </td>
+                <td class="tabular px-3 py-2.5 text-right text-xs text-secondary">
+                  {{ m.capacityLiters != null ? `${formatNumber(m.capacityLiters, 1)} л` : '—' }}
+                </td>
                 <td class="px-3 py-2.5 whitespace-nowrap">
                   <span class="font-mono text-xs">{{ m.fromCell }}</span>
                   <span class="text-xs text-secondary"> ({{ m.fromDistance }} м)</span>

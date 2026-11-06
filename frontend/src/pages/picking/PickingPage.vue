@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { refDebounced } from '@vueuse/core'
-import { Layers, PackageCheck, Route, Sparkles, Timer } from '@lucide/vue'
+import { Layers, PackageCheck, Route, Sparkles, Timer, WandSparkles } from '@lucide/vue'
 import { tasksApi } from '@/modules/tasks/api'
 import type { RouteAlgorithm, TaskListItem } from '@/modules/tasks/types'
 import { useNotify } from '@/shared/composables/useNotify'
@@ -23,7 +23,7 @@ const session = useSessionStore()
 const notify = useNotify()
 const qc = useQueryClient()
 const warehouseId = computed(() => session.warehouseId || undefined)
-const tab = ref<'build' | 'lists'>('build')
+const tab = ref<'build' | 'auto' | 'lists'>('build')
 
 const { data: candidates, isPending } = useQuery({
   queryKey: computed(() => ['picking-candidates', session.organizationId, warehouseId.value]),
@@ -92,6 +92,37 @@ const create = useMutation({
   onError: (e) => notify.error(e),
 })
 
+
+const { data: suggestions, isPending: suggestionsPending } = useQuery({
+  queryKey: computed(() => ['picking-suggestions', session.organizationId, warehouseId.value]),
+  queryFn: () => tasksApi.suggestions(warehouseId.value),
+  enabled: computed(() => tab.value === 'auto'),
+  placeholderData: keepPreviousData,
+})
+const autoAlgorithm = ref<RouteAlgorithm>('optimized')
+const createAuto = useMutation({
+  mutationFn: () =>
+    tasksApi.createBatchesAuto({ warehouseId: warehouseId.value, algorithm: autoAlgorithm.value }),
+  onSuccess: (r) => {
+    notify.success(
+      r.created ? `Создано листов: ${r.created}` : 'Нет заказов для автоформирования',
+      r.tasks[0]
+        ? `${r.tasks[0].number} · ${formatNumber(r.tasks[0].routeDistance, 1)} м`
+        : 'Очередь пуста или все заказы уже в работе',
+    )
+    void qc.invalidateQueries({ queryKey: ['picking-candidates'] })
+    void qc.invalidateQueries({ queryKey: ['picking-suggestions'] })
+    void qc.invalidateQueries({ queryKey: ['tasks'] })
+    void qc.invalidateQueries({ queryKey: ['tasks-summary'] })
+    if (r.tasks[0]) {
+      selectedTask.value = r.tasks[0].id
+      drawer.value = true
+      tab.value = 'lists'
+    }
+  },
+  onError: (e) => notify.error(e),
+})
+
 /* Листы отбора */
 const page = ref(0)
 const { data: lists, isPending: listsPending } = useQuery({
@@ -120,7 +151,7 @@ function openTask(t: TaskListItem) {
 
 <template>
   <div>
-    <PageHeader title="Комплектация" description="Батчи отбора, маршруты по складу и листы в работе" />
+    <PageHeader title="Комплектация" description="Ручные и автоматические партии, сравнение маршрутов и заполнение тары" />
 
     <div class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
       <KpiCard
@@ -152,7 +183,8 @@ function openTask(t: TaskListItem) {
 
     <Tabs v-model:value="tab">
       <TabList>
-        <Tab value="build">Формирование батча</Tab>
+        <Tab value="build">Вручную</Tab>
+        <Tab value="auto">Автопартии</Tab>
         <Tab value="lists"
           >Листы отбора <span class="ml-1 text-secondary">{{ lists?.total ?? '' }}</span></Tab
         >
@@ -231,7 +263,7 @@ function openTask(t: TaskListItem) {
                     :points="current.points"
                     :ghost="algorithm === 'optimized' ? preview!.baseline.points : undefined"
                   />
-                  <div class="grid grid-cols-3 gap-2 text-center">
+                  <div class="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
                     <div class="rounded-lg border border-default p-2">
                       <div class="tabular font-semibold text-heading">
                         {{ formatNumber(current.distance, 1) }} м
@@ -247,6 +279,21 @@ function openTask(t: TaskListItem) {
                         ~{{ preview!.estimatedMinutes }} мин
                       </div>
                       <div class="text-xs text-secondary">{{ preview!.units }} шт</div>
+                    </div>
+                    <div class="rounded-lg border border-default p-2">
+                      <div class="tabular font-semibold text-heading">
+                        {{
+                          preview!.toteFill != null
+                            ? `${Math.round(preview!.toteFill * 100)}%`
+                            : '—'
+                        }}
+                      </div>
+                      <div class="text-xs text-secondary">
+                        тара
+                        <template v-if="preview!.volumeLiters != null">
+                          · {{ formatNumber(preview!.volumeLiters, 1) }} л
+                        </template>
+                      </div>
                     </div>
                   </div>
                   <Message v-if="saving > 0" severity="success" size="small" :closable="false">
@@ -272,6 +319,79 @@ function openTask(t: TaskListItem) {
                 />
               </div>
             </SectionCard>
+          </div>
+        </TabPanel>
+
+        
+        <TabPanel value="auto">
+          <div class="space-y-5">
+            <SectionCard
+              title="Автоматическое формирование"
+              description="Жадная волна: срочность отгрузки, вместимость тары 60 л, не больше 12 заказов, короткий оптимизированный маршрут"
+            >
+              <div class="flex flex-col gap-4 pb-5 sm:flex-row sm:flex-wrap sm:items-center">
+                <SelectButton
+                  v-model="autoAlgorithm"
+                  :options="algoOptions"
+                  option-label="label"
+                  option-value="value"
+                  :allow-empty="false"
+                  size="small"
+                />
+                <Button
+                  :loading="createAuto.isPending.value"
+                  :disabled="!(suggestions?.batches.length)"
+                  @click="createAuto.mutate()"
+                >
+                  <WandSparkles class="size-4" />Создать все предложенные партии
+                </Button>
+              </div>
+            </SectionCard>
+
+            <div v-if="suggestionsPending" class="space-y-3">
+              <Skeleton v-for="i in 3" :key="i" height="5rem" />
+            </div>
+            <EmptyState
+              v-else-if="!suggestions?.batches.length"
+              :icon="PackageCheck"
+              title="Нет партий к формированию"
+              description="В резерве нет заказов, подходящих под ограничения тары и волны"
+            />
+            <div v-else class="grid gap-4 lg:grid-cols-2">
+              <SectionCard
+                v-for="(b, i) in suggestions!.batches"
+                :key="i"
+                :title="`Партия ${i + 1}`"
+                :description="`${b.orderNumbers.length} заказов · ${b.orderNumbers.slice(0, 4).join(', ')}${b.orderNumbers.length > 4 ? '…' : ''}`"
+              >
+                <div class="grid grid-cols-2 gap-2 pb-4 text-center sm:grid-cols-4">
+                  <div class="rounded-lg border border-default p-2">
+                    <div class="tabular font-semibold text-heading">
+                      {{ formatNumber(b.route.optimized.distance, 1) }} м
+                    </div>
+                    <div class="text-xs text-secondary">оптимум</div>
+                  </div>
+                  <div class="rounded-lg border border-default p-2">
+                    <div class="tabular font-semibold text-heading">
+                      {{ formatNumber(b.route.baseline.distance, 1) }} м
+                    </div>
+                    <div class="text-xs text-secondary">базовый</div>
+                  </div>
+                  <div class="rounded-lg border border-default p-2">
+                    <div class="tabular font-semibold text-heading">~{{ b.route.estimatedMinutes }} мин</div>
+                    <div class="text-xs text-secondary">{{ b.route.units }} шт</div>
+                  </div>
+                  <div class="rounded-lg border border-default p-2">
+                    <div class="tabular font-semibold text-heading">
+                      {{ Math.round(b.toteFill * 100) }}%
+                    </div>
+                    <div class="text-xs text-secondary">
+                      {{ formatNumber(b.volumeLiters, 1) }} / {{ formatNumber(b.toteCapacityLiters, 0) }} л
+                    </div>
+                  </div>
+                </div>
+              </SectionCard>
+            </div>
           </div>
         </TabPanel>
 

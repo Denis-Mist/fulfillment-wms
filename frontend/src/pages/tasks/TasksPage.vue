@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { CheckCheck, Clock, FilterX, ListChecks, TriangleAlert, UserPlus, Wand2 } from '@lucide/vue'
 import { ROLE_SHORT, TASK_TYPES } from '@/modules/tasks/labels'
+import { SKILLS } from '@/modules/staff/labels'
 import { tasksApi } from '@/modules/tasks/api'
 import type { TaskListItem, TaskQuery, TaskStatus, TaskType } from '@/modules/tasks/types'
 import { useNotify } from '@/shared/composables/useNotify'
@@ -68,7 +69,13 @@ const chips = computed<ChipOption<StatusFilter>[]>(() => [
 const typeOptions = Object.entries(TASK_TYPES).map(([value, m]) => ({ value, label: m.label }))
 const workerOptions = computed(() => (workers.value ?? []).map((w) => ({ value: w.id, label: w.fullName })))
 const sortedWorkers = computed(() =>
-  [...(workers.value ?? [])].sort((a, b) => b.active - a.active || b.doneToday - a.doneToday),
+  [...(workers.value ?? [])].sort(
+    (a, b) =>
+      Number(b.available !== false) - Number(a.available !== false) ||
+      Number(b.onShift !== false) - Number(a.onShift !== false) ||
+      b.active - a.active ||
+      b.doneToday - a.doneToday,
+  ),
 )
 
 const autoAssign = useMutation({
@@ -248,7 +255,7 @@ function open(t: TaskListItem) {
         </RegistryTable>
       </div>
 
-      <SectionCard title="Загрузка смены" description="Активные задания и выработка за сегодня">
+      <SectionCard title="Загрузка смены" description="Смена, навыки и выработка; автоназначение учитывает график">
         <div v-if="workersPending" class="space-y-3 pb-5" aria-busy="true">
           <div v-for="i in 5" :key="i" class="flex items-center gap-3">
             <Skeleton shape="circle" size="2rem" />
@@ -261,9 +268,27 @@ function open(t: TaskListItem) {
           <li v-for="w in sortedWorkers" :key="w.id" class="flex items-center gap-3">
             <UserAvatar :name="w.fullName" size="sm" />
             <div class="min-w-0 flex-1">
-              <div class="truncate text-sm font-medium text-heading">{{ w.fullName }}</div>
-              <div class="text-xs text-secondary">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="truncate text-sm font-medium text-heading">{{ w.fullName }}</span>
+                <Tag
+                  v-if="w.onShift === false"
+                  value="Не на смене"
+                  severity="secondary"
+                  class="!text-[10px]"
+                />
+                <Tag
+                  v-else-if="w.available === false"
+                  value="Занят"
+                  severity="warn"
+                  class="!text-[10px]"
+                />
+                <Tag v-else-if="w.onShift" value="На смене" severity="success" class="!text-[10px]" />
+              </div>
+              <div class="truncate text-xs text-secondary">
                 {{ ROLE_SHORT[w.role] }} · сегодня {{ w.doneToday }} зад., {{ formatNumber(w.unitsToday) }} шт
+                <template v-if="w.skills?.length">
+                  · {{ w.skills.map((sk) => SKILLS[sk] ?? sk).slice(0, 3).join(', ') }}
+                </template>
               </div>
             </div>
             <span

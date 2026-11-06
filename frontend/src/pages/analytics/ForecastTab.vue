@@ -28,7 +28,7 @@ const algorithm = useStorage<ForecastAlgorithm>('wms.analytics.forecastAlgorithm
 const horizon = ref(14)
 const algorithmOptions = [
   { value: 'holt_winters', label: 'Хольт–Уинтерс' },
-  { value: 'moving_average', label: 'Базовый (среднее 7 дн)' },
+  { value: 'moving_average', label: 'Базовый (скользящее среднее)' },
 ]
 const horizonOptions = [
   { value: 7, label: '7 дн' },

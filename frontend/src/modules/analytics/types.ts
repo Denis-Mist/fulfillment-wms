@@ -56,6 +56,12 @@ export interface SlottingMove {
   /** Ожидаемое сокращение пробега за 30 дней, м */
   gain: number
   applied: boolean
+  /** Объём единицы товара, л (аддитивно FR-12) */
+  volumeLiters?: number
+  /** Масса единицы, г */
+  weightG?: number
+  /** Вместимость целевой ячейки, л */
+  capacityLiters?: number
 }
 
 export interface SlottingResult {
@@ -92,6 +98,14 @@ export interface KpiReport {
   series: KpiPeriodPoint[]
   bySeller: {
     sellerId: string
+    name: string
+    orders: number
+    avgProcessingHours: number
+    errorRate: number
+  }[]
+  /** Разрез по складам (аддитивно FR-17) */
+  byWarehouse?: {
+    warehouseId: string
     name: string
     orders: number
     avgProcessingHours: number

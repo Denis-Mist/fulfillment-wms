@@ -25,6 +25,8 @@ import { lookups } from '../lib/mappers'
 import { createRandom } from '../lib/random'
 import { visibleWarehouseIds } from '../lib/scope'
 import { api } from './api'
+import { staffSnapshot } from './staff'
+import type { Skill } from '@/modules/staff/types'
 
 const FC_OFFICE: Role[] = ['fc_owner', 'fc_manager', 'fc_supervisor']
 const WORKERS: Role[] = ['fc_receiver', 'fc_picker', 'fc_packer', 'fc_supervisor']
@@ -53,12 +55,25 @@ interface TaskRecord {
   items: TaskItem[]
   /** Количество, отсканированное по каждой позиции (в порядке items) */
   progress: number[]
+  optimizedDistance?: number
+  baselineDistance?: number
+  estimatedMinutes?: number
+  volumeLiters?: number
+  toteCapacityLiters?: number
 }
 
 /* ---------- Геометрия маршрута ---------- */
 
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
+
+const TOTE_LITERS = 60
+const productVolume = (productId: string) =>
+  db.data.products.find((p) => p.id === productId)?.volumeLiters ?? 0.5
+const itemsVolume = (items: TaskItem[]) =>
+  Math.round(items.reduce((s, it) => s + productVolume(it.productId) * it.quantity, 0) * 10) / 10
+const toteFillOf = (volume: number, cap = TOTE_LITERS) =>
+  Math.round(Math.min(1, volume / Math.max(1, cap)) * 1000) / 1000
 
 /** Базовый порядок — по адресам ячеек, как в бумажном листе отбора */
 function baselineOrder<T extends { loc: LocationRecord }>(items: T[]): T[] {
@@ -407,12 +422,27 @@ function toDetails(t: TaskRecord): TaskDetails {
   })
   const points = t.items.map((it) => locs.get(it.locationId)).filter((x): x is LocationRecord => !!x)
   const wrapped = points.map((loc) => ({ loc }))
+  const computedBaseline = routeLength(baselineOrder(wrapped).map((w) => w.loc))
+  const computedOptimized = routeLength(optimizedOrder(wrapped).map((w) => w.loc))
+  const baseline = t.baselineDistance ?? computedBaseline
+  const optimized = t.optimizedDistance ?? computedOptimized
+  const routeDistance = t.algorithm === 'baseline' ? baseline : optimized
+  const volume = t.volumeLiters ?? itemsVolume(t.items)
+  const toteCap = t.toteCapacityLiters ?? TOTE_LITERS
+  const units = t.items.reduce((sum, it) => sum + it.quantity, 0)
   return {
     ...toItem(t),
     steps,
     algorithm: t.algorithm,
-    routeDistance: routeLength(points),
-    baselineDistance: routeLength(baselineOrder(wrapped).map((w) => w.loc)),
+    routeDistance,
+    baselineDistance: baseline,
+    optimizedDistance: optimized,
+    volumeLiters: volume,
+    toteCapacityLiters: toteCap,
+    toteFill: toteFillOf(volume, toteCap),
+    estimatedMinutes:
+      t.estimatedMinutes ??
+      Math.max(1, Math.round((routeDistance / 1.2 + units * 6 + t.items.length * 10) / 60)),
     eligibleRoles: TASK_TYPES[t.type].roles,
   }
 }
@@ -440,6 +470,15 @@ const startOfDay = () => {
   return d.getTime()
 }
 
+const SKILL_FOR_TYPE: Partial<Record<TaskType, Skill[]>> = {
+  receiving: ['receiving'],
+  putaway: ['receiving'],
+  picking: ['picking'],
+  packing: ['packing'],
+  inventory: ['inventory'],
+  move: ['picking', 'receiving', 'forklift'],
+}
+
 function workerLoads(orgId: string, list: TaskRecord[]): WorkerLoad[] {
   const sod = startOfDay()
   return workersOf(orgId).map((u) => {
@@ -450,14 +489,22 @@ function workerLoads(orgId: string, list: TaskRecord[]): WorkerLoad[] {
       ? finished.reduce((s, t) => s + (Date.parse(t.finishedAt!) - Date.parse(t.startedAt!)) / 60_000, 0) /
         finished.length
       : 0
+    const active = mine.filter((t) => t.status === 'assigned' || t.status === 'in_progress').length
+    const snap = staffSnapshot(u.id)
+    const onShift = snap?.onShift ?? true
+    const available = onShift && (snap?.active ?? true) && active < 3
     return {
       id: u.id,
       fullName: u.fullName,
       role: roleIn(u.id, orgId)!,
-      active: mine.filter((t) => t.status === 'assigned' || t.status === 'in_progress').length,
+      active,
       doneToday: done.length,
       unitsToday: done.reduce((s, t) => s + t.items.reduce((a, it) => a + it.quantity, 0), 0),
       avgMinutes: Math.round(avg),
+      onShift,
+      available,
+      warehouseId: snap?.warehouseId,
+      skills: snap?.skills ?? [],
     }
   })
 }
@@ -489,6 +536,7 @@ function preview(items: TaskItem[]): RoutePreview {
   const base = baselineOrder(wrapped)
   const units = items.reduce((s, it) => s + it.quantity, 0)
   const optDist = routeLength(opt.map((w) => w.loc))
+  const volume = itemsVolume(items)
   return {
     optimized: { distance: optDist, points: pts(opt) },
     baseline: { distance: routeLength(base.map((w) => w.loc)), points: pts(base) },
@@ -496,6 +544,9 @@ function preview(items: TaskItem[]): RoutePreview {
     units,
     // 1,2 м/с ходьба + 6 с на единицу + 10 с на точку
     estimatedMinutes: Math.max(1, Math.round((optDist / 1.2 + units * 6 + items.length * 10) / 60)),
+    volumeLiters: volume,
+    toteCapacityLiters: TOTE_LITERS,
+    toteFill: toteFillOf(volume),
   }
 }
 
@@ -503,6 +554,115 @@ function ownTask(ctx: MockContext, id: string): TaskRecord | Response {
   const t = tasks.find(id)
   if (!t || t.assigneeId !== ctx.user.id) return problem(404, 'Задание не найдено')
   return t
+}
+
+
+function buildBatch(
+  ctx: MockContext,
+  orders: OrderRecord[],
+  algorithm: RouteAlgorithm,
+): TaskRecord {
+  const items = sortItemsBy(pickItems(orders), algorithm)
+  const n = tasks.all.length + 1
+  const now = Date.now()
+  const prev = preview(items)
+  const chosen = algorithm === 'baseline' ? prev.baseline.distance : prev.optimized.distance
+  return {
+    id: `tsk_b${now}_${n}`,
+    number: `T-${String(100000 + n * 7 + 3).slice(-6)}`,
+    type: 'picking',
+    status: 'new',
+    priority: orders.some((o) => Date.parse(o.shipBy) < now + 4 * HOUR) ? 'high' : 'normal',
+    warehouseId: orders[0]!.warehouseId,
+    organizationId: ctx.org!.id,
+    createdAt: new Date(now).toISOString(),
+    orderIds: orders.map((o) => o.id),
+    algorithm,
+    items,
+    progress: items.map(() => 0),
+    optimizedDistance: prev.optimized.distance,
+    baselineDistance: prev.baseline.distance,
+    estimatedMinutes: Math.max(
+      1,
+      Math.round((chosen / 1.2 + prev.units * 6 + items.length * 10) / 60),
+    ),
+    volumeLiters: prev.volumeLiters,
+    toteCapacityLiters: prev.toteCapacityLiters,
+  }
+}
+
+/** Жадные предложения партий: срочность, тара 60 л, ≤12 заказов, прирост маршрута */
+function suggestBatches(ctx: MockContext, warehouseId?: string | null) {
+  const pool = candidates(ctx, warehouseId).sort(
+    (a, b) => Date.parse(a.shipBy) - Date.parse(b.shipBy) || a.number.localeCompare(b.number),
+  )
+  const byWh = new Map<string, OrderRecord[]>()
+  for (const o of pool) {
+    const list = byWh.get(o.warehouseId) ?? []
+    list.push(o)
+    byWh.set(o.warehouseId, list)
+  }
+  const batches: {
+    orderIds: string[]
+    orderNumbers: string[]
+    volumeLiters: number
+    toteCapacityLiters: number
+    toteFill: number
+    route: ReturnType<typeof preview>
+  }[] = []
+  for (const [, orders] of byWh) {
+    const remaining = [...orders]
+    while (remaining.length) {
+      const waveStart = Date.parse(remaining[0]!.shipBy)
+      const group: OrderRecord[] = []
+      let volume = 0
+      let routeItems: TaskItem[] = []
+      let bestDist = 0
+      const take = [...remaining]
+      for (const o of take) {
+        if (group.length >= 12) break
+        if (Date.parse(o.shipBy) > waveStart + 2 * HOUR && group.length) break
+        const nextItems = pickItems([...group, o])
+        const nextVol = itemsVolume(nextItems)
+        // Один заказ крупнее тары — отдельной партией
+        if (!group.length && nextVol > TOTE_LITERS) {
+          group.push(o)
+          volume = nextVol
+          routeItems = nextItems
+          break
+        }
+        if (nextVol > TOTE_LITERS) continue
+        const prevDist = bestDist
+        const nextDist = preview(nextItems).optimized.distance
+        // Минимизируем прирост длины; первый заказ всегда берём
+        if (group.length && nextDist - prevDist > 80 && group.length >= 3) continue
+        group.push(o)
+        volume = nextVol
+        routeItems = nextItems
+        bestDist = nextDist
+      }
+      if (!group.length) {
+        // не удалось добавить (все не влезают) — берём первый отдельно
+        const o = remaining.shift()!
+        group.push(o)
+        routeItems = pickItems(group)
+        volume = itemsVolume(routeItems)
+      } else {
+        const ids = new Set(group.map((o) => o.id))
+        for (let i = remaining.length - 1; i >= 0; i--) if (ids.has(remaining[i]!.id)) remaining.splice(i, 1)
+      }
+      const route = preview(routeItems)
+      batches.push({
+        orderIds: group.map((o) => o.id),
+        orderNumbers: group.map((o) => o.number),
+        volumeLiters: volume,
+        toteCapacityLiters: TOTE_LITERS,
+        toteFill: toteFillOf(volume),
+        route,
+      })
+    }
+  }
+  return { toteCapacityLiters: TOTE_LITERS, batches }
 }
 
 export const taskHandlers = [
@@ -618,18 +778,29 @@ export const taskHandlers = [
                 : 1,
           )
         for (const t of queue) {
+          const needed = SKILL_FOR_TYPE[t.type] ?? []
           const pool = [...loads.values()].filter(
-            (w) => TASK_TYPES[t.type].roles.includes(w.role) && w.active < 3,
+            (w) =>
+              TASK_TYPES[t.type].roles.includes(w.role) &&
+              w.active < 3 &&
+              w.onShift !== false &&
+              w.available !== false,
           )
           if (!pool.length) continue
-          // Наименее загруженный, при равенстве — профильный, а не бригадир
+          const hasSkill = (w: (typeof pool)[number]) =>
+            !needed.length || (w.skills ?? []).some((sk) => needed.includes(sk))
+          // Навык → свой склад → меньшая загрузка → бригадир в конце
           pool.sort(
             (a, b) =>
-              a.active - b.active || Number(a.role === 'fc_supervisor') - Number(b.role === 'fc_supervisor'),
+              Number(hasSkill(b)) - Number(hasSkill(a)) ||
+              Number(b.warehouseId === t.warehouseId) - Number(a.warehouseId === t.warehouseId) ||
+              a.active - b.active ||
+              Number(a.role === 'fc_supervisor') - Number(b.role === 'fc_supervisor'),
           )
           const w = pool[0]!
           tasks.upsert({ ...t, assigneeId: w.id, status: 'assigned' })
           w.active++
+          w.available = w.active < 3
           assigned++
         }
         return HttpResponse.json({ assigned })
@@ -730,14 +901,63 @@ export const taskHandlers = [
     ),
   ),
 
+  http.get(
+    api('/picking/suggestions'),
+    withAuth(
+      ({ ctx, url }) => HttpResponse.json(suggestBatches(ctx, url.searchParams.get('warehouseId'))),
+      { roles: FC_OFFICE },
+    ),
+  ),
+
+  http.post(
+    api('/picking/batches/auto'),
+    withAuth(
+      async ({ ctx, request }) => {
+        const body = (await readJson(request)) as { warehouseId?: string; algorithm?: RouteAlgorithm }
+        const algorithm = body.algorithm ?? 'optimized'
+        const plan = suggestBatches(ctx, body.warehouseId)
+        const created: ReturnType<typeof toDetails>[] = []
+        const pool = new Map(candidates(ctx, body.warehouseId).map((o) => [o.id, o]))
+        for (const b of plan.batches) {
+          const orders = b.orderIds.map((id) => pool.get(id)).filter((o): o is OrderRecord => !!o)
+          if (orders.length !== b.orderIds.length) continue
+          const rec = buildBatch(ctx, orders, algorithm)
+          tasks.upsert(rec)
+          for (const o of orders) db.upsert('orders', { ...o, status: 'picking' })
+          created.push(toDetails(rec))
+        }
+        return HttpResponse.json({ created: created.length, tasks: created }, { status: 201 })
+      },
+      { roles: FC_OFFICE },
+    ),
+  ),
+
   http.post(
     api('/picking/batches'),
     withAuth(
       async ({ ctx, request }) => {
-        const { orderIds = [], algorithm } = (await readJson(request)) as {
+        const body = (await readJson(request)) as {
           orderIds?: string[]
-          algorithm: RouteAlgorithm
+          algorithm?: RouteAlgorithm
+          auto?: boolean
+          warehouseId?: string
         }
+        const algorithm = body.algorithm ?? 'optimized'
+        if (body.auto) {
+          const plan = suggestBatches(ctx, body.warehouseId)
+          const created: ReturnType<typeof toDetails>[] = []
+          const pool = new Map(candidates(ctx, body.warehouseId).map((o) => [o.id, o]))
+          for (const b of plan.batches) {
+            const orders = b.orderIds.map((id) => pool.get(id)).filter((o): o is OrderRecord => !!o)
+            if (orders.length !== b.orderIds.length) continue
+            const rec = buildBatch(ctx, orders, algorithm)
+            tasks.upsert(rec)
+            for (const o of orders) db.upsert('orders', { ...o, status: 'picking' })
+            created.push(toDetails(rec))
+          }
+          return HttpResponse.json({ created: created.length, tasks: created }, { status: 201 })
+        }
+        const orderIds = body.orderIds ?? []
         if (!orderIds.length)
           return problem(422, 'Выберите заказы', 'Отметьте хотя бы один заказ для формирования батча.')
         const pool = new Map(candidates(ctx).map((o) => [o.id, o]))
@@ -753,23 +973,7 @@ export const taskHandlers = [
           return problem(422, 'Заказы с разных складов', 'Батч формируется в пределах одного склада.')
         if (orders.length > 12)
           return problem(422, 'Слишком большой батч', 'Не более 12 заказов в одном листе отбора.')
-        const items = sortItemsBy(pickItems(orders), algorithm)
-        const n = tasks.all.length + 1
-        const now = Date.now()
-        const rec: TaskRecord = {
-          id: `tsk_b${now}`,
-          number: `T-${String(100000 + n * 7 + 3).slice(-6)}`,
-          type: 'picking',
-          status: 'new',
-          priority: orders.some((o) => Date.parse(o.shipBy) < now + 4 * HOUR) ? 'high' : 'normal',
-          warehouseId: orders[0]!.warehouseId,
-          organizationId: ctx.org!.id,
-          createdAt: new Date(now).toISOString(),
-          orderIds: orders.map((o) => o.id),
-          algorithm,
-          items,
-          progress: items.map(() => 0),
-        }
+        const rec = buildBatch(ctx, orders, algorithm)
         tasks.upsert(rec)
         for (const o of orders) db.upsert('orders', { ...o, status: 'picking' })
         return HttpResponse.json(toDetails(rec), { status: 201 })

@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useConfirm } from 'primevue/useconfirm'
 import { Ban, MapPin, Route } from '@lucide/vue'
+import { SKILLS } from '@/modules/staff/labels'
 import { ROLE_SHORT, TASK_TYPES } from '@/modules/tasks/labels'
 import { tasksApi } from '@/modules/tasks/api'
 import { useNotify } from '@/shared/composables/useNotify'
@@ -32,11 +33,15 @@ const { data: workers } = useQuery({
 const options = computed(() =>
   (workers.value ?? [])
     .filter((w) => task.value?.eligibleRoles.includes(w.role))
-    .sort((a, b) => a.active - b.active)
-    .map((w) => ({
-      value: w.id,
-      label: `${w.fullName} · ${ROLE_SHORT[w.role] ?? ''} · заданий: ${w.active}`,
-    })),
+    .sort((a, b) => Number(b.available !== false) - Number(a.available !== false) || Number(b.onShift !== false) - Number(a.onShift !== false) || a.active - b.active)
+    .map((w) => {
+      const bits = [ROLE_SHORT[w.role] ?? '', `заданий: ${w.active}`]
+      if (w.onShift === false) bits.push('не на смене')
+      else if (w.available === false) bits.push('занят')
+      else if (w.onShift) bits.push('на смене')
+      if (w.skills?.length) bits.push(w.skills.map((sk) => SKILLS[sk] ?? sk).slice(0, 2).join(', '))
+      return { value: w.id, label: `${w.fullName} · ${bits.join(' · ')}` }
+    }),
 )
 const assignee = ref<string | null>(null)
 watch(task, (t) => (assignee.value = t?.assigneeId ?? null), { immediate: true })
@@ -95,14 +100,27 @@ const info = computed(() =>
           label: 'Время',
           value: `${task.value.elapsedMinutes ?? 0} мин из нормы ${task.value.normMinutes} мин`,
         },
+        ...(task.value.estimatedMinutes != null
+          ? [{ label: 'Оценка маршрута', value: `~${task.value.estimatedMinutes} мин` }]
+          : []),
+        ...(task.value.volumeLiters != null
+          ? [
+              {
+                label: 'Тара',
+                value: `${formatNumber(task.value.volumeLiters, 1)} л из ${formatNumber(task.value.toteCapacityLiters ?? 60, 0)} л${
+                  task.value.toteFill != null ? ` · ${Math.round(task.value.toteFill * 100)}%` : ''
+                }`,
+              },
+            ]
+          : []),
       ]
     : [],
 )
-const saving = computed(() =>
-  task.value && task.value.baselineDistance > 0
-    ? Math.round((1 - task.value.routeDistance / task.value.baselineDistance) * 100)
-    : 0,
-)
+const saving = computed(() => {
+  if (!task.value || !(task.value.baselineDistance > 0)) return 0
+  const opt = task.value.optimizedDistance ?? task.value.routeDistance
+  return Math.round((1 - opt / task.value.baselineDistance) * 100)
+})
 </script>
 
 <template>
@@ -151,7 +169,7 @@ const saving = computed(() =>
           >
         </div>
         <p class="text-xs text-secondary">
-          Показаны только сотрудники с подходящей ролью, сначала наименее загруженные.
+          Показаны сотрудники с подходящей ролью; предпочтение — на смене, со навыком и меньшей загрузкой. Ручное назначение не ограничено сменой.
         </p>
       </div>
       <div v-else-if="task.assigneeName" class="text-sm">
@@ -163,9 +181,13 @@ const saving = computed(() =>
       <div>
         <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
           <h3 class="text-sm font-semibold text-heading">Маршрут · {{ task.steps.length }} точек</h3>
-          <span class="inline-flex items-center gap-1 text-xs text-secondary">
-            <Route class="size-3.5" />{{ formatNumber(task.routeDistance, 1) }} м
-            <template v-if="saving > 0"> · на {{ saving }}% короче обхода по адресам</template>
+          <span class="inline-flex flex-wrap items-center gap-1 text-xs text-secondary">
+            <Route class="size-3.5" />
+            {{ formatNumber(task.optimizedDistance ?? task.routeDistance, 1) }} м
+            <template v-if="task.baselineDistance">
+              · базовый {{ formatNumber(task.baselineDistance, 1) }} м
+            </template>
+            <template v-if="saving > 0"> · −{{ saving }}%</template>
           </span>
         </div>
         <ol class="divide-y divide-default rounded-lg border border-default">
