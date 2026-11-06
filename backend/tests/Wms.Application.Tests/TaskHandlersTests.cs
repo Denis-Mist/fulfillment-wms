@@ -162,4 +162,50 @@ public class TaskHandlersTests : IDisposable
         var empty = await Assert.ThrowsAsync<AppException>(() => Picking.CreateBatchAsync(Office, [], null, default));
         Assert.Equal((422, "Выберите заказы"), (empty.Status, empty.Title));
     }
+
+    private User AddMember(string id, Role role)
+    {
+        var org = _db.Organizations.Single(o => o.Id == "org_fc");
+        var user = new User(id, $"{id}@x.ru", "h", id, null, false);
+        user.JoinOrganization(org, role);
+        _db.Users.Add(user);
+        return user;
+    }
+
+    private static List<Shift> Every(Shift shift) => [.. Enumerable.Repeat(shift, StaffProfile.DaysInWeek)];
+
+    [Fact]
+    public async Task Auto_assign_prefers_qualified_on_shift_picker()
+    {
+        AddMember("usr_q", Role.FcPicker);
+        _db.StaffProfiles.Add(new StaffProfile("usr_q", "wh_1", [], [Skill.Picking], true, 60, 99, Now, Every(Shift.Day)));
+        _db.SaveChanges();
+        var batch = await Picking.CreateBatchAsync(Office, ["ord_1"], "optimized", default);
+        Assert.Equal(1, (await Commands.AutoAssignAsync(Office, null, default)).Assigned);
+        Assert.Equal("usr_q", (await Queries.DetailsAsync(Office, batch.Id, default)).AssigneeId);
+    }
+
+    [Fact]
+    public async Task Auto_assign_skips_off_shift_but_manual_assign_still_works()
+    {
+        AddMember("usr_off", Role.FcPicker);
+        _db.StaffProfiles.Add(new StaffProfile("usr_off", "wh_1", [], [Skill.Picking], true, 60, 99, Now, Every(Shift.Off)));
+        _db.SaveChanges();
+        var batch = await Picking.CreateBatchAsync(Office, ["ord_1"], "optimized", default);
+        Assert.Equal(1, (await Commands.AutoAssignAsync(Office, null, default)).Assigned);
+        Assert.Equal("usr_p", (await Queries.DetailsAsync(Office, batch.Id, default)).AssigneeId);
+
+        var other = await Picking.CreateBatchAsync(Office, ["ord_2"], "optimized", default);
+        Assert.Equal("usr_off", (await Commands.AssignAsync(Office, other.Id, "usr_off", default)).AssigneeId);
+
+        var loads = await Queries.WorkersAsync(Office, null, default);
+        var off = Assert.Single(loads, w => w.Id == "usr_off");
+        Assert.False(off.OnShift);
+        Assert.False(off.Available);
+        Assert.Equal("wh_1", off.WarehouseId);
+        Assert.Contains(Skill.Picking, off.Skills!);
+        var open = Assert.Single(loads, w => w.Id == "usr_p");
+        Assert.True(open.OnShift);
+        Assert.True(open.Available);
+    }
 }

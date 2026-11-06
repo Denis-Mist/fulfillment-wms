@@ -34,7 +34,13 @@ public class TaskEndpointsTests(WmsApiFactory factory) : IClassFixture<WmsApiFac
         Assert.True(summary.GetProperty("byStatus").EnumerateObject().Any());
 
         var workers = await Json(await fc.GetAsync("/api/tasks/workers"));
-        Assert.Contains(workers.EnumerateArray(), w => w.GetProperty("id").GetString() == "usr_fc1_3" && w.GetProperty("role").GetString() == "fc_picker");
+        var listed = workers.EnumerateArray().ToList();
+        Assert.Contains(listed, w => w.GetProperty("id").GetString() == "usr_fc1_3" && w.GetProperty("role").GetString() == "fc_picker");
+        var sample = listed.First(w => w.GetProperty("id").GetString() == "usr_fc1_3");
+        Assert.True(sample.GetProperty("onShift").ValueKind is JsonValueKind.True or JsonValueKind.False);
+        Assert.True(sample.GetProperty("available").ValueKind is JsonValueKind.True or JsonValueKind.False);
+        Assert.Equal("wh_kzn1", sample.GetProperty("warehouseId").GetString());
+        Assert.Contains(sample.GetProperty("skills").EnumerateArray().Select(s => s.GetString()), s => s == "picking");
 
         var picker = await As("picker@demo.ru");
         Assert.Equal(HttpStatusCode.Forbidden, (await picker.GetAsync("/api/tasks")).StatusCode);

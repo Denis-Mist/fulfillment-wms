@@ -14,21 +14,20 @@ public sealed record AutoAssignResult(int Assigned);
 /// <summary>Диспетчерская: автоназначение, ручное назначение и отмена заданий.</summary>
 public sealed class TaskCommandHandler(IAppDbContext db, IUnitOfWork uow, TaskScope scope, WorkerDirectory workers, IClock clock)
 {
-    /// <summary>Новые задания (срочные, затем старые) — наименее загруженному подходящему сотруднику, не более 3 активных.</summary>
+    /// <summary>Новые задания (срочные, затем старые): смена и квалификация из staff, свой склад, лимит 3 активных.</summary>
     public async Task<AutoAssignResult> AutoAssignAsync(RequestContext ctx, string? warehouseId, CancellationToken ct)
     {
         if (ctx.OrganizationId is null) return new AutoAssignResult(0);
         var tasks = await scope.ListAsync(ctx, warehouseId, ct, tracking: true);
-        var loads = (await workers.LoadsAsync(ctx.OrganizationId, tasks, clock.UtcNow, ct)).Select(w => new MutableLoad(w.Id, w.Role, w.Active)).ToList();
+        var loads = (await workers.LoadsAsync(ctx.OrganizationId, tasks, clock.UtcNow, ct)).Select(MutableLoad.From).ToList();
         var queue = tasks.Where(t => t.Status == WarehouseTaskStatus.New)
             .OrderBy(t => t.Priority == TaskPriority.High ? 0 : 1).ThenBy(t => t.CreatedAt).ToList();
         var assigned = 0;
         foreach (var task in queue)
         {
-            var roles = TaskRules.EligibleRoles(task.Type);
-            var worker = loads.Where(w => roles.Contains(w.Role) && w.Active < WarehouseTask.MaxActivePerWorker)
-                .OrderBy(w => w.Active).ThenBy(w => w.Role == Role.FcSupervisor ? 1 : 0).FirstOrDefault();
-            if (worker is null) continue;
+            var pick = AssignmentPolicy.Select(loads.Select(w => w.Candidate()), task.Type, task.WarehouseId);
+            if (pick is null) continue;
+            var worker = loads.First(w => w.Id == pick.Id);
             task.Assign(worker.Id);
             worker.Active++;
             assigned++;
@@ -70,10 +69,20 @@ public sealed class TaskCommandHandler(IAppDbContext db, IUnitOfWork uow, TaskSc
     private async Task<TaskDetailsDto> DetailsAsync(WarehouseTask task, CancellationToken ct) =>
         (await TaskLookups.LoadAsync(db, [task], true, ct)).ToDetails(task, clock.UtcNow);
 
-    private sealed class MutableLoad(string id, Role role, int active)
+    private sealed class MutableLoad(string id, Role role, int active, bool hasProfile, string? warehouseId,
+        IReadOnlyCollection<Skill> skills, bool onShift)
     {
         public string Id { get; } = id;
-        public Role Role { get; } = role;
         public int Active { get; set; } = active;
+        private readonly Role _role = role;
+        private readonly bool _hasProfile = hasProfile;
+        private readonly string? _warehouseId = warehouseId;
+        private readonly IReadOnlyCollection<Skill> _skills = skills;
+        private readonly bool _onShift = onShift;
+
+        public static MutableLoad From(WorkerLoadDto w) =>
+            new(w.Id, w.Role, w.Active, w.WarehouseId is not null, w.WarehouseId, w.Skills ?? [], w.OnShift);
+
+        public AssignmentCandidate Candidate() => new(Id, _role, Active, _hasProfile, _warehouseId, _skills, _onShift);
     }
 }
