@@ -50,6 +50,10 @@ public sealed class StaffProfile
 
     public Role EffectiveRole(Role membershipRole) => RoleOverride ?? membershipRole;
 
+    /// <summary>В графике на этот день недели (дневная или ночная смена, не выходной и не отпуск).</summary>
+    public bool WorksOn(int dayOfWeek) =>
+        Active && dayOfWeek is >= 0 and < DaysInWeek && Shifts[dayOfWeek] is Shift.Day or Shift.Night;
+
     /// <summary>На смене: дневная 8–20, ночная 20–8 (по местному времени склада).</summary>
     public bool IsOnShift(int dayOfWeek, int hour)
     {

@@ -23,6 +23,17 @@ public class StaffProfileTests
     public void Inactive_is_never_on_shift() => Assert.False(Profile(active: false).IsOnShift(0, 10));
 
     [Fact]
+    public void Works_on_scheduled_days()
+    {
+        var p = Profile();
+        Assert.True(p.WorksOn(0));
+        Assert.True(p.WorksOn(1));
+        Assert.False(p.WorksOn(2));
+        Assert.False(p.WorksOn(3));
+        Assert.False(Profile(active: false).WorksOn(0));
+    }
+
+    [Fact]
     public void Norms_and_role_override()
     {
         Assert.Equal(90, StaffProfile.NormFor(Role.FcReceiver));

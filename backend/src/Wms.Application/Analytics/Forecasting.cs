@@ -10,7 +10,7 @@ public sealed record ForecastErrors(double Mape, int Mae);
 
 /// <summary>
 /// Модели прогноза (чистые функции): Хольт–Уинтерс, скользящее среднее, ошибки.
-/// История спроса для API собирается из БД через <see cref="DemandHistory"/>; синтетический ряд — только для тестов алгоритма и KPI (до FR-17).
+/// История спроса для API собирается из БД через <see cref="DemandHistory"/>; синтетический ряд — только для тестов алгоритма прогноза.
 /// </summary>
 public static class Forecasting
 {
