@@ -10,7 +10,7 @@ public sealed class MarketplaceClientResolver(IHttpClientFactory http, IOptions<
     public IMarketplaceClient For(IntegrationChannel channel) => channel switch
     {
         IntegrationChannel.Wb => new WbMarketplaceClient(http.CreateClient(MarketplaceClientNames.Wb), options, logs.CreateLogger<WbMarketplaceClient>()),
-        IntegrationChannel.Ozon => throw new InvalidOperationException("Клиент Ozon подключается отдельным PR."),
+        IntegrationChannel.Ozon => new OzonSellerClient(http.CreateClient(MarketplaceClientNames.Ozon), options, logs.CreateLogger<OzonSellerClient>()),
         _ => throw new ArgumentOutOfRangeException(nameof(channel), channel, "Неизвестный маркетплейс"),
     };
 }
