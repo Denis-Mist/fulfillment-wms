@@ -11,7 +11,8 @@ namespace Wms.Application.Tasks;
 public sealed record TaskSummaryDto(int Total, int Active, int Late, int Unassigned, int DoneToday, int AvgMinutes,
     IReadOnlyDictionary<string, int> ByStatus, IReadOnlyDictionary<string, int> ByType);
 
-public sealed record WorkerLoadDto(string Id, string FullName, Role Role, int Active, int DoneToday, int UnitsToday, int AvgMinutes);
+public sealed record WorkerLoadDto(string Id, string FullName, Role Role, int Active, int DoneToday, int UnitsToday, int AvgMinutes,
+    bool OnShift = true, bool Available = true, string? WarehouseId = null, IReadOnlyList<Skill>? Skills = null);
 
 /// <summary>Фильтры списка. Status — статус, «active» или «late»; неизвестные значения игнорируются.</summary>
 public sealed record TaskQuery(PageQuery Page, string? Status, TaskType? Type, string? AssigneeId, string? WarehouseId);
@@ -60,15 +61,26 @@ public sealed class WorkerDirectory(IAppDbContext db)
     public async Task<List<WorkerLoadDto>> LoadsAsync(string organizationId, IReadOnlyCollection<WarehouseTask> tasks, DateTimeOffset now, CancellationToken ct)
     {
         var sod = WorkDay.Start(now);
-        return (await WorkersAsync(organizationId, ct)).Select(w =>
+        var day = WarehouseTime.DayIndex(now);
+        var hour = WarehouseTime.Local(now).Hour;
+        var listed = await WorkersAsync(organizationId, ct);
+        var ids = listed.Select(w => w.User.Id).ToList();
+        var profiles = await db.StaffProfiles.AsNoTracking().Where(p => ids.Contains(p.Id)).ToDictionaryAsync(p => p.Id, ct);
+        return listed.Select(w =>
         {
             var mine = tasks.Where(t => t.AssigneeId == w.User.Id).ToList();
             var done = mine.Where(t => t.Status == WarehouseTaskStatus.Done && t.FinishedAt >= sod).ToList();
             var finished = mine.Where(t => t.Status == WarehouseTaskStatus.Done && t.StartedAt != null && t.FinishedAt != null).ToList();
             var avg = finished.Count == 0 ? 0 : finished.Average(t => (t.FinishedAt!.Value - t.StartedAt!.Value).TotalMinutes);
-            return new WorkerLoadDto(w.User.Id, w.User.FullName, w.Role,
-                mine.Count(t => t.Status is WarehouseTaskStatus.Assigned or WarehouseTaskStatus.InProgress),
-                done.Count, done.Sum(t => t.Units), (int)Domain.Common.JsMath.Round(avg));
+            profiles.TryGetValue(w.User.Id, out var profile);
+            var role = profile?.EffectiveRole(w.Role) ?? w.Role;
+            var onShift = profile is null || profile.IsOnShift(day, hour);
+            var active = mine.Count(t => t.Status is WarehouseTaskStatus.Assigned or WarehouseTaskStatus.InProgress);
+            var available = AssignmentPolicy.IsAvailable(new AssignmentCandidate(w.User.Id, role, active, profile is not null,
+                profile?.WarehouseId, profile?.Skills ?? [], onShift));
+            return new WorkerLoadDto(w.User.Id, w.User.FullName, role, active,
+                done.Count, done.Sum(t => t.Units), (int)Domain.Common.JsMath.Round(avg),
+                onShift, available, profile?.WarehouseId, profile?.Skills ?? []);
         }).ToList();
     }
 }
