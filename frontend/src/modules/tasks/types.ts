@@ -1,3 +1,4 @@
+import type { Skill } from '@/modules/staff/types'
 import type { PageQuery } from '@/shared/api/types'
 import type { Role } from '@/modules/auth/types'
 import type { SalesChannel } from '@/modules/orders/types'
@@ -53,6 +54,13 @@ export interface TaskDetails extends TaskListItem {
   /** Длина маршрута текущего порядка обхода и базового (по адресам), м */
   routeDistance: number
   baselineDistance: number
+  /** Оптимизированная длина (аддитивно FR-13/14); если нет — равна routeDistance при algorithm=optimized */
+  optimizedDistance?: number
+  volumeLiters?: number
+  toteCapacityLiters?: number
+  /** Доля заполнения тары 0..1 */
+  toteFill?: number
+  estimatedMinutes?: number
   eligibleRoles: Role[]
 }
 
@@ -82,6 +90,11 @@ export interface WorkerLoad {
   doneToday: number
   unitsToday: number
   avgMinutes: number
+  /** Аддитивно FR-15 */
+  onShift?: boolean
+  available?: boolean
+  warehouseId?: string | null
+  skills?: Skill[]
 }
 
 export interface PickCandidate {
@@ -108,6 +121,29 @@ export interface RoutePreview {
   stepsCount: number
   units: number
   estimatedMinutes: number
+  volumeLiters?: number
+  toteCapacityLiters?: number
+  toteFill?: number
+}
+
+/** План автопартий без записи (GET /picking/suggestions) */
+export interface BatchSuggestion {
+  orderIds: string[]
+  orderNumbers: string[]
+  volumeLiters: number
+  toteCapacityLiters: number
+  toteFill: number
+  route: RoutePreview
+}
+
+export interface BatchSuggestions {
+  toteCapacityLiters: number
+  batches: BatchSuggestion[]
+}
+
+export interface AutoBatchResult {
+  created: number
+  tasks: TaskDetails[]
 }
 
 export interface ScanResult {

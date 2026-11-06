@@ -54,12 +54,26 @@ function scopeWarehouses(ctx: MockContext, warehouseId: string | null) {
   return warehouseId ? all.filter((w) => w.id === warehouseId) : all
 }
 
-function meta(algorithm: string, seed: number, started: number): CalcMeta {
+function tasksForPicks(warehouseIds: string[]) {
+  const set = new Set(warehouseIds)
+  // Подсчёт строк отбора в локальной коллекции заданий (если доступна через db) — иначе 0
+  return db.data.orders
+    .filter((o) => set.has(o.warehouseId) && o.status === 'picking')
+    .reduce((n, o) => n + o.lines.length, 0)
+}
+
+function meta(
+  algorithm: string,
+  seed: number,
+  started: number,
+  dataVersion?: string,
+): CalcMeta {
   return {
     algorithm,
-    version: algorithm === 'holt_winters' || algorithm === 'abc_affinity' ? '1.3.0' : '1.0.0',
+    version: '2.0.0',
     seed,
-    dataVersion: `snap-${new Date(startOfDay(Date.now())).toISOString().slice(0, 10)}`,
+    dataVersion:
+      dataVersion ?? `snap-${new Date(startOfDay(Date.now())).toISOString().slice(0, 10)}`,
     computedAt: new Date().toISOString(),
     durationMs: Math.max(4, Math.round(performance.now() - started)),
   }
@@ -194,9 +208,18 @@ export const analyticsHandlers = [
             available,
           })
         })
+        const orderCount = db.data.orders.filter(
+          (o) => warehouses.some((w) => w.id === o.warehouseId) && o.status !== 'cancelled',
+        ).length
+        const pickCount = tasksForPicks(warehouses.map((w) => w.id))
         const plan = plans.find(planKey(ctx, warehouseId))
         const result: ForecastResult = {
-          meta: meta(algorithm, seed, started),
+          meta: meta(
+            algorithm,
+            seed,
+            started,
+            `orders-${orderCount}-picks-${pickCount}-snap-${new Date(startOfDay(Date.now())).toISOString().slice(0, 10)}`,
+          ),
           horizon,
           series,
           backtest: { ...err, baselineMape: baseErr.mape, days: BACKTEST_DAYS },
@@ -346,6 +369,9 @@ export const analyticsHandlers = [
                 toDistance: locDistance(target),
                 gain,
                 applied: appliedIds.has(id),
+                volumeLiters: product?.volumeLiters ?? 0,
+                weightG: product?.weightG ?? 0,
+                capacityLiters: target.capacityLiters,
               })
             }
           }
@@ -442,6 +468,13 @@ export const analyticsHandlers = [
             errorRate: Math.round(rng.float(0.1, 1.4) * 10) / 10,
           }))
           .sort((a, b) => b.orders - a.orders)
+        const byWarehouse = warehouses.map((w) => ({
+          warehouseId: w.id,
+          name: w.name,
+          orders: Math.round(orders * rng.float(0.15, 0.55)),
+          avgProcessingHours: Math.round(rng.float(3, 5.5) * 10) / 10,
+          errorRate: Math.round(rng.float(0.1, 1.4) * 10) / 10,
+        })).sort((a, b) => b.orders - a.orders)
         const report: KpiReport = {
           period,
           totals: {
@@ -456,6 +489,7 @@ export const analyticsHandlers = [
           },
           series,
           bySeller,
+          byWarehouse,
         }
         return HttpResponse.json(report)
       },

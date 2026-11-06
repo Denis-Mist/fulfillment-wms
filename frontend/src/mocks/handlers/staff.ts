@@ -121,6 +121,25 @@ function own(ctx: MockContext, id: string) {
   return rec
 }
 
+
+/** Снимок профиля для назначения заданий (FR-15); null — нет кадровой карточки */
+export function staffSnapshot(userId: string): {
+  warehouseId: string
+  skills: Skill[]
+  onShift: boolean
+  active: boolean
+} | null {
+  const rec = profiles.find(userId)
+  if (!rec) return null
+  const day = (new Date().getDay() + 6) % 7
+  const hour = new Date().getHours()
+  const shift = rec.shifts[day] ?? 'off'
+  const onShift =
+    rec.active &&
+    ((shift === 'day' && hour >= 8 && hour < 20) || (shift === 'night' && (hour >= 20 || hour < 8)))
+  return { warehouseId: rec.warehouseId, skills: rec.skills, onShift, active: rec.active }
+}
+
 export const staffHandlers = [
   http.get(
     api('/staff'),

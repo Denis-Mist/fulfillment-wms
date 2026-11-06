@@ -1,6 +1,8 @@
 import { http } from '@/shared/api/http'
 import type { Paged } from '@/shared/api/types'
 import type {
+  AutoBatchResult,
+  BatchSuggestions,
   LookupResult,
   PickCandidate,
   RouteAlgorithm,
@@ -25,9 +27,13 @@ export const tasksApi = {
   workers: (warehouseId?: string) => http.get<WorkerLoad[]>('/tasks/workers', { warehouseId }),
 
   candidates: (warehouseId?: string) => http.get<PickCandidate[]>('/picking/candidates', { warehouseId }),
+  suggestions: (warehouseId?: string) =>
+    http.get<BatchSuggestions>('/picking/suggestions', { warehouseId }),
   preview: (orderIds: string[]) => http.post<RoutePreview>('/picking/preview', { orderIds }),
   createBatch: (orderIds: string[], algorithm: RouteAlgorithm) =>
     http.post<TaskDetails>('/picking/batches', { orderIds, algorithm }),
+  createBatchesAuto: (body: { warehouseId?: string; algorithm?: RouteAlgorithm }) =>
+    http.post<AutoBatchResult>('/picking/batches/auto', body),
 
   myTasks: () => http.get<TaskListItem[]>('/work/tasks'),
   start: (id: string) => http.post<TaskDetails>(`/work/tasks/${id}/start`),

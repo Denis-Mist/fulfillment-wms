@@ -179,7 +179,7 @@ const ordersOption = computed<ChartOption>(() => ({
         :value="t ? `−${t.routeReductionPct}%` : '—'"
         :icon="Activity"
         tone="success"
-        hint="«до» и «после» внедрения маршрутизации"
+        hint="сравнение базового и оптимизированного маршрута"
         :loading="isPending"
       />
     </div>
@@ -187,7 +187,7 @@ const ordersOption = computed<ChartOption>(() => ({
     <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
       <SectionCard
         title="Маршруты: до и после"
-        description="Средняя длина маршрута отбора в день; алгоритм включён с середины периода"
+        description="Средняя длина маршрута отбора в день: базовый обход по адресам и оптимизированный"
       >
         <EmptyState v-if="!isPending && !data?.series?.length" compact title="Данных пока нет" />
         <BaseChart v-else :option="routeOption" height="260px" />
@@ -197,6 +197,34 @@ const ordersOption = computed<ChartOption>(() => ({
         <BaseChart v-else :option="ordersOption" height="260px" />
       </SectionCard>
     </div>
+
+
+    <SectionCard v-if="(data?.byWarehouse?.length ?? 0) > 0" title="По складам" flush>
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[28rem] text-sm">
+          <thead class="text-left text-xs text-secondary uppercase">
+            <tr class="border-b border-default">
+              <th class="px-5 py-2 font-medium">Склад</th>
+              <th class="px-3 py-2 text-right font-medium">Заказы</th>
+              <th class="px-3 py-2 text-right font-medium">Обработка, ч</th>
+              <th class="px-5 py-2 text-right font-medium">Ошибки</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="w in data?.byWarehouse ?? []"
+              :key="w.warehouseId"
+              class="border-b border-default last:border-0"
+            >
+              <td class="px-5 py-2 font-medium text-heading">{{ w.name }}</td>
+              <td class="tabular px-3 py-2 text-right">{{ formatNumber(w.orders) }}</td>
+              <td class="tabular px-3 py-2 text-right">{{ w.avgProcessingHours }}</td>
+              <td class="tabular px-5 py-2 text-right">{{ w.errorRate }}%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </SectionCard>
 
     <SectionCard title="По клиентам" flush>
       <div class="overflow-x-auto">
