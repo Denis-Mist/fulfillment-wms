@@ -107,4 +107,25 @@ public class IntegrationsHandlerTests
         var gateway = await Assert.ThrowsAsync<AppException>(() => Handler(db).SyncAsync(Seller(), "wb", default));
         Assert.Equal(502, gateway.Status);
     }
+
+    [Fact]
+    public async Task Ozon_sync_uses_client_after_connect()
+    {
+        var ozon = Substitute.For<IMarketplaceClient>();
+        ozon.Channel.Returns(IntegrationChannel.Ozon);
+        _resolver.For(IntegrationChannel.Ozon).Returns(ozon);
+        ozon.GetFbsOrderCountAsync(Arg.Any<MarketplaceCredentials>(), Arg.Any<CancellationToken>()).Returns(2);
+        ozon.GetCardCountAsync(Arg.Any<MarketplaceCredentials>(), Arg.Any<CancellationToken>()).Returns(6);
+
+        await using var db = new TestAppDbContext();
+        db.Integrations.Add(new MarketplaceIntegration("org_s", IntegrationChannel.Ozon));
+        await db.SaveChangesAsync();
+
+        var handler = Handler(db);
+        await handler.ConnectAsync(Seller(), "ozon", new ConnectInput(new string('k', 24), "123456"), default);
+        var synced = await handler.SyncAsync(Seller(), "ozon", default);
+        Assert.Equal(2, synced.Log[0].Count);
+        await ozon.Received(1).PingAsync(Arg.Is<MarketplaceCredentials>(c => c.ClientId == "123456"), Arg.Any<CancellationToken>());
+        await ozon.DidNotReceive().PushStocksAsync(Arg.Any<MarketplaceCredentials>(), Arg.Any<IReadOnlyList<MarketplaceStockItem>>(), Arg.Any<CancellationToken>());
+    }
 }

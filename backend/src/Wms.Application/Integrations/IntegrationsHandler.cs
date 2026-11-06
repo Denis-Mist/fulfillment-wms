@@ -18,7 +18,7 @@ public sealed record ConnectInput(string? ApiKey, string? ClientId, MarketplaceE
 
 public sealed record IntegrationSettingsInput(bool? AutoImportFbs, bool? PushStock, int? SyncIntervalMin, MarketplaceEnvironment? Environment = null);
 
-/// <summary>Подключения кабинетов WB/Ozon. WB ходит в HTTP API; Ozon пока имитируется (следующий PR).</summary>
+/// <summary>Подключения кабинетов WB/Ozon. Обмен идёт через IMarketplaceClient (реальные HTTP-клиенты).</summary>
 public sealed class IntegrationsHandler(IAppDbContext db, IUnitOfWork uow, IClock clock,
     IMarketplaceClientResolver clients, ISecretProtector secrets, IMarketplaceSettings settings)
 {
@@ -49,16 +49,6 @@ public sealed class IntegrationsHandler(IAppDbContext db, IUnitOfWork uow, ICloc
         var row = await GetRowAsync(ctx, channel, ct);
         if (row.Status == IntegrationStatus.Disconnected)
             throw AppException.Conflict("Кабинет не подключён");
-
-        // Ozon: имитация до PR с OzonSellerClient.
-        if (row.Channel == IntegrationChannel.Ozon)
-        {
-            try { row.Sync(Random.Shared.Next(0, 7), 60 + Random.Shared.Next(0, 100), clock.UtcNow); }
-            catch (DomainConflictException e) { throw AppException.Conflict(e.Message); }
-            await uow.SaveChangesAsync(ct);
-            return ToDto(row);
-        }
-
         return await SyncWithClientAsync(row, ct);
     }
 
@@ -105,7 +95,8 @@ public sealed class IntegrationsHandler(IAppDbContext db, IUnitOfWork uow, ICloc
     }
 
     private bool CanPushStocks(MarketplaceIntegration row) =>
-        row.Environment == MarketplaceEnvironment.Sandbox || settings.AllowProductionStockPush;
+        (row.Channel == IntegrationChannel.Wb && row.Environment == MarketplaceEnvironment.Sandbox)
+            || settings.AllowProductionStockPush;
 
     private async Task<IReadOnlyList<MarketplaceStockItem>> LoadStocksAsync(string orgId, IntegrationChannel channel, CancellationToken ct)
     {

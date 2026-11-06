@@ -167,7 +167,7 @@ dotnet ef database update -p src/Wms.Infrastructure -s src/Wms.Api
 - Тарифы и акты хранятся в PostgreSQL (`tariffs`, `billing_acts`), а не в localStorage; создаются лениво при первом обращении: тариф по умолчанию по формуле мока, акты за 3 прошлых месяца (выставлены 3-го числа следующего месяца, старше одного месяца — оплачены через 6 дней). Черновик текущего месяца — виртуальный `draft_{contractId}`.
 - Месяцы/дни считаются в UTC (мок — локальное время браузера).
 - Интеграции хранятся в `marketplace_integrations` (журнал — jsonb, ≤30 записей); демо-состояние сидируется при первом GET организации. Ключ API после `POST /integrations/{channel}/connect` сохраняется в `api_key_cipher` (AES-GCM) и в ответах не возвращается — только `keyMask`. Сидовые подключения ключа не содержат: `POST /integrations/wb/sync` без повторного connect даёт 422 «Ключ API не сохранён».
-- WB: `sync` ходит в HTTP API (sandbox в Development). Ozon по-прежнему имитируется (случайные 0–6 заказов и 60–159 SKU) до отдельного PR.
+- WB и Ozon: `sync` ходит в HTTP API. Для WB в Development по умолчанию sandbox; у Ozon официального sandbox URL нет — используется `https://api-seller.ozon.ru` в режиме чтения.
 - В ответ интеграций добавлены поля `environment` (`sandbox` | `production`), `lastError`, `lastHttpStatus`. После ошибки API статус становится `error`. Неизвестный канал → 404.
 - Неизвестный канал → 404, неизвестные значения фильтров (`service`) игнорируются.
 
@@ -275,3 +275,24 @@ dotnet ef database update -p src/Wms.Infrastructure -s src/Wms.Api
 Боевые хосты — те же пути на `marketplace-api.wildberries.ru` и `content-api.wildberries.ru`. Заголовок `Authorization` — сам токен, как в документации WB. Ошибки API возвращаются как ProblemDetails 422 (ответ 4xx) или 502 (сеть / 5xx) с текстом маркетплейса в `detail`; то же пишется в `lastError` / журнал.
 
 `connect` ключ только сохраняет и не пингует маркетплейс. Секреты в git не коммитятся.
+
+### Интеграции: Ozon Seller API
+
+Ключи создаются в кабинете продавца: [seller.ozon.ru](https://seller.ozon.ru) → Настройки → Seller API (`Client-Id` и `Api-Key`). Официальная документация: https://docs.ozon.ru/api/seller/. Отдельного sandbox-хоста в этих документах нет, поэтому WMS ходит на боевой `https://api-seller.ozon.ru`. В режиме `sandbox` (и по умолчанию без флага) обновление остатков **не выполняется** — только чтение. Выгрузка остатков на этот хост возможна, только если явно включить `Marketplace:AllowProductionStockPush` и `pushStock` у подключения.
+
+Переменные окружения для ручного smoke-теста `OzonSellerSmokeTests` (без них тест сразу выходит):
+
+- `OZON_CLIENT_ID`
+- `OZON_API_KEY`
+
+Что дергает WMS при `POST /api/integrations/ozon/sync` (после `connect` с `apiKey` и `clientId`):
+
+| Шаг | Путь на `api-seller.ozon.ru` | Метод |
+|---|---|---|
+| Проверка ключей | `/v1/roles` | POST |
+| Товары | `/v3/product/list` | POST |
+| Отправления FBS | `/v4/posting/fbs/list` (за 7 дней) | POST |
+| Отправления FBO | `/v2/posting/fbo/list` (за 7 дней) | POST |
+| Остатки | `/v1/warehouse/list`, затем `/v2/products/stocks` | POST, только если разрешена запись |
+
+Заголовки: `Client-Id` и `Api-Key`. Ошибки — те же 422/502 ProblemDetails с текстом Ozon в `detail`.
