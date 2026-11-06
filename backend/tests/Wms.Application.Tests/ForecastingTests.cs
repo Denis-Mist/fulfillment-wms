@@ -1,5 +1,6 @@
 using Wms.Application.Analytics;
 using Wms.Domain.Enums;
+using Wms.Domain.Services;
 
 namespace Wms.Application.Tests;
 
@@ -36,5 +37,26 @@ public class ForecastingTests
         Assert.Equal(10, e.Mape);
         Assert.Equal(3, Forecasting.Round(2.5));
         Assert.Equal(-2, Forecasting.Round(-2.5));
+    }
+
+    [Fact]
+    public void FromDemand_uses_order_counts()
+    {
+        var days = DemandHistory.BuildUtc(Today, 3,
+        [
+            new DemandEvent(Today.AddDays(-2), 4, 8, 1),
+            new DemandEvent(Today.AddDays(-1), 1, 2, 1),
+        ]);
+        var hist = Forecasting.FromDemand(days);
+        Assert.Equal([0, 4, 1], hist.Select(p => p.Value));
+    }
+
+    [Fact]
+    public void Short_or_empty_series_does_not_throw()
+    {
+        Assert.Equal(3, Forecasting.HoltWinters([1, 2, 3], 3).Length);
+        Assert.Equal(new[] { 0.0, 0.0 }, Forecasting.MovingAverage([], 2));
+        Assert.Equal(0, Forecasting.Errors([], []).Mape);
+        Assert.Equal(0, Forecasting.Errors([], []).Mae);
     }
 }
