@@ -23,7 +23,7 @@ public static class AnalyticsEndpoints
             Results.Ok(await h.SlottingAsync(http.Ctx(), ListQuery.String(http.Request, "warehouseId"),
                 ListQuery.Enum<SlottingAlgorithm>(http.Request, "algorithm"), ct))).RequireAccess(Management);
         g.MapPost("/slotting/apply", async (HttpContext http, AnalyticsHandler h, CancellationToken ct) =>
-            Results.Ok(await h.ApplyAsync(await Body.ReadOrEmptyAsync<ApplyInput>(http, ct), ct))).RequireAccess(Management);
+            Results.Ok(await h.ApplyAsync(http.Ctx(), await Body.ReadOrEmptyAsync<ApplyInput>(http, ct), ct))).RequireAccess(Management);
         g.MapGet("/kpi", async (HttpContext http, AnalyticsHandler h, CancellationToken ct) =>
             Results.Ok(await h.KpiAsync(http.Ctx(), ListQuery.String(http.Request, "warehouseId"), ListQuery.String(http.Request, "sellerId"),
                 Int(http.Request, "period"), ct))).RequireAccess(Management);
