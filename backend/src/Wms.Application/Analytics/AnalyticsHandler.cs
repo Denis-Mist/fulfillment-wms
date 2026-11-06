@@ -6,6 +6,7 @@ using Wms.Application.Common;
 using Wms.Domain.Common;
 using Wms.Domain.Entities;
 using Wms.Domain.Enums;
+using Wms.Domain.Services;
 
 namespace Wms.Application.Analytics;
 
@@ -48,9 +49,9 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
             .Where(w => (visible is null || visible.Contains(w.Id)) && (string.IsNullOrEmpty(warehouseId) || w.Id == warehouseId)).ToList();
     }
 
-    private CalcMeta Meta(string algorithm, uint seed, Stopwatch sw) => new(algorithm,
-        algorithm is "holt_winters" or "abc_affinity" ? "1.3.0" : "1.0.0", seed,
-        $"snap-{Today:yyyy-MM-dd}", clock.UtcNow, Math.Max(4, (int)sw.ElapsedMilliseconds));
+    private CalcMeta Meta(string algorithm, uint seed, Stopwatch sw, string? dataVersion = null, string? version = null) => new(algorithm,
+        version ?? (algorithm is "holt_winters" or "abc_affinity" ? "1.3.0" : "1.0.0"), seed,
+        dataVersion ?? $"snap-{Today:yyyy-MM-dd}", clock.UtcNow, Math.Max(4, (int)sw.ElapsedMilliseconds));
 
     public async Task<ForecastResult> ForecastAsync(RequestContext ctx, string? warehouseId, int? horizonParam, ForecastAlgorithm? algorithmParam, CancellationToken ct)
     {
@@ -64,7 +65,20 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
         var available = await db.Users.AsNoTracking()
             .CountAsync(u => u.Memberships.Any(m => orgIds.Contains(m.OrganizationId) && FloorRoles.Contains(m.Role)), ct);
         var today = Today;
-        var hist = Forecasting.History(seed, Math.Max(60, available * 36), today);
+        var from = today.AddDays(-Forecasting.HistoryDays);
+        var whIds = warehouses.Select(w => w.Id).ToList();
+        var orders = await db.Orders.AsNoTracking()
+            .Where(o => whIds.Contains(o.WarehouseId) && o.CreatedAt >= from && o.CreatedAt < today && o.Status != OrderStatus.Cancelled)
+            .ToListAsync(ct);
+        var pickTasks = await db.Tasks.AsNoTracking()
+            .Where(t => whIds.Contains(t.WarehouseId) && t.Type == TaskType.Picking && t.Status != WarehouseTaskStatus.Cancelled
+                && t.CreatedAt >= from && t.CreatedAt < today)
+            .ToListAsync(ct);
+        var events = orders.Select(o => new DemandEvent(o.CreatedAt, 1, o.Units, o.Lines.Count))
+            .Concat(pickTasks.Select(t => new DemandEvent(t.FinishedAt ?? t.CreatedAt, 0, 0, t.Items.Count)));
+        var daily = DemandHistory.BuildUtc(today, Forecasting.HistoryDays, events);
+        var hist = Forecasting.FromDemand(daily);
+        var unitsPerOrder = DemandHistory.AverageUnitsPerOrder(daily);
         var values = hist.Select(h => (double)h.Value).ToList();
         var train = values.Take(values.Count - Forecasting.BacktestDays).ToList();
         var test = values.Skip(values.Count - Forecasting.BacktestDays).ToList();
@@ -81,16 +95,17 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
         {
             var v = future[h];
             var date = today.AddDays(h);
-            var orders = Math.Max(0, Forecasting.Round(v));
-            series.Add(new ForecastPoint(date, null, orders, Math.Max(0, Forecasting.Round(v - spread)), Forecasting.Round(v + spread)));
-            var units = Forecasting.Round(orders * 2.6);
+            var predictedOrders = Math.Max(0, Forecasting.Round(v));
+            series.Add(new ForecastPoint(date, null, predictedOrders, Math.Max(0, Forecasting.Round(v - spread)), Forecasting.Round(v + spread)));
+            var units = Forecasting.Round(predictedOrders * unitsPerOrder);
             int pickers = (int)Math.Ceiling(units / (double)PickerRate), packers = (int)Math.Ceiling(units / (double)PackerRate),
                 receivers = (int)Math.Ceiling(units * 0.9 / ReceiverRate);
-            staffing.Add(new StaffingDay(date, orders, units, pickers, packers, receivers, pickers + packers + receivers, available));
+            staffing.Add(new StaffingDay(date, predictedOrders, units, pickers, packers, receivers, pickers + packers + receivers, available));
         }
         var key = StaffPlan.KeyFor(ctx.OrganizationId, string.IsNullOrEmpty(warehouseId) ? null : warehouseId);
         var plan = await db.StaffPlans.AsNoTracking().FirstOrDefaultAsync(p => p.Id == key, ct);
-        return new ForecastResult(Meta(SnakeCaseName.Of(algorithm), seed, sw), horizon, series,
+        return new ForecastResult(Meta(SnakeCaseName.Of(algorithm), seed, sw,
+            $"orders-{orders.Count}-picks-{pickTasks.Sum(t => t.Items.Count)}-snap-{today:yyyy-MM-dd}", "2.0.0"), horizon, series,
             new BacktestDto(err.Mape, err.Mae, baseErr.Mape, Forecasting.BacktestDays), staffing,
             plan is null ? null : new PlanDto(plan.ApprovedAt, plan.ApprovedBy, plan.Algorithm));
     }

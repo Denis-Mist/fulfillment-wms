@@ -74,4 +74,22 @@ public class DashboardAnalyticsEndpointsTests(WmsApiFactory factory) : IClassFix
         var seller = await As("seller@demo.ru");
         Assert.Equal(HttpStatusCode.Forbidden, (await seller.GetAsync("/api/analytics/kpi")).StatusCode);
     }
+
+    [Fact]
+    public async Task Forecast_history_comes_from_real_orders()
+    {
+        var fc = await As("director@demo.ru");
+        var all = await Json(await fc.GetAsync("/api/analytics/forecast?horizon=7"));
+        Assert.Equal("2.0.0", all.GetProperty("meta").GetProperty("version").GetString());
+        Assert.StartsWith("orders-", all.GetProperty("meta").GetProperty("dataVersion").GetString());
+        var hist = all.GetProperty("series").EnumerateArray().Take(56).ToList();
+        Assert.All(hist, p => Assert.True(p.TryGetProperty("actual", out var a) && a.ValueKind == JsonValueKind.Number));
+        var sumAll = hist.Sum(p => p.GetProperty("actual").GetInt32());
+        Assert.True(sumAll > 0, $"expected seeded orders in history, got {sumAll}");
+
+        var one = await Json(await fc.GetAsync("/api/analytics/forecast?warehouseId=wh_pdl1&horizon=7"));
+        var sumOne = one.GetProperty("series").EnumerateArray().Take(56).Sum(p => p.GetProperty("actual").GetInt32());
+        Assert.True(sumOne > 0);
+        Assert.True(sumOne < sumAll);
+    }
 }
