@@ -5,6 +5,7 @@ using Wms.Application.Common;
 using Wms.Application.Tasks;
 using Wms.Domain.Entities;
 using Wms.Domain.Enums;
+using Wms.Domain.Services;
 
 namespace Wms.Application.Tests;
 
@@ -20,7 +21,8 @@ public class TaskHandlersTests : IDisposable
     public TaskHandlersTests()
     {
         _clock.UtcNow.Returns(Now);
-        _ids.NewSuffix().Returns("x1");
+        var n = 0;
+        _ids.NewSuffix().Returns(_ => $"x{++n}");
         var org = new Organization("org_fc", OrganizationType.Fulfillment, "ФЦ", "1", "М", OrganizationStatus.Active, Now);
         _db.Organizations.AddRange(org, new Organization("org_s", OrganizationType.Seller, "Селлер", "2", "М", OrganizationStatus.Active, Now));
         _db.Warehouses.AddRange(new Warehouse("wh_1", "org_fc", "Склад", "W1", "М", "ул.", 100, true), new Warehouse("wh_2", "org_fc", "Второй", "W2", "М", "ул.", 100, true));
@@ -65,6 +67,9 @@ public class TaskHandlersTests : IDisposable
         Assert.Equal("tsk_bx1", batch.Id);
         Assert.Equal("ORD_1, ORD_2", batch.Reference);
         Assert.Equal(["A-01-1", "B-01-1"], batch.Steps.Select(s => s.LocationCode));
+        Assert.Equal(batch.BaselineDistance, batch.RouteDistance);
+        Assert.Equal(1.5, batch.VolumeLiters);
+        Assert.True(batch.EstimatedMinutes >= 1);
         Assert.Equal(409, (await Assert.ThrowsAsync<AppException>(() => Picking.CreateBatchAsync(Office, ["ord_1"], null, default))).Status);
         var empty = await Assert.ThrowsAsync<AppException>(() => Picking.CreateBatchAsync(Office, [], null, default));
         Assert.Equal((422, "Выберите заказы"), (empty.Status, empty.Title));
@@ -109,5 +114,52 @@ public class TaskHandlersTests : IDisposable
         Assert.Equal("Хранение · Склад · ярус 1", location.Subtitle);
         Assert.Equal("product", (await Work.LookupAsync(Picker, "bbb-2", default)).Kind);
         Assert.Equal(404, (await Assert.ThrowsAsync<AppException>(() => Work.LookupAsync(Picker, "zzz", default))).Status);
+    }
+
+    [Fact]
+    public async Task Suggest_and_auto_batch_persist_route_and_tote_metrics()
+    {
+        var suggested = await Picking.SuggestAsync(Office, "wh_1", default);
+        var plan = Assert.Single(suggested.Batches);
+        Assert.Equal(["ord_1", "ord_2"], plan.OrderIds);
+        Assert.Equal(1.5, plan.VolumeLiters);
+        Assert.Equal(BatchOptimizer.DefaultToteLiters, plan.ToteCapacityLiters);
+        Assert.True(plan.Route.Optimized.Distance <= plan.Route.Baseline.Distance);
+        Assert.Equal(3, (await Picking.CandidatesAsync(Office, null, default)).Count);
+
+        var created = await Picking.CreateAutoBatchesAsync(Office, "wh_1", "optimized", default);
+        var batch = Assert.Single(created.Tasks);
+        Assert.Equal(2, batch.OrdersCount);
+        Assert.Equal(["A-01-1", "B-01-1"], batch.Steps.Select(s => s.LocationCode));
+        Assert.Equal(plan.Route.Optimized.Distance, batch.OptimizedDistance);
+        Assert.Equal(plan.Route.Baseline.Distance, batch.BaselineDistance);
+        Assert.True(batch.OptimizedDistance <= batch.BaselineDistance);
+        Assert.Equal(1.5, batch.VolumeLiters);
+        Assert.Equal(BatchOptimizer.DefaultToteLiters, batch.ToteCapacityLiters);
+        Assert.True(batch.EstimatedMinutes >= 1);
+        Assert.Equal(OrderStatus.Picking, _db.Orders.Single(o => o.Id == "ord_1").Status);
+        Assert.Equal(OrderStatus.Reserved, _db.Orders.Single(o => o.Id == "ord_3").Status);
+        Assert.Equal(0, (await Picking.CreateAutoBatchesAsync(Office, "wh_1", null, default)).Created);
+    }
+
+    [Fact]
+    public async Task Auto_split_by_tote_and_baseline_keeps_cell_order()
+    {
+        _db.Products.Add(new Product("prd_big", "org_s", "BIG-1", "Короб", "Еда", "333", null, 10, 2000, 40, false, false));
+        _db.Stock.Add(new StockItem("stk_big", "prd_big", "org_s", "wh_1", "l_a", 20, 0));
+        _db.Locations.Add(new StorageLocation("l_c", "wh_1", "z_s", "C-01-1", 30, 0, 1, 100));
+        _db.Stock.Add(new StockItem("stk_c", "prd_2", "org_s", "wh_1", "l_c", 10, 0));
+        _db.Orders.AddRange(
+            new Order("ord_big1", "BIG1", null, SalesChannel.Wb, OrderStatus.Reserved, "org_s", "wh_1", Now.AddHours(-1), Now.AddHours(1), null, "М", [new OrderLine("prd_big", 1, 1)]),
+            new Order("ord_big2", "BIG2", null, SalesChannel.Wb, OrderStatus.Reserved, "org_s", "wh_1", Now.AddHours(-1), Now.AddHours(2), null, "М", [new OrderLine("prd_big", 1, 1)]));
+        _db.SaveChanges();
+
+        var created = await Picking.CreateAutoBatchesAsync(Office, "wh_1", "optimized", default);
+        Assert.Equal(2, created.Created);
+        Assert.Contains(created.Tasks, t => t.VolumeLiters == 40);
+        Assert.All(created.Tasks, t => Assert.True(t.OptimizedDistance <= t.BaselineDistance));
+
+        var empty = await Assert.ThrowsAsync<AppException>(() => Picking.CreateBatchAsync(Office, [], null, default));
+        Assert.Equal((422, "Выберите заказы"), (empty.Status, empty.Title));
     }
 }

@@ -133,4 +133,5 @@ public class TaskEndpointsTests(WmsApiFactory factory) : IClassFixture<WmsApiFac
         var auto = await Json(await fc.PostAsJsonAsync("/api/tasks/auto-assign", new { }));
         Assert.True(auto.GetProperty("assigned").GetInt32() >= 0);
     }
+
 }

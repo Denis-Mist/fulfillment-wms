@@ -1366,9 +1366,17 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("assignee_id");
 
+                    b.Property<double?>("BaselineDistance")
+                        .HasColumnType("double precision")
+                        .HasColumnName("baseline_distance");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<int?>("EstimatedMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("estimated_minutes");
 
                     b.Property<DateTimeOffset?>("FinishedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1382,6 +1390,10 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("number");
+
+                    b.Property<double?>("OptimizedDistance")
+                        .HasColumnType("double precision")
+                        .HasColumnName("optimized_distance");
 
                     b.PrimitiveCollection<List<string>>("OrderIds")
                         .IsRequired()
@@ -1414,10 +1426,18 @@ namespace Wms.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("status");
 
+                    b.Property<double?>("ToteCapacityLiters")
+                        .HasColumnType("double precision")
+                        .HasColumnName("tote_capacity_liters");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("type");
+
+                    b.Property<double?>("VolumeLiters")
+                        .HasColumnType("double precision")
+                        .HasColumnName("volume_liters");
 
                     b.Property<string>("WarehouseId")
                         .IsRequired()

@@ -34,6 +34,10 @@ public static class RoutePlanner
         return JsMath.Round1(sum + Distance(x, y, 0, 0));
     }
 
+    /// <summary>Оценка времени обхода: 1,2 м/с плюс 6 с на единицу и 10 с на остановку.</summary>
+    public static int EstimatedMinutes(double distanceMeters, int units, int steps) =>
+        (int)Math.Max(1, JsMath.Round((distanceMeters / 1.2 + units * 6 + steps * 10) / 60));
+
     /// <summary>Как в бумажном листе отбора — по коду ячейки (ordinal).</summary>
     public static IReadOnlyList<T> Baseline<T>(IEnumerable<T> items, Func<T, RouteNode> node) =>
         items.Select((item, index) => (item, index)).OrderBy(x => node(x.item).Code, StringComparer.Ordinal).ThenBy(x => x.index)
