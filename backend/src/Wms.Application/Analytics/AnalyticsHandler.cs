@@ -32,9 +32,11 @@ public sealed record KpiPoint(DateTimeOffset Date, int Orders, double Processing
 public sealed record KpiTotals(int Orders, int ThroughputPerDay, double AvgProcessingHours, int AvgRouteBaseline, int AvgRouteOptimized,
     double RouteReductionPct, int Utilization, double ErrorRate);
 public sealed record SellerKpi(string SellerId, string Name, int Orders, double AvgProcessingHours, double ErrorRate);
-public sealed record KpiReport(int Period, KpiTotals Totals, IReadOnlyList<KpiPoint> Series, IReadOnlyList<SellerKpi> BySeller);
+public sealed record WarehouseKpi(string WarehouseId, string Name, int Orders, double AvgProcessingHours, double ErrorRate);
+public sealed record KpiReport(int Period, KpiTotals Totals, IReadOnlyList<KpiPoint> Series, IReadOnlyList<SellerKpi> BySeller,
+    IReadOnlyList<WarehouseKpi> ByWarehouse);
 
-/// <summary>Аналитика ФЦ (mocks/handlers/analytics.ts): прогноз и план персонала, слоттинг ABC, KPI маршрутизации.</summary>
+/// <summary>Аналитика ФЦ: прогноз и план персонала, слоттинг ABC, KPI по реальным заказам и маршрутам.</summary>
 public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock clock, WarehouseScope scope)
 {
     /// <summary>Нормативы производительности, единиц в смену на сотрудника.</summary>
@@ -302,34 +304,113 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
         var warehouses = await WarehousesAsync(ctx, warehouseId, ct);
         var whIds = warehouses.Select(w => w.Id).ToList();
         if (string.IsNullOrEmpty(sellerId)) sellerId = null;
-        var seed = SeededRandom.Hash(string.Join(',', whIds) + (sellerId ?? string.Empty));
-        var rng = new Mulberry32(seed);
-        var scale = Math.Max(1, warehouses.Count) * 140 * (sellerId is null ? 1 : 0.3);
-        var hist = Forecasting.History(seed, scale, Today).TakeLast(period).ToList();
-        var switchAt = hist.Count / 2;
-        var series = hist.Select((h, i) =>
-        {
-            var after = i >= switchAt;
-            var baseline = Forecasting.Round(rng.Float(180, 230));
-            var optimized = after ? Forecasting.Round(baseline * rng.Float(0.68, 0.78)) : baseline;
-            var hours = Forecasting.Round1(rng.Float(after ? 3.1 : 4.2, after ? 4.4 : 5.8));
-            var utilization = Forecasting.Round(rng.Float(62, 91));
-            var errors = rng.Int(0, Math.Max(1, Forecasting.Round(h.Value / 120.0)));
-            return new KpiPoint(h.Date, h.Value, hours, baseline, optimized, utilization, errors);
-        }).ToList();
-        var orders = series.Sum(p => p.Orders);
-        var avgBase = series.Average(p => p.RouteBaseline);
-        var avgOpt = series.Average(p => p.RouteOptimized);
-        var contracts = await db.Contracts.AsNoTracking().OrderBy(c => c.Id).ToListAsync(ct);
+        var today = Today;
+        var from = today.AddDays(-period);
+
+        var orderRows = await db.Orders.AsNoTracking()
+            .Where(o => whIds.Contains(o.WarehouseId) && o.Status != OrderStatus.Cancelled
+                && (o.CreatedAt >= from && o.CreatedAt < today || o.ShippedAt != null && o.ShippedAt >= from && o.ShippedAt < today))
+            .ToListAsync(ct);
+        if (sellerId is not null) orderRows = orderRows.Where(o => o.SellerId == sellerId).ToList();
+        var created = orderRows.Where(o => InDayRange(o.CreatedAt, from, today)).ToList();
+        var sellerOrderIds = orderRows.Select(o => o.Id).ToHashSet();
+
+        var tasks = await db.Tasks.AsNoTracking()
+            .Where(t => whIds.Contains(t.WarehouseId) && t.Status != WarehouseTaskStatus.Cancelled
+                && (t.CreatedAt >= from && t.CreatedAt < today || t.FinishedAt != null && t.FinishedAt >= from && t.FinishedAt < today))
+            .ToListAsync(ct);
+        if (sellerId is not null)
+            tasks = tasks.Where(t => t.OrderIds.Any(sellerOrderIds.Contains)).ToList();
+
+        var locationIds = tasks.SelectMany(t => t.Items.Select(i => i.LocationId)).Distinct().ToList();
+        var locations = await db.Locations.AsNoTracking().Where(l => locationIds.Contains(l.Id))
+            .ToDictionaryAsync(l => l.Id, l => new RouteNode(l.Code, l.X, l.Y), ct);
+
+        var operations = await db.StockOperations.AsNoTracking()
+            .Where(o => whIds.Contains(o.WarehouseId) && o.At >= from && o.At < today
+                && (o.Type == OperationType.Writeoff || o.Reason != null))
+            .ToListAsync(ct);
         var orgNames = await db.Organizations.AsNoTracking().ToDictionaryAsync(o => o.Id, o => o.Name, ct);
-        var bySeller = contracts.Where(c => c.WarehouseIds.Any(whIds.Contains)).Select(c => c.SellerId).Distinct()
-            .Where(id => sellerId is null || id == sellerId)
-            .Select(id => new SellerKpi(id, orgNames.GetValueOrDefault(id) ?? id, Forecasting.Round(orders * rng.Float(0.08, 0.35)),
-                Forecasting.Round1(rng.Float(3, 5.5)), Forecasting.Round1(rng.Float(0.1, 1.4))))
-            .ToList().OrderByDescending(s => s.Orders).ToList();
-        var totals = new KpiTotals(orders, Forecasting.Round(orders / (double)series.Count), Forecasting.Round1(series.Average(p => p.ProcessingHours)),
-            Forecasting.Round(avgBase), Forecasting.Round(avgOpt), Forecasting.Round((1 - avgOpt / avgBase) * 1000) / 10.0,
-            Forecasting.Round(series.Average(p => p.Utilization)), Forecasting.Round(series.Sum(p => p.Errors) / (double)Math.Max(1, orders) * 1000) / 10.0);
-        return new KpiReport(period, totals, series, bySeller);
+        if (sellerId is not null)
+        {
+            var sellerName = orgNames.GetValueOrDefault(sellerId) ?? sellerId;
+            operations = operations.Where(o => o.SellerName == sellerName).ToList();
+        }
+
+        var staff = await db.StaffProfiles.AsNoTracking().Where(p => whIds.Contains(p.WarehouseId)).ToListAsync(ct);
+        var routes = tasks.Where(t => t.Type == TaskType.Picking).ToDictionary(t => t.Id, t => RouteOf(t, locations));
+
+        var series = new List<KpiPoint>(period);
+        for (var i = 0; i < period; i++)
+        {
+            var day = from.AddDays(i);
+            var next = day.AddDays(1);
+            var dayOrders = created.Where(o => InDayRange(o.CreatedAt, day, next)).ToList();
+            var hours = CycleHours(orderRows.Where(o => o.ShippedAt is { } shipped && InDayRange(shipped, day, next))
+                .Select(o => (o.CreatedAt, o.ShippedAt!.Value)));
+            var finished = tasks.Where(t => t.Status == WarehouseTaskStatus.Done && t.FinishedAt is { } done && InDayRange(done, day, next)).ToList();
+            if (hours.Count == 0)
+                hours = CycleHours(finished.Where(t => t.StartedAt is not null).Select(t => (t.StartedAt!.Value, t.FinishedAt!.Value)));
+
+            var dayRoutes = tasks.Where(t => t.Type == TaskType.Picking && InDayRange(t.FinishedAt ?? t.CreatedAt, day, next))
+                .Select(t => routes[t.Id]).ToList();
+            var workMinutes = finished.Where(t => t.StartedAt is not null)
+                .Sum(t => (t.FinishedAt!.Value - t.StartedAt!.Value).TotalMinutes);
+            series.Add(new KpiPoint(day, dayOrders.Count, Forecasting.Round1(KpiMetrics.AverageOrZero(hours)),
+                Forecasting.Round(KpiMetrics.AverageOrZero(dayRoutes.Select(r => r.Baseline).ToList())),
+                Forecasting.Round(KpiMetrics.AverageOrZero(dayRoutes.Select(r => r.Optimized).ToList())),
+                KpiMetrics.Utilization(workMinutes, staff.Count(p => p.WorksOn(WarehouseTime.DayIndex(day)))),
+                operations.Count(o => InDayRange(o.At, day, next))));
+        }
+
+        var windowRoutes = tasks.Where(t => t.Type == TaskType.Picking && InDayRange(t.FinishedAt ?? t.CreatedAt, from, today))
+            .Select(t => routes[t.Id]).ToList();
+        var allHours = CycleHours(orderRows.Where(o => o.ShippedAt is { } shipped && InDayRange(shipped, from, today))
+            .Select(o => (o.CreatedAt, o.ShippedAt!.Value)));
+        if (allHours.Count == 0)
+            allHours = CycleHours(tasks.Where(t => t.Status == WarehouseTaskStatus.Done && t.FinishedAt is { } done
+                    && InDayRange(done, from, today) && t.StartedAt is not null)
+                .Select(t => (t.StartedAt!.Value, t.FinishedAt!.Value)));
+        var avgBase = KpiMetrics.AverageOrZero(windowRoutes.Select(r => r.Baseline).ToList());
+        var avgOpt = KpiMetrics.AverageOrZero(windowRoutes.Select(r => r.Optimized).ToList());
+        var totalOrders = series.Sum(p => p.Orders);
+        var totals = new KpiTotals(totalOrders, series.Count == 0 ? 0 : Forecasting.Round(totalOrders / (double)series.Count),
+            Forecasting.Round1(KpiMetrics.AverageOrZero(allHours)), Forecasting.Round(avgBase), Forecasting.Round(avgOpt),
+            KpiMetrics.ReductionPct(avgBase, avgOpt),
+            series.Count == 0 ? 0 : Forecasting.Round(series.Average(p => p.Utilization)),
+            KpiMetrics.ErrorRate(operations.Count, totalOrders));
+
+        var bySeller = created.GroupBy(o => o.SellerId)
+            .Select(g => Slice(g.Key, orgNames.GetValueOrDefault(g.Key) ?? g.Key, g.ToList(), orderRows, operations, from, today, matchSeller: true))
+            .Select(x => new SellerKpi(x.Id, x.Name, x.Orders, x.Hours, x.Errors))
+            .OrderByDescending(s => s.Orders).ToList();
+        var byWarehouse = warehouses
+            .Select(w => Slice(w.Id, w.Name, created.Where(o => o.WarehouseId == w.Id).ToList(),
+                orderRows.Where(o => o.WarehouseId == w.Id).ToList(), operations.Where(o => o.WarehouseId == w.Id).ToList(),
+                from, today, matchSeller: false))
+            .Select(x => new WarehouseKpi(x.Id, x.Name, x.Orders, x.Hours, x.Errors))
+            .OrderByDescending(w => w.Orders).ToList();
+        return new KpiReport(period, totals, series, bySeller, byWarehouse);
+    }
+
+    private static bool InDayRange(DateTimeOffset at, DateTimeOffset from, DateTimeOffset to) => at >= from && at < to;
+
+    private static List<double> CycleHours(IEnumerable<(DateTimeOffset Start, DateTimeOffset End)> spans) =>
+        spans.Select(s => (s.End - s.Start).TotalHours).Where(h => h >= 0).ToList();
+
+    private static (double Baseline, double Optimized) RouteOf(WarehouseTask task, IReadOnlyDictionary<string, RouteNode> locations)
+    {
+        if (task.BaselineDistance is { } baseline && task.OptimizedDistance is { } optimized) return (baseline, optimized);
+        return KpiMetrics.RoutePair(task.Items.Where(i => locations.ContainsKey(i.LocationId)).Select(i => locations[i.LocationId]));
+    }
+
+    private static (string Id, string Name, int Orders, double Hours, double Errors) Slice(string id, string name,
+        IReadOnlyCollection<Order> created, IReadOnlyCollection<Order> related, IReadOnlyCollection<StockOperation> errors,
+        DateTimeOffset from, DateTimeOffset today, bool matchSeller)
+    {
+        var hours = CycleHours(related.Where(o => o.ShippedAt is { } shipped && InDayRange(shipped, from, today))
+            .Select(o => (o.CreatedAt, o.ShippedAt!.Value)));
+        var counted = matchSeller ? errors.Where(o => o.SellerName == name).ToList() : errors.ToList();
+        return (id, name, created.Count, Forecasting.Round1(KpiMetrics.AverageOrZero(hours)), KpiMetrics.ErrorRate(counted.Count, created.Count));
     }
 }

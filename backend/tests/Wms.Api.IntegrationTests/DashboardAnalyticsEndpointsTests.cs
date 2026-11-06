@@ -70,7 +70,11 @@ public class DashboardAnalyticsEndpointsTests(WmsApiFactory factory) : IClassFix
 
         var kpi = await Json(await fc.GetAsync("/api/analytics/kpi?period=14"));
         Assert.Equal(14, kpi.GetProperty("series").GetArrayLength());
+        Assert.True(kpi.GetProperty("totals").GetProperty("orders").GetInt32() > 0);
         Assert.True(kpi.GetProperty("totals").GetProperty("routeReductionPct").GetDouble() > 0);
+        Assert.True(kpi.GetProperty("bySeller").GetArrayLength() > 0);
+        Assert.True(kpi.GetProperty("byWarehouse").GetArrayLength() > 0);
+        Assert.True(kpi.GetProperty("byWarehouse")[0].TryGetProperty("warehouseId", out _));
 
         var seller = await As("seller@demo.ru");
         Assert.Equal(HttpStatusCode.Forbidden, (await seller.GetAsync("/api/analytics/kpi")).StatusCode);
