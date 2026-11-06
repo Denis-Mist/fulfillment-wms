@@ -208,4 +208,13 @@ public class TaskHandlersTests : IDisposable
         Assert.True(open.OnShift);
         Assert.True(open.Available);
     }
+
+    [Fact]
+    public async Task Assign_unknown_user_is_not_found()
+    {
+        var batch = await Picking.CreateBatchAsync(Office, ["ord_1"], "optimized", default);
+        var ex = await Assert.ThrowsAsync<AppException>(() => Commands.AssignAsync(Office, batch.Id, "usr_does_not_exist", default));
+        Assert.Equal((404, "Сотрудник не найден"), (ex.Status, ex.Title));
+        Assert.Equal(WarehouseTaskStatus.New, _db.Tasks.Single(t => t.Id == batch.Id).Status);
+    }
 }

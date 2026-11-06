@@ -58,6 +58,9 @@ public sealed class WorkerDirectory(IAppDbContext db)
         return user?.Memberships.FirstOrDefault(m => m.OrganizationId == organizationId)?.Role;
     }
 
+    public Task<bool> ExistsAsync(string userId, CancellationToken ct) =>
+        db.Users.AsNoTracking().AnyAsync(u => u.Id == userId, ct);
+
     public async Task<List<WorkerLoadDto>> LoadsAsync(string organizationId, IReadOnlyCollection<WarehouseTask> tasks, DateTimeOffset now, CancellationToken ct)
     {
         var sod = WorkDay.Start(now);

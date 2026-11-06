@@ -56,11 +56,18 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
         version ?? (algorithm is "holt_winters" or "abc_affinity" ? "1.3.0" : "1.0.0"), seed,
         dataVersion ?? $"snap-{Today:yyyy-MM-dd}", clock.UtcNow, Math.Max(4, (int)sw.ElapsedMilliseconds));
 
-    public async Task<ForecastResult> ForecastAsync(RequestContext ctx, string? warehouseId, int? horizonParam, ForecastAlgorithm? algorithmParam, CancellationToken ct)
+    private static T ResolveAlgorithm<T>(string? raw, T fallback) where T : struct, Enum
+    {
+        if (string.IsNullOrEmpty(raw)) return fallback;
+        if (SnakeCaseName.TryParse(raw, out T value)) return value;
+        throw AppException.Unprocessable("Неизвестный алгоритм", "algorithm");
+    }
+
+    public async Task<ForecastResult> ForecastAsync(RequestContext ctx, string? warehouseId, int? horizonParam, string? algorithmParam, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();
         var horizon = Math.Clamp(horizonParam ?? 14, 7, 28);
-        var algorithm = algorithmParam ?? ForecastAlgorithm.HoltWinters;
+        var algorithm = ResolveAlgorithm(algorithmParam, ForecastAlgorithm.HoltWinters);
         var warehouses = await WarehousesAsync(ctx, warehouseId, ct);
         if (warehouses.Count == 0) throw AppException.NotFound("Склад не найден");
         var seed = SeededRandom.Hash(string.Join(',', warehouses.Select(w => w.Id)));
@@ -116,9 +123,7 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
     public async Task<PlanDto> ApproveAsync(RequestContext ctx, ApproveInput input, CancellationToken ct)
     {
         // Как мок: без algorithm план утверждается (алгоритм по умолчанию); неизвестное значение — 422.
-        var algorithm = ForecastAlgorithm.HoltWinters;
-        if (!string.IsNullOrEmpty(input.Algorithm) && !SnakeCaseName.TryParse(input.Algorithm, out algorithm))
-            throw AppException.Unprocessable("Неизвестный алгоритм", "algorithm");
+        var algorithm = ResolveAlgorithm(input.Algorithm, ForecastAlgorithm.HoltWinters);
         var key = StaffPlan.KeyFor(ctx.OrganizationId, string.IsNullOrEmpty(input.WarehouseId) ? null : input.WarehouseId);
         var by = await db.Users.AsNoTracking().Where(u => u.Id == ctx.UserId).Select(u => u.FullName).FirstOrDefaultAsync(ct) ?? string.Empty;
         var plan = await db.StaffPlans.FirstOrDefaultAsync(p => p.Id == key, ct);
@@ -130,10 +135,10 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
 
     private static double Distance(StorageLocation l) => SlottingPolicy.Distance(l.X, l.Y, l.Level);
 
-    public async Task<SlottingResult> SlottingAsync(RequestContext ctx, string? warehouseId, SlottingAlgorithm? algorithmParam, CancellationToken ct)
+    public async Task<SlottingResult> SlottingAsync(RequestContext ctx, string? warehouseId, string? algorithmParam, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();
-        var algorithm = algorithmParam ?? SlottingAlgorithm.AbcAffinity;
+        var algorithm = ResolveAlgorithm(algorithmParam, SlottingAlgorithm.AbcAffinity);
         var algoName = SnakeCaseName.Of(algorithm);
         var whIds = (await WarehousesAsync(ctx, warehouseId, ct)).Select(w => w.Id).ToList();
         var seed = SeededRandom.Hash(string.Join(',', whIds));
@@ -237,17 +242,19 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
         var ids = (input.Ids ?? []).Where(i => !string.IsNullOrWhiteSpace(i)).Distinct().ToList();
         if (ids.Count == 0) throw AppException.Unprocessable("Не выбраны рекомендации", "ids");
         var now = clock.UtcNow;
+        var appliedIds = new List<string>();
         foreach (var id in ids)
-            await TryApplyMoveAsync(ctx, id, ct);
-        var existing = await db.SlottingApplied.Where(a => ids.Contains(a.Id)).ToDictionaryAsync(a => a.Id, ct);
-        foreach (var id in ids)
+            if (await TryApplyMoveAsync(ctx, id, ct)) appliedIds.Add(id);
+        if (appliedIds.Count == 0) return new ApplyResult(0);
+        var existing = await db.SlottingApplied.Where(a => appliedIds.Contains(a.Id)).ToDictionaryAsync(a => a.Id, ct);
+        foreach (var id in appliedIds)
             if (existing.TryGetValue(id, out var row)) row.Reapply(now);
             else db.SlottingApplied.Add(new SlottingApplied(id, now));
         await uow.SaveChangesAsync(ct);
-        return new ApplyResult(ids.Count);
+        return new ApplyResult(appliedIds.Count);
     }
 
-    private async Task TryApplyMoveAsync(RequestContext ctx, string id, CancellationToken ct)
+    private async Task<bool> TryApplyMoveAsync(RequestContext ctx, string id, CancellationToken ct)
     {
         SlottingAlgorithm algorithm;
         string stockId;
@@ -261,24 +268,24 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
             algorithm = SlottingAlgorithm.Abc;
             stockId = id["slot_abc_".Length..];
         }
-        else return;
+        else return false;
 
         var source = await db.Stock.FirstOrDefaultAsync(s => s.Id == stockId, ct);
-        if (source is null || source.Free <= 0) return;
+        if (source is null || source.Free <= 0) return false;
         var visible = await scope.VisibleWarehouseIdsAsync(ctx, ct);
-        if (visible is not null && !visible.Contains(source.WarehouseId)) return;
+        if (visible is not null && !visible.Contains(source.WarehouseId)) return false;
 
         SlottingResult planned;
-        try { planned = await SlottingAsync(ctx, source.WarehouseId, algorithm, ct); }
-        catch (AppException) { return; }
+        try { planned = await SlottingAsync(ctx, source.WarehouseId, SnakeCaseName.Of(algorithm), ct); }
+        catch (AppException) { return false; }
         var move = planned.Moves.FirstOrDefault(m => m.Id == id);
-        if (move is null) return;
+        if (move is null) return false;
         var target = await db.Locations.FirstOrDefaultAsync(l => l.WarehouseId == source.WarehouseId && l.Code == move.ToCell, ct);
-        if (target is null || target.Id == source.LocationId) return;
+        if (target is null || target.Id == source.LocationId) return false;
 
         var product = await db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == source.ProductId, ct);
         var occupants = await db.Stock.Where(s => s.LocationId == target.Id).ToListAsync(ct);
-        if (occupants.Any(s => s.ProductId != source.ProductId)) return;
+        if (occupants.Any(s => s.ProductId != source.ProductId)) return false;
         var used = 0.0;
         foreach (var row in occupants)
         {
@@ -286,7 +293,7 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
             used += vol * row.Quantity;
         }
         var qty = source.Free;
-        if (!SlottingPolicy.Fits(target.CapacityLiters, used, (product?.VolumeLiters ?? 0) * qty)) return;
+        if (!SlottingPolicy.Fits(target.CapacityLiters, used, (product?.VolumeLiters ?? 0) * qty)) return false;
 
         source.Take(qty);
         var existing = occupants.FirstOrDefault(s => s.ProductId == source.ProductId && s.SellerId == source.SellerId);
@@ -296,6 +303,7 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
         if (source.IsEmpty) db.Stock.Remove(source);
 
         string nowSuffix() => clock.UtcNow.ToUnixTimeMilliseconds().ToString();
+        return true;
     }
 
     public async Task<KpiReport> KpiAsync(RequestContext ctx, string? warehouseId, string? sellerId, int? periodParam, CancellationToken ct)

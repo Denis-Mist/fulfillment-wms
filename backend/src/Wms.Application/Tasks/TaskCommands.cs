@@ -42,6 +42,8 @@ public sealed class TaskCommandHandler(IAppDbContext db, IUnitOfWork uow, TaskSc
         if (!task.IsOpen) throw AppException.Conflict("Задание уже закрыто");
         if (!string.IsNullOrEmpty(userId))
         {
+            if (!await workers.ExistsAsync(userId, ct))
+                throw AppException.NotFound("Сотрудник не найден");
             var role = await workers.RoleInAsync(userId, task.OrganizationId, ct);
             if (role is null || !TaskRules.EligibleRoles(task.Type).Contains(role.Value))
                 throw AppException.Unprocessable("Сотрудник не может выполнять это задание", $"Нужна роль: {TaskRules.Label(task.Type).ToLowerInvariant()}");
