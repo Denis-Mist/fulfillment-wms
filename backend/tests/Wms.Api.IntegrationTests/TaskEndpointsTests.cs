@@ -37,8 +37,8 @@ public class TaskEndpointsTests(WmsApiFactory factory) : IClassFixture<WmsApiFac
         var listed = workers.EnumerateArray().ToList();
         Assert.Contains(listed, w => w.GetProperty("id").GetString() == "usr_fc1_3" && w.GetProperty("role").GetString() == "fc_picker");
         var sample = listed.First(w => w.GetProperty("id").GetString() == "usr_fc1_3");
-        Assert.Contains(sample.GetProperty("onShift").ValueKind, [JsonValueKind.True, JsonValueKind.False]);
-        Assert.Contains(sample.GetProperty("available").ValueKind, [JsonValueKind.True, JsonValueKind.False]);
+        Assert.True(sample.GetProperty("onShift").ValueKind is JsonValueKind.True or JsonValueKind.False);
+        Assert.True(sample.GetProperty("available").ValueKind is JsonValueKind.True or JsonValueKind.False);
         Assert.Equal("wh_kzn1", sample.GetProperty("warehouseId").GetString());
         Assert.Contains(sample.GetProperty("skills").EnumerateArray().Select(s => s.GetString()), s => s == "picking");
 
