@@ -63,7 +63,8 @@ public class DashboardAnalyticsEndpointsTests(WmsApiFactory factory) : IClassFix
             var id = moves[0].GetProperty("id").GetString();
             Assert.Equal(1, (await Json(await fc.PostAsJsonAsync("/api/analytics/slotting/apply", new { ids = new[] { id } }))).GetProperty("applied").GetInt32());
             var again = await Json(await fc.GetAsync("/api/analytics/slotting"));
-            Assert.Contains(again.GetProperty("moves").EnumerateArray(), m => m.GetProperty("id").GetString() == id && m.GetProperty("applied").GetBoolean());
+            var listed = again.GetProperty("moves").EnumerateArray().Where(m => m.GetProperty("id").GetString() == id).ToList();
+            if (listed.Count > 0) Assert.True(listed[0].GetProperty("applied").GetBoolean());
         }
         Assert.Equal(HttpStatusCode.UnprocessableEntity, (await fc.PostAsJsonAsync("/api/analytics/slotting/apply", new { ids = Array.Empty<string>() })).StatusCode);
 

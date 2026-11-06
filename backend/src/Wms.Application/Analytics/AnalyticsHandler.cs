@@ -20,7 +20,8 @@ public sealed record ForecastResult(CalcMeta Meta, int Horizon, IReadOnlyList<Fo
 public sealed record ApproveInput(string? WarehouseId, string? Algorithm);
 
 public sealed record SlottingMove(string Id, string ProductId, string Sku, string Name, string SellerName, string Abc, int Picks30d,
-    string? AffinitySku, string FromCell, double FromDistance, string ToCell, double ToDistance, int Gain, bool Applied);
+    string? AffinitySku, string FromCell, double FromDistance, string ToCell, double ToDistance, int Gain, bool Applied,
+    double VolumeLiters = 0, double WeightG = 0, double CapacityLiters = 0);
 public sealed record ClassShare(int Sku, int PicksShare);
 public sealed record SlottingResult(CalcMeta Meta, IReadOnlyDictionary<string, ClassShare> Classes, int CurrentDistance, int ProjectedDistance,
     double ReductionPct, IReadOnlyList<SlottingMove> Moves);
@@ -125,7 +126,7 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
         return new PlanDto(plan.ApprovedAt, plan.ApprovedBy, plan.Algorithm);
     }
 
-    private static double Distance(StorageLocation l) => Forecasting.Round1(l.X + l.Y + (l.Level - 1) * 1.5);
+    private static double Distance(StorageLocation l) => SlottingPolicy.Distance(l.X, l.Y, l.Level);
 
     public async Task<SlottingResult> SlottingAsync(RequestContext ctx, string? warehouseId, SlottingAlgorithm? algorithmParam, CancellationToken ct)
     {
@@ -134,9 +135,11 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
         var algoName = SnakeCaseName.Of(algorithm);
         var whIds = (await WarehousesAsync(ctx, warehouseId, ct)).Select(w => w.Id).ToList();
         var seed = SeededRandom.Hash(string.Join(',', whIds));
-        var rng = new Mulberry32(seed);
+        var since = clock.UtcNow.AddDays(-30);
 
-        var orders = await db.Orders.AsNoTracking().Where(o => whIds.Contains(o.WarehouseId)).OrderBy(o => EF.Property<long>(o, "Seq")).ToListAsync(ct);
+        var orders = await db.Orders.AsNoTracking()
+            .Where(o => whIds.Contains(o.WarehouseId) && o.CreatedAt >= since && o.Status != OrderStatus.Cancelled)
+            .ToListAsync(ct);
         var picks = new Dictionary<string, int>();
         var pairs = new Dictionary<string, Dictionary<string, int>>();
         foreach (var o in orders)
@@ -157,50 +160,59 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
         var orgNames = await db.Organizations.AsNoTracking().ToDictionaryAsync(o => o.Id, o => o.Name, ct);
 
         var items = stock.GroupBy(s => s.ProductId).Select(g => g.First())
-            .Select(s => (Stock: s, Picks: Forecasting.Round(picks.GetValueOrDefault(s.ProductId) * 6 + Weighted(rng) * rng.Int(1, 6))))
+            .Select(s => (Stock: s, Picks: picks.GetValueOrDefault(s.ProductId)))
             .OrderByDescending(i => i.Picks).ToList();
+        var cls = SlottingPolicy.ClassifyAbc(items.Select(i => (i.Stock.ProductId, i.Picks)));
         var totalPicks = Math.Max(1, items.Sum(i => i.Picks));
-        var cls = new Dictionary<string, string>();
-        var cum = 0;
-        foreach (var it in items)
-        {
-            cum += it.Picks;
-            var share = cum / (double)totalPicks;
-            cls[it.Stock.ProductId] = share <= 0.8 ? "A" : share <= 0.95 ? "B" : "C";
-        }
 
-        var occupied = stock.Select(s => s.LocationId).ToHashSet();
-        var free = locations.Where(l => !occupied.Contains(l.Id)).OrderBy(Distance).ToList();
+        var usedByCell = stock.GroupBy(s => s.LocationId).ToDictionary(g => g.Key, g =>
+            SlottingPolicy.UsedLiters(g.Select(s => (products.GetValueOrDefault(s.ProductId)?.VolumeLiters ?? 0, s.Quantity))));
+        var skuByCell = stock.GroupBy(s => s.LocationId).ToDictionary(g => g.Key, g => g.Select(s => s.ProductId).ToHashSet());
         var applied = (await db.SlottingApplied.AsNoTracking().Select(a => a.Id).ToListAsync(ct)).ToHashSet();
         var moves = new List<SlottingMove>();
         double current = 0, projected = 0;
         var usedFree = new HashSet<string>();
         var placed = new Dictionary<string, StorageLocation>();
+        var useAffinity = algorithm == SlottingAlgorithm.AbcAffinity;
+
         foreach (var it in items)
         {
             if (!locs.TryGetValue(it.Stock.LocationId, out var from)) continue;
             var d = Distance(from);
             current += it.Picks * d * 2;
-            var abc = cls[it.Stock.ProductId];
+            var abc = cls.GetValueOrDefault(it.Stock.ProductId, "C");
+            var product = products.GetValueOrDefault(it.Stock.ProductId);
+            var needed = (product?.VolumeLiters ?? 0) * it.Stock.Quantity;
             StorageLocation? target = null;
             if (abc == "A" && d > 12)
             {
-                var partner = algorithm == SlottingAlgorithm.AbcAffinity && pairs.TryGetValue(it.Stock.ProductId, out var pm)
+                var partner = useAffinity && pairs.TryGetValue(it.Stock.ProductId, out var pm)
                     ? pm.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).FirstOrDefault(placed.ContainsKey)
                     : null;
                 var anchor = partner is null ? null : placed[partner];
-                var candidates = free.Where(l => l.WarehouseId == from.WarehouseId && !usedFree.Contains(l.Id) && Distance(l) < d - 4);
-                target = anchor is null ? candidates.FirstOrDefault()
-                    : candidates.OrderBy(l => Math.Abs(l.X - anchor.X) + Math.Abs(l.Y - anchor.Y)).FirstOrDefault();
+                bool FitsCell(StorageLocation l)
+                {
+                    if (l.WarehouseId != from.WarehouseId || l.Id == from.Id || usedFree.Contains(l.Id)) return false;
+                    var occupants = skuByCell.GetValueOrDefault(l.Id);
+                    if (occupants is { Count: > 0 } && occupants.Any(id => id != it.Stock.ProductId)) return false;
+                    var used = usedByCell.GetValueOrDefault(l.Id);
+                    return SlottingPolicy.Fits(l.CapacityLiters, used, needed) && Distance(l) < d - SlottingPolicy.MinDistanceGain;
+                }
+                var candidates = locations.Where(FitsCell);
+                target = candidates
+                    .OrderBy(l => SlottingPolicy.CandidateScore(Distance(l), l.Level, product?.WeightG ?? 0,
+                        anchor is null ? 0 : Math.Abs(l.X - anchor.X) + Math.Abs(l.Y - anchor.Y), useAffinity && anchor is not null))
+                    .ThenBy(Distance)
+                    .FirstOrDefault();
                 if (target is not null)
                 {
                     usedFree.Add(target.Id);
-                    var product = products.GetValueOrDefault(it.Stock.ProductId);
                     var id = $"slot_{algoName}_{it.Stock.Id}";
                     var gain = Forecasting.Round(it.Picks * (d - Distance(target)) * 2 * (1 + (anchor is null ? 0 : 0.12)));
                     moves.Add(new SlottingMove(id, it.Stock.ProductId, product?.Sku ?? string.Empty, product?.Name ?? string.Empty,
                         orgNames.GetValueOrDefault(it.Stock.SellerId) ?? string.Empty, abc, it.Picks,
-                        partner is null ? null : products.GetValueOrDefault(partner)?.Sku, from.Code, d, target.Code, Distance(target), gain, applied.Contains(id)));
+                        partner is null ? null : products.GetValueOrDefault(partner)?.Sku, from.Code, d, target.Code, Distance(target), gain, applied.Contains(id),
+                        product?.VolumeLiters ?? 0, product?.WeightG ?? 0, target.CapacityLiters));
                 }
             }
             var final = target ?? from;
@@ -210,33 +222,78 @@ public sealed class AnalyticsHandler(IAppDbContext db, IUnitOfWork uow, IClock c
         projected = Math.Min(projected, current - moves.Sum(m => m.Gain));
         var classes = new[] { "A", "B", "C" }.ToDictionary(c => c, c =>
         {
-            var list = items.Where(i => cls[i.Stock.ProductId] == c).ToList();
+            var list = items.Where(i => cls.GetValueOrDefault(i.Stock.ProductId, "C") == c).ToList();
             return new ClassShare(list.Count, Forecasting.Round(list.Sum(i => i.Picks) * 100.0 / totalPicks));
         });
-        return new SlottingResult(Meta(algoName, seed, sw), classes, Forecasting.Round(current), Forecasting.Round(projected),
+        return new SlottingResult(Meta(algoName, seed, sw, version: "2.0.0"), classes, Forecasting.Round(current), Forecasting.Round(projected),
             current > 0 ? Forecasting.Round((current - projected) / current * 1000) / 10.0 : 0,
             moves.OrderByDescending(m => m.Gain).Take(20).ToList());
     }
 
-    /// <summary>rng.weighted([[1,6],[4,3],[14,1]]) из мока.</summary>
-    private static int Weighted(Mulberry32 rng)
-    {
-        var roll = rng.Next() * 10;
-        if ((roll -= 6) <= 0) return 1;
-        return roll - 3 <= 0 ? 4 : 14;
-    }
-
-    public async Task<ApplyResult> ApplyAsync(ApplyInput input, CancellationToken ct)
+    public async Task<ApplyResult> ApplyAsync(RequestContext ctx, ApplyInput input, CancellationToken ct)
     {
         var ids = (input.Ids ?? []).Where(i => !string.IsNullOrWhiteSpace(i)).Distinct().ToList();
         if (ids.Count == 0) throw AppException.Unprocessable("Не выбраны рекомендации", "ids");
         var now = clock.UtcNow;
+        foreach (var id in ids)
+            await TryApplyMoveAsync(ctx, id, ct);
         var existing = await db.SlottingApplied.Where(a => ids.Contains(a.Id)).ToDictionaryAsync(a => a.Id, ct);
         foreach (var id in ids)
             if (existing.TryGetValue(id, out var row)) row.Reapply(now);
             else db.SlottingApplied.Add(new SlottingApplied(id, now));
         await uow.SaveChangesAsync(ct);
         return new ApplyResult(ids.Count);
+    }
+
+    private async Task TryApplyMoveAsync(RequestContext ctx, string id, CancellationToken ct)
+    {
+        SlottingAlgorithm algorithm;
+        string stockId;
+        if (id.StartsWith("slot_abc_affinity_", StringComparison.Ordinal))
+        {
+            algorithm = SlottingAlgorithm.AbcAffinity;
+            stockId = id["slot_abc_affinity_".Length..];
+        }
+        else if (id.StartsWith("slot_abc_", StringComparison.Ordinal))
+        {
+            algorithm = SlottingAlgorithm.Abc;
+            stockId = id["slot_abc_".Length..];
+        }
+        else return;
+
+        var source = await db.Stock.FirstOrDefaultAsync(s => s.Id == stockId, ct);
+        if (source is null || source.Free <= 0) return;
+        var visible = await scope.VisibleWarehouseIdsAsync(ctx, ct);
+        if (visible is not null && !visible.Contains(source.WarehouseId)) return;
+
+        SlottingResult planned;
+        try { planned = await SlottingAsync(ctx, source.WarehouseId, algorithm, ct); }
+        catch (AppException) { return; }
+        var move = planned.Moves.FirstOrDefault(m => m.Id == id);
+        if (move is null) return;
+        var target = await db.Locations.FirstOrDefaultAsync(l => l.WarehouseId == source.WarehouseId && l.Code == move.ToCell, ct);
+        if (target is null || target.Id == source.LocationId) return;
+
+        var product = await db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == source.ProductId, ct);
+        var occupants = await db.Stock.Where(s => s.LocationId == target.Id).ToListAsync(ct);
+        if (occupants.Any(s => s.ProductId != source.ProductId)) return;
+        var used = 0.0;
+        foreach (var row in occupants)
+        {
+            var vol = (await db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == row.ProductId, ct))?.VolumeLiters ?? 0;
+            used += vol * row.Quantity;
+        }
+        var qty = source.Free;
+        if (!SlottingPolicy.Fits(target.CapacityLiters, used, (product?.VolumeLiters ?? 0) * qty)) return;
+
+        source.Take(qty);
+        var existing = occupants.FirstOrDefault(s => s.ProductId == source.ProductId && s.SellerId == source.SellerId);
+        if (existing is not null) existing.Receive(qty);
+        else db.Stock.Add(new StockItem($"stk_{source.ProductId}_{target.Id}_{nowSuffix()}", source.ProductId, source.SellerId,
+            source.WarehouseId, target.Id, qty, 0));
+        if (source.IsEmpty) db.Stock.Remove(source);
+
+        string nowSuffix() => clock.UtcNow.ToUnixTimeMilliseconds().ToString();
     }
 
     public async Task<KpiReport> KpiAsync(RequestContext ctx, string? warehouseId, string? sellerId, int? periodParam, CancellationToken ct)
