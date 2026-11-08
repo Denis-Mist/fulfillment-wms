@@ -1,5 +1,6 @@
 export type IntegrationChannel = 'wb' | 'ozon'
 export type IntegrationStatus = 'connected' | 'error' | 'disconnected'
+export type MarketplaceEnvironment = 'sandbox' | 'production'
 
 export interface IntegrationLogEntry {
   id: string
@@ -20,16 +21,23 @@ export interface Integration {
   autoImportFbs: boolean
   pushStock: boolean
   syncIntervalMin: number
+  /** Тестовый или боевой контур. Сервер отдаёт всегда; в старых ответах может отсутствовать. */
+  environment?: MarketplaceEnvironment
+  /** Текст последней ошибки синхронизации. */
+  lastError?: string
+  lastHttpStatus?: number
   log: IntegrationLogEntry[]
 }
 
 export interface ConnectInput {
   apiKey: string
   clientId?: string
+  environment?: MarketplaceEnvironment
 }
 
 export interface IntegrationSettingsInput {
   autoImportFbs: boolean
   pushStock: boolean
   syncIntervalMin: number
+  environment?: MarketplaceEnvironment
 }

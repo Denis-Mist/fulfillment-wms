@@ -38,7 +38,7 @@ function seedLog(channel: IntegrationChannel, seed: number): IntegrationLogEntry
       at,
       kind: stock ? 'stock' : 'orders',
       count,
-      message: stock ? `Остатки выгружены: ${count} SKU` : `Загружено заказов FBS: ${count}`,
+      message: stock ? `Остатки выгружены: ${count} SKU` : `Заказов FBS в кабинете: ${count}`,
     })
   }
   return log
@@ -63,6 +63,7 @@ function storeFor(orgId: string) {
           autoImportFbs: connected,
           pushStock: connected && channel === 'wb',
           syncIntervalMin: 15,
+          environment: 'sandbox',
           log: connected ? seedLog(channel, seed + i) : [],
         }
       }),
@@ -99,7 +100,7 @@ export const integrationsHandlers = [
       async ({ ctx, params, request }) => {
         const ch = channelOf(params)
         if (!ch || !ctx.org) return problem(404, 'Неизвестный маркетплейс')
-        const { apiKey, clientId } = (await readJson(request)) as ConnectInput
+        const { apiKey, clientId, environment } = (await readJson(request)) as ConnectInput
         const key = apiKey?.trim() ?? ''
         if (key.length < 20)
           return problem(422, 'Ключ API слишком короткий', 'Скопируйте ключ целиком из личного кабинета')
@@ -118,12 +119,13 @@ export const integrationsHandlers = [
               connectedAt: now,
               lastSyncAt: now,
               autoImportFbs: true,
+              environment: environment === 'production' ? 'production' : 'sandbox',
               log: [
                 {
                   id: `${ch}_${Date.now()}`,
                   at: now,
                   kind: 'connect' as const,
-                  message: 'Кабинет подключён, ключ проверен',
+                  message: 'Кабинет подключён',
                 },
                 ...row.log,
               ].slice(0, 30),
@@ -177,7 +179,7 @@ export const integrationsHandlers = [
             at: now,
             kind: 'orders',
             count,
-            message: `Загружено заказов FBS: ${count}`,
+            message: `Заказов FBS в кабинете: ${count}`,
           },
         ]
         if (row.pushStock) {
@@ -223,6 +225,7 @@ export const integrationsHandlers = [
               autoImportFbs: !!input.autoImportFbs,
               pushStock: !!input.pushStock,
               syncIntervalMin: input.syncIntervalMin,
+              environment: input.environment === 'production' || input.environment === 'sandbox' ? input.environment : row.environment,
             }),
           ),
         )

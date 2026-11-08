@@ -64,7 +64,7 @@ public sealed partial class MarketplaceIntegration
         ConnectedAt = now; LastSyncAt = now; AutoImportFbs = true;
         Environment = environment;
         LastError = null; LastHttpStatus = null;
-        Prepend([new IntegrationLogEntry($"{Prefix}_{now.ToUnixTimeMilliseconds()}", now, IntegrationLogKind.Connect, "Кабинет подключён, ключ проверен")]);
+        Prepend([new IntegrationLogEntry($"{Prefix}_{now.ToUnixTimeMilliseconds()}", now, IntegrationLogKind.Connect, "Кабинет подключён")]);
     }
 
     public void SetApiKeyCipher(string? cipher) => ApiKeyCipher = cipher;
@@ -78,14 +78,16 @@ public sealed partial class MarketplaceIntegration
     public void Sync(int orders, int skus, DateTimeOffset now) =>
         RecordSyncSuccess(orders, PushStock ? skus : null, now, null);
 
-    public void RecordSyncSuccess(int orders, int? pushedSkus, DateTimeOffset now, int? httpStatus)
+    public void RecordSyncSuccess(int orders, int? pushedSkus, DateTimeOffset now, int? httpStatus, string? stockNote = null)
     {
         EnsureConnected();
         var ms = now.ToUnixTimeMilliseconds();
         var entries = new List<IntegrationLogEntry>();
-        if (pushedSkus is int skus)
+        if (stockNote is not null)
+            entries.Add(new($"{Prefix}_{ms}_s", now, IntegrationLogKind.Stock, Clip(stockNote), pushedSkus));
+        else if (pushedSkus is int skus)
             entries.Add(new($"{Prefix}_{ms}_s", now, IntegrationLogKind.Stock, $"Остатки выгружены: {skus} SKU", skus));
-        entries.Add(new($"{Prefix}_{ms}_o", now, IntegrationLogKind.Orders, $"Загружено заказов FBS: {orders}", orders));
+        entries.Add(new($"{Prefix}_{ms}_o", now, IntegrationLogKind.Orders, $"Заказов FBS в кабинете: {orders}", orders));
         Status = IntegrationStatus.Connected;
         LastSyncAt = now; LastError = null; LastHttpStatus = httpStatus;
         Prepend(entries);
@@ -94,8 +96,7 @@ public sealed partial class MarketplaceIntegration
     public void RecordSyncFailure(string message, int? httpStatus, DateTimeOffset now)
     {
         EnsureConnected();
-        var text = string.IsNullOrWhiteSpace(message) ? "Ошибка API маркетплейса" : message.Trim();
-        if (text.Length > ErrorLimit) text = text[..ErrorLimit];
+        var text = Clip(string.IsNullOrWhiteSpace(message) ? "Ошибка API маркетплейса" : message.Trim());
         Status = IntegrationStatus.Error;
         LastError = text;
         LastHttpStatus = httpStatus;
@@ -111,6 +112,8 @@ public sealed partial class MarketplaceIntegration
     }
 
     private string Prefix => Channel == IntegrationChannel.Wb ? "wb" : "ozon";
+
+    private static string Clip(string text) => text.Length <= ErrorLimit ? text : text[..ErrorLimit];
 
     private void EnsureConnected()
     {

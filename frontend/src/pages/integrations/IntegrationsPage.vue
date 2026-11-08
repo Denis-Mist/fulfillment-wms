@@ -9,6 +9,7 @@ import type {
   IntegrationChannel,
   IntegrationLogEntry,
   IntegrationSettingsInput,
+  MarketplaceEnvironment,
 } from '@/modules/integrations/types'
 import { useNotify } from '@/shared/composables/useNotify'
 import { SALES_CHANNELS, type Tone } from '@/shared/config/statuses'
@@ -41,6 +42,14 @@ const HINT: Record<IntegrationChannel, string> = {
   ozon: 'Client ID и API-ключ из раздела «Настройки → Seller API» личного кабинета Ozon',
 }
 const INTERVALS = [5, 15, 30, 60].map((v) => ({ value: v, label: `${v} мин` }))
+const ENVIRONMENTS: { value: MarketplaceEnvironment; label: string }[] = [
+  { value: 'sandbox', label: 'Тестовый' },
+  { value: 'production', label: 'Боевой' },
+]
+const CONNECT_ENVIRONMENTS = [
+  { value: 'default', label: 'Как на сервере' },
+  ...ENVIRONMENTS,
+]
 
 const done = (title: string) => ({
   onSuccess: () => {
@@ -69,6 +78,7 @@ function patch(it: Integration, change: Partial<IntegrationSettingsInput>) {
       autoImportFbs: it.autoImportFbs,
       pushStock: it.pushStock,
       syncIntervalMin: it.syncIntervalMin,
+      ...(it.environment ? { environment: it.environment } : {}),
       ...change,
     },
   })
@@ -87,6 +97,7 @@ function askDisconnect(it: Integration) {
 const connectFor = ref<IntegrationChannel | null>(null)
 const apiKey = ref('')
 const clientId = ref('')
+const connectEnvironment = ref<'default' | MarketplaceEnvironment>('default')
 const keyError = computed(() => {
   if (apiKey.value.trim().length < 20) return 'Ключ API — не менее 20 символов'
   if (connectFor.value === 'ozon' && !/^\d{4,10}$/.test(clientId.value.trim()))
@@ -97,15 +108,20 @@ function openConnect(ch: IntegrationChannel) {
   connectFor.value = ch
   apiKey.value = ''
   clientId.value = ''
+  connectEnvironment.value = 'default'
 }
 const connect = useMutation({
   mutationFn: () =>
     integrationsApi.connect(connectFor.value!, {
       apiKey: apiKey.value.trim(),
       clientId: connectFor.value === 'ozon' ? clientId.value.trim() : undefined,
+      ...(connectEnvironment.value === 'default' ? {} : { environment: connectEnvironment.value }),
     }),
   onSuccess: (it) => {
-    notify.success(`${SALES_CHANNELS[it.channel].name} подключён`, 'Первая загрузка заказов уже выполнена')
+    notify.success(
+      `${SALES_CHANNELS[it.channel].name} подключён`,
+      'Ключ сохранён. Синхронизацию можно запустить вручную — заказы в WMS при этом не создаются.',
+    )
     connectFor.value = null
     void qc.invalidateQueries({ queryKey: ['integrations'] })
   },
@@ -130,7 +146,7 @@ const log = computed(() =>
   <div>
     <PageHeader
       title="Интеграции"
-      description="Подключение кабинетов маркетплейсов по API-ключу: автоматическая загрузка заказов FBS и выгрузка остатков"
+      description="Кабинеты WB и Ozon: синхронизация считает заказы FBS в журнале и выгружает остатки, если это разрешено"
     />
 
     <div v-if="isPending" class="grid gap-4 lg:grid-cols-2">
@@ -154,13 +170,19 @@ const log = computed(() =>
                   {{
                     it.status === 'disconnected'
                       ? 'Кабинет не подключён'
-                      : `Синхронизация ${formatRelative(it.lastSyncAt!)}`
+                      : it.lastSyncAt
+                        ? `Синхронизация ${formatRelative(it.lastSyncAt)}`
+                        : 'Синхронизация ещё не выполнялась'
                   }}
                 </p>
               </div>
             </div>
             <ToneBadge :tone="STATUS[it.status].tone" :label="STATUS[it.status].label" />
           </div>
+
+          <Message v-if="it.lastError" severity="error" size="small" class="break-words">
+            {{ it.lastError }}<span v-if="it.lastHttpStatus"> (HTTP {{ it.lastHttpStatus }})</span>
+          </Message>
 
           <template v-if="it.status !== 'disconnected'">
             <dl class="grid grid-cols-2 gap-3 rounded-lg bg-surface-50 p-3 text-sm dark:bg-surface-900">
@@ -182,7 +204,10 @@ const log = computed(() =>
               <label class="flex items-center justify-between gap-4 py-2.5">
                 <span class="min-w-0">
                   <span class="block text-sm font-medium text-heading">Автозагрузка заказов FBS</span>
-                  <span class="block text-xs text-secondary">Новые заказы сразу попадают на сборку в ФЦ</span>
+                  <span class="block text-xs text-secondary"
+                    >Настройка сохраняется. Синхронизация только пишет число заказов FBS в журнал и не создаёт их в
+                    WMS</span
+                  >
                 </span>
                 <ToggleSwitch
                   :model-value="it.autoImportFbs"
@@ -194,7 +219,8 @@ const log = computed(() =>
                 <span class="min-w-0">
                   <span class="block text-sm font-medium text-heading">Выгрузка остатков</span>
                   <span class="block text-xs text-secondary"
-                    >Доступный остаток со складов ФЦ передаётся на маркетплейс</span
+                    >Доступный остаток уходит при синхронизации. На боевой контур — только если запись разрешена на
+                    сервере, иначе в журнале будет пометка, что выгрузка пропущена</span
                   >
                 </span>
                 <ToggleSwitch
@@ -204,7 +230,27 @@ const log = computed(() =>
                 />
               </label>
               <div class="flex flex-wrap items-center justify-between gap-3 py-2.5">
-                <span class="text-sm font-medium text-heading">Интервал обмена</span>
+                <span class="min-w-0">
+                  <span class="block text-sm font-medium text-heading">Контур</span>
+                  <span class="block text-xs text-secondary">Тестовый не трогает боевые остатки WB</span>
+                </span>
+                <Select
+                  :model-value="it.environment"
+                  :options="ENVIRONMENTS"
+                  option-label="label"
+                  option-value="value"
+                  :disabled="!canManage || save.isPending.value"
+                  class="w-40"
+                  placeholder="Не задан"
+                  aria-label="Контур кабинета"
+                  @update:model-value="patch(it, { environment: $event })"
+                />
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-3 py-2.5">
+                <span class="min-w-0">
+                  <span class="block text-sm font-medium text-heading">Интервал обмена</span>
+                  <span class="block text-xs text-secondary">Сохраняется в настройках. По расписанию обмен сам не стартует</span>
+                </span>
                 <Select
                   :model-value="it.syncIntervalMin"
                   :options="INTERVALS"
@@ -290,6 +336,21 @@ const log = computed(() =>
         <p class="flex gap-2 text-sm text-secondary">
           <KeyRound class="mt-0.5 size-4 shrink-0" />{{ HINT[connectFor] }}
         </p>
+        <label class="flex flex-col gap-1.5 text-sm">
+          <span class="font-medium text-heading">Контур</span>
+          <Select
+            v-model="connectEnvironment"
+            :options="CONNECT_ENVIRONMENTS"
+            option-label="label"
+            option-value="value"
+            class="w-full"
+            aria-label="Контур подключения"
+          />
+          <span class="text-xs text-secondary"
+            >«Как на сервере» — тестовый контур в разработке и боевой на остальных стендах. Ключ при сохранении не
+            проверяется.</span
+          >
+        </label>
         <label v-if="connectFor === 'ozon'" class="flex flex-col gap-1.5 text-sm">
           <span class="font-medium text-heading">Client ID</span>
           <InputText v-model="clientId" inputmode="numeric" class="w-full font-mono" />
@@ -305,7 +366,7 @@ const log = computed(() =>
       <template #footer>
         <Button label="Отмена" severity="secondary" text @click="connectFor = null" />
         <Button
-          label="Проверить и подключить"
+          label="Подключить кабинет"
           :disabled="!!keyError"
           :loading="connect.isPending.value"
           @click="connect.mutate()"

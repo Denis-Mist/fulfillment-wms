@@ -75,12 +75,18 @@ public sealed class IntegrationsHandler(IAppDbContext db, IUnitOfWork uow, ICloc
             var orders = await client.GetFbsOrderCountAsync(creds, ct);
             _ = await client.GetCardCountAsync(creds, ct);
             int? pushed = null;
-            if (row.PushStock && CanPushStocks(row))
+            string? stockNote = null;
+            if (row.PushStock)
             {
-                var stocks = await LoadStocksAsync(row.OrganizationId, row.Channel, ct);
-                pushed = await client.PushStocksAsync(creds, stocks, ct);
+                if (!CanPushStocks(row))
+                    stockNote = "Остатки не выгружены: запись в боевой кабинет отключена";
+                else
+                {
+                    var stocks = await LoadStocksAsync(row.OrganizationId, row.Channel, ct);
+                    pushed = stocks.Count == 0 ? 0 : await client.PushStocksAsync(creds, stocks, ct);
+                }
             }
-            row.RecordSyncSuccess(orders, pushed, clock.UtcNow, 200);
+            row.RecordSyncSuccess(orders, pushed, clock.UtcNow, 200, stockNote);
             await uow.SaveChangesAsync(ct);
             return ToDto(row);
         }
@@ -107,16 +113,16 @@ public sealed class IntegrationsHandler(IAppDbContext db, IUnitOfWork uow, ICloc
             .Select(g => new { ProductId = g.Key, Amount = g.Sum(x => x.Quantity - x.Reserved) })
             .ToListAsync(ct);
         var byProduct = qty.ToDictionary(x => x.ProductId, x => Math.Max(0, x.Amount));
-        var items = new List<MarketplaceStockItem>();
+        var grouped = new Dictionary<string, long>(StringComparer.Ordinal);
         foreach (var product in products)
         {
             var sku = channel == IntegrationChannel.Wb
                 ? (string.IsNullOrWhiteSpace(product.WbBarcode) ? product.Barcode : product.WbBarcode)
                 : (string.IsNullOrWhiteSpace(product.Sku) ? product.Barcode : product.Sku);
             if (string.IsNullOrWhiteSpace(sku)) continue;
-            items.Add(new MarketplaceStockItem(sku, byProduct.GetValueOrDefault(product.Id)));
+            grouped[sku] = Math.Min(int.MaxValue, grouped.GetValueOrDefault(sku) + byProduct.GetValueOrDefault(product.Id));
         }
-        return items;
+        return grouped.Select(pair => new MarketplaceStockItem(pair.Key, (int)pair.Value)).ToList();
     }
 
     private async Task<IntegrationDto> MutateAsync(RequestContext ctx, string channel, Action<MarketplaceIntegration> action, CancellationToken ct)
@@ -158,8 +164,29 @@ public sealed class IntegrationsHandler(IAppDbContext db, IUnitOfWork uow, ICloc
             db.Integrations.Add(row);
             rows.Add(row);
         }
-        await uow.SaveChangesAsync(ct);
+        try
+        {
+            await uow.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex) && db is DbContext)
+        {
+            // Два параллельных первых запроса организации вставляют одни и те же каналы.
+            ((DbContext)db).ChangeTracker.Clear();
+            rows = await db.Integrations.Where(i => i.OrganizationId == orgId).ToListAsync(ct);
+        }
         return rows.OrderBy(r => r.Channel).ToList();
+    }
+
+    private static bool IsUniqueViolation(DbUpdateException ex)
+    {
+        for (Exception? current = ex; current is not null; current = current.InnerException)
+        {
+            if (current.GetType().GetProperty("SqlState")?.GetValue(current) is "23505") return true;
+            if (current.Message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase)
+                || current.Message.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
     }
 
     private static IEnumerable<IntegrationLogEntry> SeedLog(IntegrationChannel ch, uint seed, DateTimeOffset now)
@@ -177,7 +204,7 @@ public sealed class IntegrationsHandler(IAppDbContext db, IUnitOfWork uow, ICloc
             var stock = i % 3 == 1;
             var count = stock ? rng.Int(40, 180) : rng.Int(0, 12);
             yield return new($"{prefix}_{i}", at, stock ? IntegrationLogKind.Stock : IntegrationLogKind.Orders,
-                stock ? $"Остатки выгружены: {count} SKU" : $"Загружено заказов FBS: {count}", count);
+                stock ? $"Остатки выгружены: {count} SKU" : $"Заказов FBS в кабинете: {count}", count);
         }
     }
 
