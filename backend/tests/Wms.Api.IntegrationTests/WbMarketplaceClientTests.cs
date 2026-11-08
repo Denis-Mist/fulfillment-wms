@@ -61,6 +61,57 @@ public class WbMarketplaceClientTests
     }
 
     [Fact]
+    public async Task Recent_orders_are_paged_when_there_are_no_new_ones()
+    {
+        var nexts = new List<string>();
+        var handler = new ScriptedHandler((req, _) =>
+        {
+            if (req.RequestUri!.AbsolutePath == "/api/v3/orders/new")
+                return Json(HttpStatusCode.OK, """{"orders":[]}""");
+            nexts.Add(req.RequestUri.Query);
+            var page = nexts.Count;
+            var orders = page == 1 ? """[{"id":1},{"id":2}]""" : """[{"id":3}]""";
+            var next = page == 1 ? 1000 : 0;
+            return Json(HttpStatusCode.OK, "{\"orders\":" + orders + ",\"next\":" + next + "}");
+        });
+        Assert.Equal(3, await Create(handler).GetFbsOrderCountAsync(SandboxToken, default));
+        Assert.Contains("next=0", nexts[0]);
+        Assert.Contains("limit=1000", nexts[0]);
+        Assert.Contains("next=1000", nexts[1]);
+    }
+
+    [Fact]
+    public async Task Push_stocks_collapses_duplicate_sku_and_batches_by_1000()
+    {
+        var puts = new List<string?>();
+        var handler = new ScriptedHandler((req, body) =>
+        {
+            if (req.Method == HttpMethod.Get)
+                return Json(HttpStatusCode.OK, """{"warehouses":[{"id":42,"name":"FBS"}]}""");
+            puts.Add(body);
+            return new HttpResponseMessage(HttpStatusCode.NoContent);
+        });
+        var client = Create(handler);
+        Assert.Equal(0, await client.PushStocksAsync(SandboxToken, [], default));
+        Assert.Empty(puts);
+        var stocks = Enumerable.Range(0, 1000).Select(i => new MarketplaceStockItem($"sku-{i}", 1)).ToList();
+        stocks.Add(new MarketplaceStockItem("sku-0", 4));
+        Assert.Equal(1000, await client.PushStocksAsync(SandboxToken, stocks, default));
+        Assert.Single(puts);
+        Assert.Contains("\"sku\":\"sku-0\",\"amount\":5", puts[0]);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(puts[0]!, "sku-0"));
+    }
+
+    [Fact]
+    public async Task Timeout_is_reported_as_marketplace_outage()
+    {
+        var handler = new ScriptedHandler((_, _) => throw new TaskCanceledException("elapsed"));
+        var ex = await Assert.ThrowsAsync<MarketplaceApiException>(() => Create(handler).PingAsync(SandboxToken, CancellationToken.None));
+        Assert.Contains("Нет ответа", ex.Message);
+        Assert.False(ex.IsClientError);
+    }
+
+    [Fact]
     public async Task Push_stocks_puts_to_first_warehouse()
     {
         var handler = new ScriptedHandler((req, body) =>

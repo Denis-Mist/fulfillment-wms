@@ -39,6 +39,15 @@ public class OzonSellerClientTests
     }
 
     [Fact]
+    public async Task Ping_403_reads_nested_error_object()
+    {
+        var handler = new ScriptedHandler((_, _) =>
+            Json(HttpStatusCode.Forbidden, """{"error":{"code":5,"message":"Client-Id is missing"}}"""));
+        var ex = await Assert.ThrowsAsync<MarketplaceApiException>(() => Create(handler).PingAsync(Creds, default));
+        Assert.Contains("Client-Id is missing", ex.Message);
+    }
+
+    [Fact]
     public async Task Lists_products_and_fbs_then_fbo_postings()
     {
         var paths = new List<string>();
@@ -57,6 +66,69 @@ public class OzonSellerClientTests
         Assert.Equal(4, await client.GetCardCountAsync(Creds, default));
         Assert.Equal(3, await client.GetFbsOrderCountAsync(Creds, default));
         Assert.Equal(["/v3/product/list", "/v4/posting/fbs/list", "/v2/posting/fbo/list"], paths);
+    }
+
+    [Fact]
+    public async Task Fbs_count_follows_has_next_pages()
+    {
+        var offsets = new List<string?>();
+        var handler = new ScriptedHandler((req, body) =>
+        {
+            if (req.RequestUri!.AbsolutePath == "/v2/posting/fbo/list")
+                return Json(HttpStatusCode.OK, """{"result":{"postings":[]}}""");
+            offsets.Add(body);
+            var offset = offsets.Count == 1 ? 0 : 100;
+            Assert.Contains($"\"offset\":{offset}", body);
+            var hasNext = offsets.Count == 1 ? "true" : "false";
+            var postings = offsets.Count == 1 ? "[{},{}]" : "[{}]";
+            return Json(HttpStatusCode.OK, "{\"result\":{\"postings\":" + postings + ",\"has_next\":" + hasNext + "}}");
+        });
+        Assert.Equal(3, await Create(handler).GetFbsOrderCountAsync(Creds, default));
+        Assert.Equal(2, offsets.Count);
+    }
+
+    [Fact]
+    public async Task Push_stocks_skips_disabled_warehouse_and_reports_item_errors()
+    {
+        var handler = new ScriptedHandler((req, body) =>
+        {
+            if (req.RequestUri!.AbsolutePath == "/v1/warehouse/list")
+                return Json(HttpStatusCode.OK, """{"result":[{"warehouse_id":1,"status":"disabled"},{"warehouse_id":9,"status":"created"}]}""");
+            Assert.Contains("\"warehouse_id\":9", body);
+            return Json(HttpStatusCode.OK, """{"result":[{"offer_id":"SKU-1","updated":false,"errors":[{"message":"product not found"}]}]}""");
+        });
+        var ex = await Assert.ThrowsAsync<MarketplaceApiException>(() =>
+            Create(handler).PushStocksAsync(Creds, [new MarketplaceStockItem("SKU-1", 2), new MarketplaceStockItem("SKU-1", 3)], default));
+        Assert.Contains("product not found", ex.Message);
+        Assert.Contains("0 из 1", ex.Message);
+    }
+
+    [Fact]
+    public async Task Push_stocks_splits_batches_of_100_and_ignores_empty_catalog()
+    {
+        var stockCalls = 0;
+        var handler = new ScriptedHandler((req, _) =>
+        {
+            if (req.RequestUri!.AbsolutePath == "/v1/warehouse/list")
+                return Json(HttpStatusCode.OK, """{"result":[{"warehouse_id":77}]}""");
+            stockCalls++;
+            return Json(HttpStatusCode.OK, """{"result":[]}""");
+        });
+        var client = Create(handler);
+        Assert.Equal(0, await client.PushStocksAsync(Creds, [], default));
+        Assert.Equal(0, stockCalls);
+        var stocks = Enumerable.Range(0, 101).Select(i => new MarketplaceStockItem($"SKU-{i}", 1)).ToList();
+        Assert.Equal(101, await client.PushStocksAsync(Creds, stocks, default));
+        Assert.Equal(2, stockCalls);
+    }
+
+    [Fact]
+    public async Task Cancelled_call_is_not_a_marketplace_outage()
+    {
+        var handler = new ScriptedHandler((_, _) => throw new TaskCanceledException("aborted"));
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Create(handler).PingAsync(Creds, cts.Token));
     }
 
     [Fact]

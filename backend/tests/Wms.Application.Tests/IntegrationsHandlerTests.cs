@@ -128,4 +128,52 @@ public class IntegrationsHandlerTests
         await ozon.Received(1).PingAsync(Arg.Is<MarketplaceCredentials>(c => c.ClientId == "123456"), Arg.Any<CancellationToken>());
         await ozon.DidNotReceive().PushStocksAsync(Arg.Any<MarketplaceCredentials>(), Arg.Any<IReadOnlyList<MarketplaceStockItem>>(), Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task Production_stock_push_is_logged_as_skipped_when_writes_are_disabled()
+    {
+        await using var db = new TestAppDbContext();
+        var row = new MarketplaceIntegration("org_s", IntegrationChannel.Wb);
+        row.Connect(new string('a', 24), null, _clock.UtcNow, MarketplaceEnvironment.Production);
+        row.SetApiKeyCipher("enc:token-value");
+        row.UpdateSettings(true, true, 15, MarketplaceEnvironment.Production);
+        db.Integrations.Add(row);
+        await db.SaveChangesAsync();
+        _settings.AllowProductionStockPush.Returns(false);
+        _wb.GetFbsOrderCountAsync(Arg.Any<MarketplaceCredentials>(), Arg.Any<CancellationToken>()).Returns(1);
+        _wb.GetCardCountAsync(Arg.Any<MarketplaceCredentials>(), Arg.Any<CancellationToken>()).Returns(1);
+
+        var synced = await Handler(db).SyncAsync(Seller(), "wb", default);
+
+        Assert.Equal(IntegrationStatus.Connected, synced.Status);
+        Assert.Contains(synced.Log, entry => entry.Kind == IntegrationLogKind.Stock && entry.Message.Contains("не выгружены"));
+        Assert.Contains(synced.Log, entry => entry.Message == "Заказов FBS в кабинете: 1");
+        await _wb.DidNotReceive().PushStocksAsync(Arg.Any<MarketplaceCredentials>(), Arg.Any<IReadOnlyList<MarketplaceStockItem>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Sandbox_stock_push_sums_duplicate_barcodes()
+    {
+        await using var db = new TestAppDbContext();
+        var row = new MarketplaceIntegration("org_s", IntegrationChannel.Wb);
+        row.Connect(new string('a', 24), null, _clock.UtcNow, MarketplaceEnvironment.Sandbox);
+        row.SetApiKeyCipher("enc:token-value");
+        row.UpdateSettings(true, true, 15);
+        db.Integrations.Add(row);
+        db.Products.Add(new Product("prd_1", "org_s", "SKU-1", "Кружка", "Посуда", "4600000000001", "12345678", 10, 100, 1, false, false));
+        db.Products.Add(new Product("prd_2", "org_s", "SKU-2", "Кружка 2", "Посуда", "4600000000002", "12345678", 10, 100, 1, false, false));
+        db.Stock.Add(new StockItem("stk_1", "prd_1", "org_s", "wh", "loc", 5, 1));
+        db.Stock.Add(new StockItem("stk_2", "prd_2", "org_s", "wh", "loc", 3, 0));
+        await db.SaveChangesAsync();
+        _wb.GetFbsOrderCountAsync(Arg.Any<MarketplaceCredentials>(), Arg.Any<CancellationToken>()).Returns(2);
+        _wb.GetCardCountAsync(Arg.Any<MarketplaceCredentials>(), Arg.Any<CancellationToken>()).Returns(2);
+        _wb.PushStocksAsync(Arg.Any<MarketplaceCredentials>(), Arg.Any<IReadOnlyList<MarketplaceStockItem>>(), Arg.Any<CancellationToken>()).Returns(1);
+
+        await Handler(db).SyncAsync(Seller(), "wb", default);
+
+        await _wb.Received(1).PushStocksAsync(
+            Arg.Any<MarketplaceCredentials>(),
+            Arg.Is<IReadOnlyList<MarketplaceStockItem>>(items => items.Count == 1 && items[0].Sku == "12345678" && items[0].Amount == 7),
+            Arg.Any<CancellationToken>());
+    }
 }

@@ -11,6 +11,9 @@ public sealed class ProblemDetailsExceptionHandler(IProblemDetailsService proble
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken ct)
     {
+        if (exception is OperationCanceledException && context.RequestAborted.IsCancellationRequested)
+            return true;
+
         var problem = exception switch
         {
             AppException app => Problems.Create(app.Status, app.Title, app.Detail, app.Errors),

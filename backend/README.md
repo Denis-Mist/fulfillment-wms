@@ -166,7 +166,7 @@ dotnet ef database update -p src/Wms.Infrastructure -s src/Wms.Api
 - Начисления (`/billing/charges`, `/billing/summary`) считаются детерминированно из реальных заказов/приёмок и синтетического суточного потока, но ГПСЧ (mulberry32) засевается хешем ключа (договор/день/заказ), поэтому суммы не совпадают с моком побайтно.
 - Тарифы и акты хранятся в PostgreSQL (`tariffs`, `billing_acts`), а не в localStorage; создаются лениво при первом обращении: тариф по умолчанию по формуле мока, акты за 3 прошлых месяца (выставлены 3-го числа следующего месяца, старше одного месяца — оплачены через 6 дней). Черновик текущего месяца — виртуальный `draft_{contractId}`.
 - Месяцы/дни считаются в UTC (мок — локальное время браузера).
-- Интеграции хранятся в `marketplace_integrations` (журнал — jsonb, ≤30 записей); демо-состояние сидируется при первом GET организации. Ключ API после `POST /integrations/{channel}/connect` сохраняется в `api_key_cipher` (AES-GCM) и в ответах не возвращается — только `keyMask`. Сидовые подключения ключа не содержат: `POST /integrations/wb/sync` без повторного connect даёт 422 «Ключ API не сохранён».
+- Интеграции хранятся в `marketplace_integrations` (журнал — jsonb, ≤30 записей); демо-состояние сидируется при первом GET организации. Параллельный первый запрос не даёт 500 на уникальном ключе `(organization_id, channel)`: повторная вставка перечитывает уже сохранённые строки. Ключ API после `POST /integrations/{channel}/connect` сохраняется в `api_key_cipher` (AES-GCM) и в ответах не возвращается — только `keyMask`. Сидовые подключения ключа не содержат: `POST /integrations/wb/sync` без повторного connect даёт 422 «Ключ API не сохранён». `connect` не проверяет ключ у маркетплейса — в журнале «Кабинет подключён».
 - WB и Ozon: `sync` ходит в HTTP API. Для WB в Development по умолчанию sandbox; у Ozon официального sandbox URL нет — используется `https://api-seller.ozon.ru` в режиме чтения.
 - В ответ интеграций добавлены поля `environment` (`sandbox` | `production`), `lastError`, `lastHttpStatus`. После ошибки API статус становится `error` (раньше бэкенд отдавал только `connected` / `disconnected`). Неизвестный канал → 404, неизвестные значения фильтров (`service`) игнорируются.
 
@@ -266,14 +266,16 @@ dotnet ef database update -p src/Wms.Infrastructure -s src/Wms.Api
 | Шаг | Хост (sandbox) | Метод |
 |---|---|---|
 | Проверка токена | `marketplace-api-sandbox.wildberries.ru/ping` | GET |
-| Новые заказы FBS | `.../api/v3/orders/new` (если пусто — `.../api/v3/orders` за 7 дней) | GET |
+| Новые заказы FBS | `.../api/v3/orders/new` (если пусто — `.../api/v3/orders` за 7 дней, страницы по `next`, до 10×1000) | GET |
 | Карточки | `content-api-sandbox.wildberries.ru/content/v2/get/cards/list` | POST |
-| Склады и остатки | `.../api/v3/warehouses`, `PUT .../api/v3/stocks/{id}` | GET / PUT |
+| Склады и остатки | `.../api/v3/warehouses`, `PUT .../api/v3/stocks/{id}` пачками по 1000 SKU | GET / PUT |
 | Тестовый заказ | `POST .../api/v3/test/fbs/orders/make` | метод клиента есть, обычный sync его не вызывает |
 
 Боевые хосты — те же пути на `marketplace-api.wildberries.ru` и `content-api.wildberries.ru`. Заголовок `Authorization` — сам токен, как в документации WB. Ошибки API возвращаются как ProblemDetails 422 (ответ 4xx) или 502 (сеть / 5xx) с текстом маркетплейса в `detail`; то же пишется в `lastError` / журнал.
 
-`connect` ключ только сохраняет и не пингует маркетплейс. Секреты в git не коммитятся.
+`connect` ключ только сохраняет и не пингует маркетплейс. Журнал при этом пишет «Кабинет подключён», без претензии, что ключ уже проверен. Секреты в git не коммитятся.
+
+Число в строке «Заказов FBS в кабинете» — это количество отправлений в кабинете, а не заказы, созданные в WMS. Повторные SKU в выгрузке складываются. Пустой каталог не вызывает API складов. Если `pushStock` включён, но запись в боевой контур запрещена (`AllowProductionStockPush=false`, а для WB ещё и среда не sandbox), синхронизация всё равно успешна, а в журнале появляется «Остатки не выгружены: запись в боевой кабинет отключена». Обрыв HTTP-запроса клиента не записывается как ошибка маркетплейса.
 
 ### Интеграции: Ozon Seller API
 
@@ -290,11 +292,11 @@ dotnet ef database update -p src/Wms.Infrastructure -s src/Wms.Api
 |---|---|---|
 | Проверка ключей | `/v1/roles` | POST |
 | Товары | `/v3/product/list` | POST |
-| Отправления FBS | `/v4/posting/fbs/list` (за 7 дней) | POST |
-| Отправления FBO | `/v2/posting/fbo/list` (за 7 дней) | POST |
-| Остатки | `/v1/warehouse/list`, затем `/v2/products/stocks` | POST, только если разрешена запись |
+| Отправления FBS | `/v4/posting/fbs/list` (за 7 дней, страницы по 100, пока `has_next`, не больше 20) | POST |
+| Отправления FBO | `/v2/posting/fbo/list` (за 7 дней, первая страница; в счётчик FBS не входит) | POST |
+| Остатки | `/v1/warehouse/list` (берётся активный склад), затем `/v2/products/stocks` пачками по 100 | POST, только если разрешена запись |
 
-Заголовки: `Client-Id` и `Api-Key`. Ошибки — те же 422/502 ProblemDetails с текстом Ozon в `detail`.
+Заголовки: `Client-Id` и `Api-Key`. Ошибки — те же 422/502 ProblemDetails с текстом Ozon в `detail`. Ответ 200, в котором у позиции `updated: false` или непустой `errors`, тоже становится 422: в тексте есть число принятых SKU и первая ошибка Ozon. Для выгрузки выбирается склад со статусом `created` или `new`, а не первый попавшийся отключённый.
 
 ### Поля интеграций для фронтенда
 

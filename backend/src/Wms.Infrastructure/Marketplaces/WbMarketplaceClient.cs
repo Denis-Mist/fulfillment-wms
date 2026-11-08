@@ -12,6 +12,9 @@ namespace Wms.Infrastructure.Marketplaces;
 /// </summary>
 public sealed class WbMarketplaceClient(HttpClient http, IOptions<MarketplaceOptions> options, ILogger<WbMarketplaceClient> logger) : IMarketplaceClient
 {
+    /// <summary>Лимит PUT /api/v3/stocks/{warehouseId}.</summary>
+    public const int StockBatch = 1000;
+
     public IntegrationChannel Channel => IntegrationChannel.Wb;
 
     public async Task PingAsync(MarketplaceCredentials credentials, CancellationToken ct)
@@ -28,10 +31,7 @@ public sealed class WbMarketplaceClient(HttpClient http, IOptions<MarketplaceOpt
         var fresh = await GetAsync(credentials, new Uri(mp, "api/v3/orders/new"), ct);
         var count = MarketplaceHttp.ArrayCount(fresh, "orders");
         if (count > 0) return count;
-
-        var from = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeSeconds();
-        var recent = await GetAsync(credentials, new Uri(mp, $"api/v3/orders?limit=100&next=0&dateFrom={from}"), ct);
-        return MarketplaceHttp.ArrayCount(recent, "orders");
+        return await CountRecentOrdersAsync(credentials, mp, ct);
     }
 
     public async Task<int> GetCardCountAsync(MarketplaceCredentials credentials, CancellationToken ct)
@@ -42,25 +42,29 @@ public sealed class WbMarketplaceClient(HttpClient http, IOptions<MarketplaceOpt
         using var req = Authorized(HttpMethod.Post, url, credentials, MarketplaceHttp.JsonBody(body));
         var json = await MarketplaceHttp.SendAsync(http, req, "Wildberries", ct);
         if (json.ValueKind == JsonValueKind.Object && json.TryGetProperty("cursor", out var cursor)
-            && cursor.TryGetProperty("total", out var total) && total.ValueKind == JsonValueKind.Number)
-            return total.GetInt32();
+            && cursor.TryGetProperty("total", out var total) && MarketplaceHttp.TryInt(total, out var cards))
+            return cards;
         return MarketplaceHttp.ArrayCount(json, "cards");
     }
 
     public async Task<int> PushStocksAsync(MarketplaceCredentials credentials, IReadOnlyList<MarketplaceStockItem> stocks, CancellationToken ct)
     {
+        var items = MarketplaceHttp.CollapseSkus(stocks);
+        if (items.Count == 0) return 0;
         var warehouses = await ListWarehousesAsync(credentials, ct);
         if (warehouses.Count == 0)
             throw new MarketplaceApiException("На маркетплейсе нет склада продавца — создайте склад в sandbox WB.", 422);
-        if (stocks.Count == 0) return 0;
 
         var warehouseId = warehouses[0];
-        var url = new Uri(Hosts().Marketplace(credentials.Environment), $"api/v3/stocks/{warehouseId}");
-        var payload = new { stocks = stocks.Select(s => new { sku = s.Sku, amount = s.Amount }).ToList() };
-        logger.LogInformation("WB push stocks warehouse {Warehouse} sku {Count}", warehouseId, stocks.Count);
-        using var req = Authorized(HttpMethod.Put, url, credentials, MarketplaceHttp.JsonBody(payload));
-        await MarketplaceHttp.SendAsync(http, req, "Wildberries", ct);
-        return stocks.Count;
+        foreach (var chunk in items.Chunk(StockBatch))
+        {
+            var url = new Uri(Hosts().Marketplace(credentials.Environment), $"api/v3/stocks/{warehouseId}");
+            var payload = new { stocks = chunk.Select(s => new { sku = s.Sku, amount = s.Amount }).ToList() };
+            logger.LogInformation("WB push stocks warehouse {Warehouse} sku {Count}", warehouseId, chunk.Length);
+            using var req = Authorized(HttpMethod.Put, url, credentials, MarketplaceHttp.JsonBody(payload));
+            await MarketplaceHttp.SendAsync(http, req, "Wildberries", ct);
+        }
+        return items.Count;
     }
 
     /// <summary>Создание тестового FBS-заказа в sandbox (POST /api/v3/test/fbs/orders/make). Не вызывается при обычном sync.</summary>
@@ -89,6 +93,23 @@ public sealed class WbMarketplaceClient(HttpClient http, IOptions<MarketplaceOpt
                 ids.Add(raw);
         }
         return ids;
+    }
+
+    private async Task<int> CountRecentOrdersAsync(MarketplaceCredentials credentials, Uri marketplace, CancellationToken ct)
+    {
+        var from = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeSeconds();
+        var next = 0L;
+        var total = 0;
+        for (var page = 0; page < 10; page++)
+        {
+            var recent = await GetAsync(credentials, new Uri(marketplace, $"api/v3/orders?limit={StockBatch}&next={next}&dateFrom={from}"), ct);
+            var count = MarketplaceHttp.ArrayCount(recent, "orders");
+            total += count;
+            if (count == 0 || !MarketplaceHttp.TryInt64(recent, "next", out var cursor) || cursor == 0 || cursor == next)
+                break;
+            next = cursor;
+        }
+        return total;
     }
 
     private async Task<JsonElement> GetAsync(MarketplaceCredentials credentials, Uri url, CancellationToken ct)
