@@ -1,0 +1,7 @@
+**/bin/
+**/obj/
+**/TestResults/
+tests/
+docker-compose.yml
+*.user
+.vs/

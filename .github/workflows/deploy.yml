@@ -1,0 +1,67 @@
+name: deploy
+
+# Автодеплой на сервер после merge в main: сначала тесты (те же workflow, что и на PR), потом деплой.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-tests:
+    uses: ./.github/workflows/backend-tests.yml
+
+  frontend-tests:
+    uses: ./.github/workflows/frontend-tests.yml
+
+  deploy:
+    needs: [backend-tests, frontend-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # деплои не пересекаются и не отменяют друг друга (на сервере дополнительно flock)
+    concurrency:
+      group: wms-deploy-production
+      cancel-in-progress: false
+    environment:
+      name: production
+      url: https://wms.korobfulfillment.ru
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+    steps:
+      - name: Configure SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          test -n "$DEPLOY_HOST" && test -n "$DEPLOY_USER" && test -n "$DEPLOY_SSH_KEY" && test -n "$DEPLOY_KNOWN_HOSTS" \
+            || { echo "::error::Не заданы секреты DEPLOY_HOST / DEPLOY_USER / DEPLOY_SSH_KEY / DEPLOY_KNOWN_HOSTS"; exit 1; }
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts && chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy (server-side wms-deploy)
+        # Ключ на сервере ограничен forced command: он может только запустить /usr/local/sbin/wms-deploy,
+        # который делает git reset на origin/main и deploy/server-deploy.sh.
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT:-22}" \
+            -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=10 \
+            "$DEPLOY_USER@$DEPLOY_HOST" deploy | tee deploy.log
+          grep -q "Готово: ${GITHUB_SHA::12}" deploy.log \
+            || echo "::warning::На сервере задеплоен не ${GITHUB_SHA::12} (в main уже есть более новый коммит?)"
+
+      - name: Smoke check
+        run: |
+          curl -fsS -o /dev/null -w "index %{http_code}\n" https://wms.korobfulfillment.ru/
+          curl -fsS -o /dev/null -w "deep link %{http_code}\n" https://wms.korobfulfillment.ru/orders
+          code=$(curl -s -o /dev/null -w "%{http_code}" -H 'Content-Type: application/json' \
+            -d '{"email":"director@demo.ru","password":"demo"}' https://wms.korobfulfillment.ru/api/auth/login)
+          echo "login $code"; test "$code" = 200
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
