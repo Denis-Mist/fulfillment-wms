@@ -1,0 +1,27 @@
+[Unit]
+Description=Fulfillment WMS API (ASP.NET Core)
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=wms
+Group=wms
+WorkingDirectory=/opt/wms/api
+EnvironmentFile=/opt/wms/.env
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_NOLOGO=1
+Environment=DOTNET_gcServer=0
+Environment=DOTNET_GCHeapHardLimitPercent=0x19
+# Слушаем только loopback, наружу — через веб-сервер
+ExecStart=/opt/wms/api/Wms.Api --urls http://127.0.0.1:${WMS_API_PORT}
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

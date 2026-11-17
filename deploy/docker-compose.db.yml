@@ -1,0 +1,31 @@
+# PostgreSQL для WMS. Отдельный compose-проект "wms": своя сеть и свой том, порт только на 127.0.0.1.
+# Запуск (на сервере, из каталога /opt/wms): docker compose -f docker-compose.db.yml --env-file .env up -d
+name: wms
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: wms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: wms
+      POSTGRES_USER: wms
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set in .env}
+    ports:
+      - "127.0.0.1:${WMS_DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [wms]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wms -d wms"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+networks:
+  wms:
+    name: wms-net
+
+volumes:
+  pgdata:
+    name: wms-pgdata
