@@ -108,6 +108,7 @@ docker images wms-api --format '{{.Tag}}' | grep -vxE 'latest|<none>' | tail -n 
   | sed 's/^/wms-api:/' | xargs -r docker image rm >/dev/null 2>&1 || true
 docker image prune -f --filter label=wms.component=api >/dev/null || true
 docker buildx prune --builder "$BUILDER" -f --keep-storage 3gb >/dev/null 2>&1 || true
+docker buildx stop "$BUILDER" >/dev/null 2>&1 || true   # builder не держит память между деплоями (кеш сохраняется)
 ls -1t "$APP"/backups/wms-*.dump 2>/dev/null | tail -n +11 | xargs -r rm -f
 
 "${COMPOSE[@]}" ps --format 'table {{.Name}}\t{{.Status}}'
