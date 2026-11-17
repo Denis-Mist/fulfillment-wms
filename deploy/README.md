@@ -17,6 +17,14 @@
 * Миграции EF Core и демо-сиды применяются при старте API (`Database__Seed=true`; пароль демо-пользователей `demo`).
 * Автозапуск: `wms-api.service` enabled (`Restart=always`), контейнер Postgres — `restart: unless-stopped`, docker — enabled.
 
+## Текущая установка
+
+* Адрес: **https://wms.korobfulfillment.ru** (DNS в Cloudflare, запись A в режиме *DNS only*: Let's Encrypt
+  должен видеть сервер напрямую, без прокси Cloudflare).
+* Сайт nginx `wms` (`server_name wms.korobfulfillment.ru`), сертификат Let's Encrypt выпущен `certbot --nginx`
+  (HTTP → HTTPS 301), автопродление — системный `certbot.timer`.
+* Другие сайты на этом nginx не затрагиваются; применение изменений — только `nginx -t && systemctl reload nginx`.
+
 ## Файлы
 
 | Файл | Где используется |
@@ -39,7 +47,7 @@
 ./deploy/build.sh
 
 # 2. Скопировать deploy/ на сервер и настроить его (однократно)
-rsync -a --exclude out deploy/ root@<SERVER_IP>:/root/wms-deploy/
+tar -C deploy --exclude out -czf - . | ssh root@<SERVER_IP> 'mkdir -p /root/wms-deploy && tar -C /root/wms-deploy -xzf -'
 ssh root@<SERVER_IP> 'SERVER_NAME=<SERVER_IP> /root/wms-deploy/server-setup.sh'
 
 # 3. Выложить приложение
@@ -74,8 +82,12 @@ docker exec wms-postgres pg_dump -U wms wms | gzip > wms-$(date +%F).sql.gz
 1. Купить домен, создать DNS A-запись `wms.example.ru → <SERVER_IP>`.
 2. Указать домен в nginx: в `/etc/nginx/sites-available/wms` `server_name wms.example.ru;` (или заново
    `SERVER_NAME=wms.example.ru ./server-setup.sh`), затем `nginx -t && systemctl reload nginx`.
-3. Выпустить сертификат Let's Encrypt: `apt install certbot python3-certbot-nginx && certbot --nginx -d wms.example.ru`
+3. Выпустить сертификат Let's Encrypt (только для этого домена):
+   `certbot --nginx -d wms.example.ru --redirect --non-interactive --agree-tos`
    (certbot сам добавит `listen 443 ssl` и редирект 80→443, продление — systemd-таймер certbot).
+   Проверка продления: `certbot renew --dry-run --cert-name wms.example.ru` (без TTY certbot сначала ждёт
+   случайную паузу до ~8 минут — это нормально).
+   Если DNS в Cloudflare — запись должна быть *DNS only* (серое облако).
 4. Открыть 443/tcp в firewall, если он включён (`ufw allow 443/tcp`).
 
 ## Firewall
