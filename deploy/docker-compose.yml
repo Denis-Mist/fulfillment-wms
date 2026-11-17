@@ -1,0 +1,70 @@
+# Fulfillment WMS: API + PostgreSQL. Compose-проект "wms" (сеть wms-net, том wms-pgdata).
+# На сервере запускается из deploy/server-deploy.sh:
+#   docker compose -f /opt/wms/src/deploy/docker-compose.yml --env-file /opt/wms/.env up -d --wait
+# Образ wms-api:latest собирает server-deploy.sh (docker buildx, builder с лимитом памяти);
+# секция build ниже — для ручной сборки (`docker compose build api`).
+name: wms
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: wms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: wms
+      POSTGRES_USER: wms
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set in .env}
+    # порт наружу не публикуется: база доступна только в сети wms-net
+    # (для psql/pg_dump: docker exec -it wms-postgres psql -U wms wms)
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [wms]
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wms -d wms"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    logging: &logging
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  api:
+    image: wms-api:latest
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: wms-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__Wms: "Host=postgres;Port=5432;Database=wms;Username=wms;Password=${POSTGRES_PASSWORD}"
+      Jwt__SigningKey: ${Jwt__SigningKey:?Jwt__SigningKey is not set in .env}
+      Marketplace__ProtectionKey: ${Marketplace__ProtectionKey:?Marketplace__ProtectionKey is not set in .env}
+      Database__MigrateOnStartup: ${Database__MigrateOnStartup:-true}
+      Database__Seed: ${Database__Seed:-true}
+      DOTNET_GCHeapHardLimitPercent: "0x4b" # 75% от лимита контейнера
+    # только loopback: снаружи API доступен через системный nginx (location /api/)
+    ports:
+      - "127.0.0.1:${WMS_API_PORT:-5080}:8080"
+    networks: [wms]
+    mem_limit: 512m
+    healthcheck:
+      # в образе aspnet нет curl — проверяем /health через bash /dev/tcp
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q ' 200 '"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+    logging: *logging
+
+networks:
+  wms:
+    name: wms-net
+
+volumes:
+  pgdata:
+    name: wms-pgdata

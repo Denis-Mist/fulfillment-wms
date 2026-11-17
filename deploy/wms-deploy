@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Точка входа деплоя на сервере. Устанавливается server-setup.sh в /usr/local/sbin/wms-deploy (root:root 755).
+# Вызывается:
+#   * GitHub Actions по SSH: пользователь wms-deploy, forced command в authorized_keys
+#     `command="sudo -n /usr/local/sbin/wms-deploy"`, sudoers разрешает только эту команду без аргументов;
+#   * вручную от root: `wms-deploy`.
+# Делает: блокировка (деплои не пересекаются) → git fetch + reset на origin/$WMS_BRANCH → server-deploy.sh.
+set -euo pipefail
+SRC="${WMS_SRC:-/opt/wms/src}"
+BRANCH="${WMS_BRANCH:-main}"
+
+exec 9>/run/lock/wms-deploy.lock
+if ! flock -w 1800 9; then echo "wms-deploy: не дождались блокировки (идёт другой деплой)" >&2; exit 1; fi
+
+git -C "$SRC" fetch --quiet --prune origin "$BRANCH"
+git -C "$SRC" reset --quiet --hard "origin/$BRANCH"
+git -C "$SRC" clean -qffdx
+echo "wms-deploy: $(git -C "$SRC" log -1 --format='%h %s')"
+exec bash "$SRC/deploy/server-deploy.sh"
