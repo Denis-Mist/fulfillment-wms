@@ -9,6 +9,7 @@ import type { OperationQuery, OperationType, StockOperation } from '@/modules/st
 import { useRegistry } from '@/shared/composables/useRegistry'
 import { formatDate, formatNumber, formatTime } from '@/shared/lib/format'
 import { useSessionStore } from '@/stores/session'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
 import FilterChips from '@/shared/ui/FilterChips.vue'
 import KpiCard from '@/shared/ui/KpiCard.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'
@@ -21,6 +22,7 @@ import StockActionDialog from '../stock/StockActionDialog.vue'
 import ToneBadge from '../stock/ToneBadge.vue'
 
 const session = useSessionStore()
+const { isDemo, hint: demoHint } = useDemoLock()
 const registry = useRegistry({
   filters: { type: undefined as OperationType | undefined },
   sortField: 'at',
@@ -84,7 +86,7 @@ function describe(op: StockOperation): string {
         <Button severity="secondary" outlined @click="open('inventory')"
           ><ClipboardCheck class="size-4" />Инвентаризация</Button
         >
-        <Button severity="danger" outlined @click="open('writeoff')"><Trash2 class="size-4" />Списать</Button>
+        <Button severity="danger" outlined v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" @click="open('writeoff')"><Trash2 class="size-4" />Списать</Button>
       </template>
     </PageHeader>
 

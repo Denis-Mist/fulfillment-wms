@@ -78,6 +78,17 @@ async function signInDemo(account: DemoAccount) {
       <Message v-if="error" severity="error" :closable="false" size="small">{{ error }}</Message>
 
       <Button type="submit" label="Войти" :loading="loading" fluid size="large" />
+      <Button
+        type="button"
+        label="Попробовать демо"
+        severity="secondary"
+        outlined
+        fluid
+        size="large"
+        :disabled="loading"
+        @click="router.push({ name: 'demo' })"
+      />
+      <p class="text-center text-sm text-secondary">Аккаунт не нужен — выберите роль и посмотрите систему.</p>
     </form>
 
     <template v-if="mocksEnabled">

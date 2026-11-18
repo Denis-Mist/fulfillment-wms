@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useStorage } from '@vueuse/core'
-import { authApi } from '@/modules/auth/api'
+import { authApi, type DemoPersona } from '@/modules/auth/api'
 import { cabinetForRole } from '@/modules/auth/roles'
 import type {
   AuthResponse,
@@ -25,6 +25,7 @@ export const useSessionStore = defineStore('session', () => {
   const initError = ref<unknown>(null)
 
   const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const isDemo = computed(() => !!user.value?.isDemo)
 
   const activeMembership = computed(() => {
     if (!user.value || user.value.isPlatformAdmin) return null
@@ -105,6 +106,10 @@ export const useSessionStore = defineStore('session', () => {
     applyAuth(await authApi.login(request))
   }
 
+  async function loginDemo(persona: DemoPersona) {
+    applyAuth(await authApi.demo(persona))
+  }
+
   async function register(request: RegisterRequest) {
     applyAuth(await authApi.register(request))
   }
@@ -133,6 +138,7 @@ export const useSessionStore = defineStore('session', () => {
     organizationId,
     warehouseId,
     isAuthenticated,
+    isDemo,
     activeMembership,
     role,
     cabinet,
@@ -141,6 +147,7 @@ export const useSessionStore = defineStore('session', () => {
     initError,
     retryInit,
     login,
+    loginDemo,
     register,
     refreshUser,
     logout,

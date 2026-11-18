@@ -5,6 +5,23 @@ import { handleBodyErrors, readJson, latency, problem, tokenFor, withAuth } from
 import { toCurrentUser } from '../lib/mappers'
 import { api } from './api'
 
+/** В мок-режиме демо всегда доступно; тесты могут выключить флаг. */
+export const demoFlags = { enabled: true }
+
+export const DEMO_PERSONAS: Record<string, string> = {
+  platform_admin: 'admin@demo.ru',
+  fc_owner: 'director@demo.ru',
+  fc_manager: 'manager@demo.ru',
+  fc_supervisor: 'staff8@fc1.demo.ru',
+  fc_account_manager: 'am@fc1.demo.ru',
+  fc_receiver: 'staff1@fc1.demo.ru',
+  fc_picker: 'picker@demo.ru',
+  fc_packer: 'staff6@fc1.demo.ru',
+  seller_owner: 'seller@demo.ru',
+  seller_manager: 'manager@ud.demo.ru',
+  pending: 'owner1@pending.demo.ru',
+}
+
 export const authHandlers = [
   http.post(api('/auth/login'), async ({ request }) => handleBodyErrors(async () => {
     await latency()
@@ -13,7 +30,7 @@ export const authHandlers = [
     if (!user || user.password !== body.password) {
       return problem(401, 'Неверный email или пароль', 'Проверьте данные и попробуйте ещё раз.')
     }
-    return HttpResponse.json({ accessToken: tokenFor(user.id), user: toCurrentUser(user) })
+    return HttpResponse.json({ accessToken: tokenFor(user.id), user: toCurrentUser(user, false) })
   })),
 
   http.post(api('/auth/register'), async ({ request }) => handleBodyErrors(async () => {
@@ -50,11 +67,27 @@ export const authHandlers = [
       ],
     }
     db.upsert('users', user)
-    return HttpResponse.json({ accessToken: tokenFor(user.id), user: toCurrentUser(user) }, { status: 201 })
+    return HttpResponse.json({ accessToken: tokenFor(user.id), user: toCurrentUser(user, false) }, { status: 201 })
   })),
 
   http.get(
     api('/auth/me'),
-    withAuth(({ ctx }) => HttpResponse.json(toCurrentUser(ctx.user)), { allowInactive: true }),
+    withAuth(({ ctx }) => HttpResponse.json(toCurrentUser(ctx.user, ctx.isDemo)), { allowInactive: true }),
   ),
+
+  http.get(api('/auth/demo/status'), async () => {
+    await latency()
+    return HttpResponse.json({ enabled: demoFlags.enabled })
+  }),
+
+  http.post(api('/auth/demo'), async ({ request }) => handleBodyErrors(async () => {
+    await latency()
+    if (!demoFlags.enabled) return problem(404, 'Не найдено')
+    const body = (await readJson(request)) as { persona?: string }
+    const email = DEMO_PERSONAS[body.persona ?? '']
+    if (!email) return problem(422, 'Неизвестная роль', 'Выберите одну из доступных демо-ролей.')
+    const user = db.data.users.find((u) => u.email.toLowerCase() === email)
+    if (!user) return problem(404, 'Пользователь не найден')
+    return HttpResponse.json({ accessToken: tokenFor(user.id, true), user: toCurrentUser(user, true) })
+  })),
 ]

@@ -11,12 +11,14 @@ import { useCabinet } from '@/shared/composables/useCabinet'
 import { useNotify } from '@/shared/composables/useNotify'
 import { formatRelative } from '@/shared/lib/format'
 import { useSessionStore } from '@/stores/session'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
 import PageHeader from '@/shared/ui/PageHeader.vue'
 import RegistryTable from '@/shared/ui/RegistryTable.vue'
 import SectionCard from '@/shared/ui/SectionCard.vue'
 import ToneBadge from '@/pages/stock/ToneBadge.vue'
 
 const session = useSessionStore()
+const { isDemo, hint: demoHint, lock: demoLock } = useDemoLock()
 const { isFulfillment } = useCabinet()
 const notify = useNotify()
 const confirm = useConfirm()
@@ -207,7 +209,7 @@ const invited = computed(() => (team.value ?? []).filter((m) => m.status === 'in
               </SectionCard>
             </div>
             <div v-if="canAdmin" class="flex gap-2">
-              <Button type="submit" label="Сохранить реквизиты" :loading="saveProfile.isPending.value" />
+              <Button type="submit" label="Сохранить реквизиты" v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" :loading="saveProfile.isPending.value" />
               <Button
                 label="Сбросить"
                 text
@@ -264,7 +266,7 @@ const invited = computed(() => (team.value ?? []).filter((m) => m.status === 'in
                 placeholder="Роль"
                 class="w-full sm:w-60"
               />
-              <Button type="submit" :disabled="!inviteEmail || !inviteRole" :loading="invite.isPending.value">
+              <Button type="submit" v-tooltip="isDemo ? demoHint : undefined" :disabled="demoLock(!inviteEmail || !inviteRole)" :loading="invite.isPending.value">
                 <MailPlus class="size-4" /> Пригласить
               </Button>
             </form>

@@ -2,15 +2,15 @@ import type { Cabinet, Role } from './types'
 
 export const ROLE_LABELS: Record<Role, string> = {
   platform_admin: 'Администратор платформы',
-  fc_owner: 'Директор',
+  fc_owner: 'Директор ФЦ',
   fc_manager: 'Менеджер склада',
   fc_supervisor: 'Старший смены',
   fc_account_manager: 'Менеджер по клиентам',
   fc_receiver: 'Кладовщик-приёмщик',
   fc_picker: 'Комплектовщик',
   fc_packer: 'Упаковщик',
-  seller_owner: 'Владелец',
-  seller_manager: 'Менеджер',
+  seller_owner: 'Владелец селлера',
+  seller_manager: 'Менеджер селлера',
 }
 
 export const WORKER_ROLES: Role[] = ['fc_receiver', 'fc_picker', 'fc_packer']

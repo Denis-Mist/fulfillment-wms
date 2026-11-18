@@ -60,6 +60,12 @@ const authPage = (
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'home', component: { render: () => null } },
+  {
+    path: '/demo',
+    name: 'demo',
+    component: () => import('@/pages/auth/DemoPage.vue'),
+    meta: { title: 'Демо', public: true },
+  },
   authPage('/login', 'login', 'Вход', () => import('@/pages/auth/LoginPage.vue'), {
     public: true,
     guestOnly: true,

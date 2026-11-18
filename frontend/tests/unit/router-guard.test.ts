@@ -57,6 +57,25 @@ describe('router guard', () => {
     expect(router.currentRoute.value.name).toBe('fc-dashboard')
   })
 
+  it('менеджер по клиентам не входит в /fc/tasks', async () => {
+    const { router } = await setup('am@fc1.demo.ru')
+    await router.push('/fc/tasks')
+    expect(router.currentRoute.value.name).toBe('fc-dashboard')
+    expect(router.currentRoute.value.query.denied).toBe('/fc/tasks')
+  })
+
+  it('/demo доступна и авторизованному (смена роли)', async () => {
+    const { router } = await setup('director@demo.ru')
+    await router.push('/demo')
+    expect(router.currentRoute.value.name).toBe('demo')
+  })
+
+  it('гость открывает /demo без редиректа на логин', async () => {
+    const { router } = await setup()
+    await router.push('/demo')
+    expect(router.currentRoute.value.name).toBe('demo')
+  })
+
   it('неизвестный путь → not-found', async () => {
     const { router } = await setup('director@demo.ru')
     await router.push('/nope/xyz')

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DemoBanner from '@/shared/ui/DemoBanner.vue'
 import QueryErrorBoundary from '@/shared/ui/QueryErrorBoundary.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -15,8 +16,10 @@ const sections = computed(() => cabinetDef('worker').groups.flatMap((g) => g.sec
 
 <template>
   <div class="flex min-h-screen flex-col">
+    <div class="sticky top-0 z-20">
+    <DemoBanner />
     <header
-      class="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-surface-200/80 bg-white/90 px-4 backdrop-blur-md dark:border-surface-800 dark:bg-surface-900/90"
+      class="flex h-14 items-center justify-between border-b border-surface-200/80 bg-white/90 px-4 backdrop-blur-md dark:border-surface-800 dark:bg-surface-900/90"
     >
       <AppLogo compact />
       <div class="min-w-0 px-3 text-center leading-tight">
@@ -30,6 +33,7 @@ const sections = computed(() => cabinetDef('worker').groups.flatMap((g) => g.sec
         <UserMenu compact />
       </div>
     </header>
+    </div>
 
     <main class="mx-auto w-full max-w-xl flex-1 p-4 pb-24">
       <QueryErrorBoundary>

@@ -15,6 +15,7 @@ import { useNotify } from '@/shared/composables/useNotify'
 import { SALES_CHANNELS, type Tone } from '@/shared/config/statuses'
 import { formatDate, formatDateTime, formatRelative } from '@/shared/lib/format'
 import { useSessionStore } from '@/stores/session'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
 import ChannelBadge from '@/shared/ui/ChannelBadge.vue'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'
@@ -22,6 +23,7 @@ import SectionCard from '@/shared/ui/SectionCard.vue'
 import ToneBadge from '@/pages/stock/ToneBadge.vue'
 
 const session = useSessionStore()
+const { isDemo, hint: demoHint, lock: demoLock } = useDemoLock()
 const notify = useNotify()
 const confirm = useConfirm()
 const qc = useQueryClient()
@@ -211,7 +213,7 @@ const log = computed(() =>
                 </span>
                 <ToggleSwitch
                   :model-value="it.autoImportFbs"
-                  :disabled="!canManage || save.isPending.value"
+                  :disabled="demoLock(!canManage || save.isPending.value)"
                   @update:model-value="patch(it, { autoImportFbs: $event })"
                 />
               </label>
@@ -225,7 +227,7 @@ const log = computed(() =>
                 </span>
                 <ToggleSwitch
                   :model-value="it.pushStock"
-                  :disabled="!canManage || save.isPending.value"
+                  :disabled="demoLock(!canManage || save.isPending.value)"
                   @update:model-value="patch(it, { pushStock: $event })"
                 />
               </label>
@@ -239,7 +241,7 @@ const log = computed(() =>
                   :options="ENVIRONMENTS"
                   option-label="label"
                   option-value="value"
-                  :disabled="!canManage || save.isPending.value"
+                  :disabled="demoLock(!canManage || save.isPending.value)"
                   class="w-40"
                   placeholder="Не задан"
                   aria-label="Контур кабинета"
@@ -256,7 +258,7 @@ const log = computed(() =>
                   :options="INTERVALS"
                   option-label="label"
                   option-value="value"
-                  :disabled="!canManage"
+                  :disabled="demoLock(!canManage)"
                   class="w-32"
                   aria-label="Интервал обмена"
                   @update:model-value="patch(it, { syncIntervalMin: $event })"
@@ -266,6 +268,8 @@ const log = computed(() =>
 
             <div class="flex flex-wrap gap-2">
               <Button
+                v-tooltip="isDemo ? demoHint : undefined"
+                :disabled="isDemo"
                 label="Синхронизировать"
                 size="small"
                 :loading="sync.isPending.value && sync.variables.value === it.channel"
@@ -275,6 +279,8 @@ const log = computed(() =>
               </Button>
               <Button
                 v-if="canManage"
+                v-tooltip="isDemo ? demoHint : undefined"
+                :disabled="isDemo"
                 label="Отключить"
                 size="small"
                 severity="danger"
@@ -289,7 +295,7 @@ const log = computed(() =>
           <template v-else>
             <p class="text-sm text-secondary">{{ HINT[it.channel] }}</p>
             <div>
-              <Button v-if="canManage" label="Подключить" size="small" @click="openConnect(it.channel)">
+              <Button v-if="canManage" v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" label="Подключить" size="small" @click="openConnect(it.channel)">
                 <template #icon><Plug class="mr-2 size-4" /></template>
               </Button>
               <p v-else class="text-sm text-secondary">Подключить кабинет может владелец организации.</p>
@@ -367,7 +373,8 @@ const log = computed(() =>
         <Button label="Отмена" severity="secondary" text @click="connectFor = null" />
         <Button
           label="Подключить кабинет"
-          :disabled="!!keyError"
+          v-tooltip="isDemo ? demoHint : undefined"
+          :disabled="demoLock(!!keyError)"
           :loading="connect.isPending.value"
           @click="connect.mutate()"
         />
