@@ -1,3 +1,5 @@
+import { expectMockResponse, shouldSendDemoHeader, DEMO_HEADER, isDemoTab } from '@/app/demoMode'
+import { tokenLooksDemo } from '@/modules/auth/token'
 import type { ProblemDetails } from './types'
 
 type QueryValue = string | number | boolean | null | undefined
@@ -42,8 +44,6 @@ function buildUrl(path: string, query?: QueryParams) {
   return url.toString()
 }
 
-const MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
-
 /** Ответ обработчика MSW всегда JSON (или 204); всё остальное — проход мимо моков */
 function fromMock(response: Response) {
   if (response.status === 204) return true
@@ -67,8 +67,11 @@ async function request<T>(method: string, path: string, options: RequestOptions 
   const headers: Record<string, string> = { Accept: 'application/json' }
   const token = config.getToken()
   const organizationId = config.getOrganizationId()
-  if (token) headers.Authorization = `Bearer ${token}`
+  const demoTab = isDemoTab()
+  // Мок-токен (mock.demo:) — только в демо-вкладке; боевой JWT — только вне её.
+  if (token && tokenLooksDemo(token) === demoTab) headers.Authorization = `Bearer ${token}`
   if (organizationId) headers['X-Organization-Id'] = organizationId
+  if (shouldSendDemoHeader()) headers[DEMO_HEADER] = '1'
   if (options.body !== undefined) headers['Content-Type'] = 'application/json'
 
   const send = () =>
@@ -84,7 +87,7 @@ async function request<T>(method: string, path: string, options: RequestOptions 
     response = await send()
     // Моки: если ответ пришёл не от MSW (dev-сервер отдал не-JSON 404 — service worker ещё/снова
     // не контролирует вкладку), ждём готовности worker и повторяем запрос (BUG-08)
-    for (let attempt = 0; MOCKS && attempt < 3 && !fromMock(response); attempt++) {
+    for (let attempt = 0; expectMockResponse() && attempt < 3 && !fromMock(response); attempt++) {
       await waitForMockWorker(attempt)
       response = await send()
     }

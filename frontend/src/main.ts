@@ -11,13 +11,14 @@ import { primeLocaleRu } from './app/locale'
 import { queryClient } from './app/query'
 import { router } from './app/router'
 import { AppPreset, DARK_MODE_CLASS } from './app/theme'
+import { shouldStartMocksOnBoot } from './app/demoMode'
 import { configureHttp } from './shared/api/http'
 import { useSessionStore } from './stores/session'
 
 async function bootstrap() {
-  if (import.meta.env.VITE_USE_MOCKS === 'true') {
-    const { worker } = await import('./mocks/browser')
-    await worker.start({ onUnhandledFrame: 'bypass', quiet: true })
+  if (shouldStartMocksOnBoot()) {
+    const { startMockWorker } = await import('./mocks/runtime')
+    await startMockWorker()
   }
 
   const app = createApp(App)

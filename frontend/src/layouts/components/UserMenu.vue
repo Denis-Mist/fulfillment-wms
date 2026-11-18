@@ -20,10 +20,10 @@ const name = computed(() => session.user?.fullName ?? '')
 const role = computed(() => (session.role ? ROLE_LABELS[session.role] : ''))
 const mocksEnabled = import.meta.env.VITE_USE_MOCKS === 'true'
 
-function logout() {
+async function logout() {
   popover.value?.hide()
-  session.logout()
-  void router.push({ name: 'login' })
+  const dest = await session.logout()
+  void router.replace(dest === 'home' ? '/' : { name: 'login' })
 }
 
 function resetDemo() {
@@ -34,9 +34,8 @@ function resetDemo() {
     acceptProps: { label: 'Сбросить', severity: 'danger' },
     rejectProps: { label: 'Отмена', severity: 'secondary', outlined: true },
     accept: async () => {
-      const { resetMockData } = await import('@/mocks/browser')
-      resetMockData()
-      window.location.reload()
+      const dest = await session.resetDemo()
+      if (dest === 'demo') void router.replace({ name: 'demo' })
     },
   })
 }
@@ -76,7 +75,7 @@ function resetDemo() {
         {{ isDark ? 'Светлая тема' : 'Тёмная тема' }}
       </button>
       <button
-        v-if="mocksEnabled"
+        v-if="session.isDemo || mocksEnabled"
         type="button"
         class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-surface-700 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800"
         @click="resetDemo"

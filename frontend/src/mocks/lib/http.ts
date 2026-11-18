@@ -141,9 +141,6 @@ export function withAuth(
     }
     if (options.roles && !options.roles.includes(ctx.role)) return problem(403, 'Недостаточно прав')
     const url = new URL(request.url)
-    if (ctx.isDemo && isDemoStopped(request.method, url.pathname)) {
-      return problem(403, 'В демо-режиме это действие недоступно')
-    }
     return handleBodyErrors(() => resolver({ request, params, ctx, url }))
   }
 }

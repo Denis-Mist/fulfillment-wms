@@ -6,6 +6,7 @@ export default mergeConfig(
   viteConfig,
   defineConfig({
     test: {
+      env: { VITE_USE_MOCKS: 'true' },
       environment: 'jsdom',
       environmentOptions: { jsdom: { url: 'http://localhost/' } },
       include: ['tests/unit/**/*.test.ts'],

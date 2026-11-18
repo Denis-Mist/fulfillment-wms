@@ -2,9 +2,22 @@
  * Дополнительная коллекция моков с сохранением изменений в localStorage.
  * Базовые записи генерируются детерминированно, правки пользователя накладываются поверх.
  */
+const resets: Array<() => void> = []
+
+export function resetLocalCollections() {
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith('wms.mock.')) localStorage.removeItem(key)
+  }
+  for (const reset of resets) reset()
+}
+
 export function localCollection<T extends { id: string }>(key: string, seed: () => T[]) {
   const storageKey = `wms.mock.${key}.v1`
   let items: T[] | null = null
+
+  resets.push(() => {
+    items = null
+  })
 
   const load = (): T[] => {
     if (items) return items

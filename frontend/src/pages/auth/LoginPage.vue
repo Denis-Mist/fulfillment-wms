@@ -81,6 +81,7 @@ async function signInDemo(account: DemoAccount) {
       <Button
         type="button"
         label="Попробовать демо"
+        data-testid="try-demo"
         severity="secondary"
         outlined
         fluid
