@@ -60,6 +60,12 @@ const authPage = (
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'home', component: { render: () => null } },
+  {
+    path: '/demo',
+    name: 'demo',
+    component: () => import('@/pages/auth/DemoPage.vue'),
+    meta: { title: 'Демо', public: true },
+  },
   authPage('/login', 'login', 'Вход', () => import('@/pages/auth/LoginPage.vue'), {
     public: true,
     guestOnly: true,
@@ -96,6 +102,7 @@ router.beforeEach(async (to) => {
     return true
   }
   if (!session.isAuthenticated) {
+    if (session.demoExpired) return { name: 'demo', query: { expired: '1' } }
     return { name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : undefined }
   }
   if (session.isRestricted) return to.name === 'pending' ? true : { name: 'pending' }

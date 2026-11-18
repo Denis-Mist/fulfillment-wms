@@ -31,6 +31,8 @@ export interface CurrentUser {
   phone?: string
   isPlatformAdmin: boolean
   memberships: Membership[]
+  /** Всегда boolean: true только у токена POST /auth/demo (claim demo=true) */
+  isDemo: boolean
 }
 
 export interface AuthResponse {

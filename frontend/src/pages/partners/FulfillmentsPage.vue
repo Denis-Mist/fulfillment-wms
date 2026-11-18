@@ -8,6 +8,7 @@ import type { ConnectRequestInput, FulfillmentCard } from '@/modules/partners/ty
 import { useNotify } from '@/shared/composables/useNotify'
 import { formatDate, formatMoney, formatNumber, formatRelative } from '@/shared/lib/format'
 import { useSessionStore } from '@/stores/session'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import FilterChips from '@/shared/ui/FilterChips.vue'
 import KpiCard from '@/shared/ui/KpiCard.vue'
@@ -19,6 +20,7 @@ import ToneBadge from '@/pages/stock/ToneBadge.vue'
 type Scope = 'mine' | 'available'
 
 const session = useSessionStore()
+const { isDemo, hint: demoHint, lock: demoLock } = useDemoLock()
 const notify = useNotify()
 const qc = useQueryClient()
 const canRequest = computed(() => session.role === 'seller_owner')
@@ -226,6 +228,8 @@ const warehouseNames = (c: FulfillmentCard) =>
             </p>
             <Button
               v-if="canRequest"
+              v-tooltip="isDemo ? demoHint : undefined"
+              :disabled="isDemo"
               :label="c.connection === 'declined' ? 'Подать заявку повторно' : 'Подать заявку'"
               size="small"
               class="w-full"
@@ -286,7 +290,8 @@ const warehouseNames = (c: FulfillmentCard) =>
         <Button label="Отмена" severity="secondary" text @click="target = null" />
         <Button
           label="Отправить заявку"
-          :disabled="!!formError"
+          v-tooltip="isDemo ? demoHint : undefined"
+          :disabled="demoLock(!!formError)"
           :loading="connect.isPending.value"
           @click="connect.mutate()"
         />

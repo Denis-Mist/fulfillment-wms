@@ -7,6 +7,8 @@ import type { PlatformUser } from '@/modules/admin/types'
 import { ROLE_LABELS } from '@/modules/auth/roles'
 import type { Role } from '@/modules/auth/types'
 import { useNotify } from '@/shared/composables/useNotify'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
+
 import { useRegistry } from '@/shared/composables/useRegistry'
 import FilterChips from '@/shared/ui/FilterChips.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'
@@ -14,6 +16,8 @@ import RegistryTable from '@/shared/ui/RegistryTable.vue'
 import SearchInput from '@/shared/ui/SearchInput.vue'
 import type { ChipOption } from '@/shared/ui/types'
 import UserAvatar from '@/shared/ui/UserAvatar.vue'
+
+const { isDemo, hint: demoHint } = useDemoLock()
 
 const queryClient = useQueryClient()
 const confirm = useConfirm()
@@ -129,8 +133,10 @@ function askToggle(user: PlatformUser) {
       <Column header="" class="w-px whitespace-nowrap text-right">
         <template #body="{ data: user }">
           <div v-if="!user.isPlatformAdmin" class="flex justify-end gap-1.5">
-            <Button label="Сбросить пароль" size="small" text severity="secondary" @click="reset.mutate(user)" />
+            <Button v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" label="Сбросить пароль" size="small" text severity="secondary" @click="reset.mutate(user)" />
             <Button
+              v-tooltip="isDemo ? demoHint : undefined"
+              :disabled="isDemo"
               :label="user.blocked ? 'Разблокировать' : 'Заблокировать'"
               size="small"
               :severity="user.blocked ? undefined : 'danger'"

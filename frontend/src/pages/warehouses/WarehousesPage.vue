@@ -8,6 +8,7 @@ import type { LocationQuery } from '@/modules/warehouses/types'
 import { useRegistry } from '@/shared/composables/useRegistry'
 import { formatNumber, formatPercent } from '@/shared/lib/format'
 import { useSessionStore } from '@/stores/session'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import FilterChips from '@/shared/ui/FilterChips.vue'
 import KpiCard from '@/shared/ui/KpiCard.vue'
@@ -23,6 +24,7 @@ import WarehouseMap from './WarehouseMap.vue'
 import ZoneDialog from './ZoneDialog.vue'
 
 const session = useSessionStore()
+const { isDemo, hint: demoHint, lock: demoLock } = useDemoLock()
 
 const { data: warehouses, isPending: warehousesPending } = useQuery({
   queryKey: ['warehouses'],
@@ -101,7 +103,7 @@ const fillTone = (ratio: number) => (ratio >= 0.9 ? 'text-rose-600' : ratio >= 0
         <Button label="Проверить размещение" severity="secondary" outlined :disabled="!selected" @click="checkPutaway()">
           <template #icon><ShieldCheck class="size-4" /></template>
         </Button>
-        <Button label="Ячейка" :disabled="!selected" @click="locationDialog = true">
+        <Button label="Ячейка" v-tooltip="isDemo ? demoHint : undefined" :disabled="demoLock(!selected)" @click="locationDialog = true">
           <template #icon><Plus class="size-4" /></template>
         </Button>
       </template>
@@ -172,7 +174,7 @@ const fillTone = (ratio: number) => (ratio >= 0.9 ? 'text-rose-600' : ratio >= 0
           <TabPanel value="zones">
             <SectionCard title="Зоны склада" description="Функциональное деление склада; размещение допускается только в зонах хранения и отбора">
               <template #actions>
-                <Button label="Зона" size="small" outlined @click="zoneDialog = true">
+                <Button label="Зона" size="small" outlined v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" @click="zoneDialog = true">
                   <template #icon><Plus class="size-4" /></template>
                 </Button>
               </template>

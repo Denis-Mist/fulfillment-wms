@@ -8,8 +8,12 @@ import { staffApi } from '@/modules/staff/api'
 import type { Employee, EmployeeInput, Skill } from '@/modules/staff/types'
 import { warehousesApi } from '@/modules/warehouses/api'
 import { useNotify } from '@/shared/composables/useNotify'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
+
 import { formatDate, formatNumber } from '@/shared/lib/format'
 import InfoList from '@/shared/ui/InfoList.vue'
+
+const { isDemo, hint: demoHint } = useDemoLock()
 
 const props = defineProps<{ employee: Employee | null; editable: boolean }>()
 const visible = defineModel<boolean>('visible', { required: true })
@@ -147,7 +151,7 @@ const isWorker = computed(() => !!form.value && WORKER_ROLES.includes(form.value
         </label>
       </div>
       <div v-if="editable" class="flex gap-2">
-        <Button label="Сохранить" :loading="save.isPending.value" @click="save.mutate()" />
+        <Button label="Сохранить" v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" :loading="save.isPending.value" @click="save.mutate()" />
         <Button label="Отмена" text severity="secondary" @click="visible = false" />
       </div>
     </div>

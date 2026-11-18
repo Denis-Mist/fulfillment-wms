@@ -17,13 +17,14 @@ export function lookups() {
 
 export type Lookups = ReturnType<typeof lookups>
 
-export function toCurrentUser(user: UserRecord): CurrentUser {
+export function toCurrentUser(user: UserRecord, isDemo = false): CurrentUser {
   return {
     id: user.id,
     email: user.email,
     fullName: user.fullName,
     phone: user.phone,
     isPlatformAdmin: user.isPlatformAdmin,
+    isDemo,
     memberships: user.memberships.flatMap((membership) => {
       const org = db.data.organizations.find((o) => o.id === membership.organizationId)
       if (!org) return []

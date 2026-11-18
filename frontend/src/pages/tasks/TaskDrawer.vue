@@ -7,10 +7,14 @@ import { SKILLS } from '@/modules/staff/labels'
 import { ROLE_SHORT, TASK_TYPES } from '@/modules/tasks/labels'
 import { tasksApi } from '@/modules/tasks/api'
 import { useNotify } from '@/shared/composables/useNotify'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
+
 import { formatDateTime, formatNumber } from '@/shared/lib/format'
 import InfoList from '@/shared/ui/InfoList.vue'
 import ProgressMeter from '@/shared/ui/ProgressMeter.vue'
 import TaskStatusTag from './TaskStatusTag.vue'
+
+const { isDemo, hint: demoHint } = useDemoLock()
 
 const props = defineProps<{ taskId: string | null }>()
 const visible = defineModel<boolean>('visible', { required: true })
@@ -164,7 +168,7 @@ const saving = computed(() => {
             :disabled="assign.isPending.value"
             @update:model-value="assign.mutate($event ?? null)"
           />
-          <Button severity="danger" text :loading="cancel.isPending.value" @click="askCancel"
+          <Button severity="danger" text v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" :loading="cancel.isPending.value" @click="askCancel"
             ><Ban class="size-4" />Отменить</Button
           >
         </div>

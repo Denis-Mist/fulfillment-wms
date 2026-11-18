@@ -7,6 +7,9 @@ import type { ZoneInput } from '@/modules/warehouses/types'
 import { z } from 'zod'
 import { useFormValidation } from '@/shared/composables/useFormValidation'
 import { useNotify } from '@/shared/composables/useNotify'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
+
+const { isDemo, hint: demoHint } = useDemoLock()
 
 const props = defineProps<{ warehouseId: string }>()
 const visible = defineModel<boolean>('visible', { required: true })
@@ -94,7 +97,7 @@ const create = useMutation({
     </form>
     <template #footer>
       <Button label="Отмена" severity="secondary" outlined @click="visible = false" />
-      <Button label="Создать" type="submit" form="zone-form" :loading="create.isPending.value" />
+      <Button label="Создать" type="submit" form="zone-form" v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" :loading="create.isPending.value" />
     </template>
   </Dialog>
 </template>

@@ -9,12 +9,14 @@ import type { AbcClass, SlottingAlgorithm } from '@/modules/analytics/types'
 import { useNotify } from '@/shared/composables/useNotify'
 import { formatNumber } from '@/shared/lib/format'
 import { useSessionStore } from '@/stores/session'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import KpiCard from '@/shared/ui/KpiCard.vue'
 import SectionCard from '@/shared/ui/SectionCard.vue'
 import CalcMetaLine from './CalcMetaLine.vue'
 
 const session = useSessionStore()
+const { isDemo, hint: demoHint, lock: demoLock } = useDemoLock()
 const notify = useNotify()
 const confirm = useConfirm()
 const qc = useQueryClient()
@@ -146,7 +148,8 @@ const ABC_TONE: Record<AbcClass, string> = {
                 : 'Принять выбранные'
             "
             size="small"
-            :disabled="!selected.length"
+            v-tooltip="isDemo ? demoHint : undefined"
+            :disabled="demoLock(!selected.length)"
             :loading="apply.isPending.value"
             @click="askApply"
           >

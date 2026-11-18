@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { CloudAlert, RotateCw } from '@lucide/vue'
-import { ApiError } from '@/shared/api/http'
+import { ApiError, errorMessage } from '@/shared/api/http'
 
 const props = withDefaults(
   defineProps<{ error?: unknown; title?: string; compact?: boolean; retrying?: boolean }>(),
@@ -9,8 +9,15 @@ const props = withDefaults(
 )
 defineEmits<{ retry: [] }>()
 
+const heading = computed(() => {
+  const e = props.error
+  if (e instanceof ApiError && (e.status === 503 || e.status === 429)) return errorMessage(e)
+  return props.title
+})
+
 const detail = computed(() => {
   const e = props.error
+  if (e instanceof ApiError && e.status === 503) return 'Повторите попытку через минуту.'
   if (e instanceof ApiError) return `Сервер ответил ошибкой ${e.status}${e.message ? `: ${e.message}` : ''}.`
   if (e instanceof Error && e.message) return e.message
   return 'Проверьте подключение к сети и попробуйте ещё раз.'
@@ -29,7 +36,7 @@ const detail = computed(() => {
     >
       <CloudAlert class="size-6" />
     </div>
-    <div class="text-base font-semibold text-heading">{{ title }}</div>
+    <div class="text-base font-semibold text-heading">{{ heading }}</div>
     <p class="mt-1 max-w-sm text-sm text-secondary">{{ detail }}</p>
     <Button class="mt-5 min-h-11" label="Повторить" :loading="retrying" @click="$emit('retry')">
       <template #icon><RotateCw class="size-4" /></template>

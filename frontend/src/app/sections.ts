@@ -88,6 +88,7 @@ export const CABINETS: CabinetDef[] = [
             title: 'Задания',
             description: 'Очередь складских заданий и их распределение между сотрудниками.',
             icon: ListChecks,
+            roles: ['fc_owner', 'fc_manager', 'fc_supervisor'],
             planned: [
               'Очередь заданий: приёмка, размещение, отбор, упаковка, перемещение, инвентаризация',
               'Назначение исполнителей вручную и автоматически',
@@ -194,6 +195,7 @@ export const CABINETS: CabinetDef[] = [
             title: 'Комплектация',
             description: 'Волны, отбор, упаковка и отгрузка заказов.',
             icon: ScanLine,
+            roles: ['fc_owner', 'fc_manager', 'fc_supervisor'],
             planned: [
               'Формирование волн и батчей отбора',
               'Листы отбора с оптимальным маршрутом по складу',
@@ -570,3 +572,11 @@ export function cabinetDef(id: Cabinet): CabinetDef {
 export function routeName(cabinet: Cabinet, section: string): string {
   return `${cabinet}-${section}`
 }
+
+/** Пункты меню кабинета, видимые роли (без hidden). */
+export function navSectionsForRole(cabinet: Cabinet, role: Role) {
+  return cabinetDef(cabinet)
+    .groups.flatMap((group) => group.sections)
+    .filter((section) => !section.hidden && (!section.roles || section.roles.includes(role)))
+}
+
