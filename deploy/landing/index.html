@@ -495,6 +495,12 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
 .rv-d5{transition-delay:.40s}
 .rv-d6{transition-delay:.48s}
 
+/* кнопка «Попробовать демо» в шапке: на средних ширинах прячем дублирующую «Контакты» */
+@media (max-width:1180px){
+  .nav-cta .btn-ghost[href="#contacts"]{display:none}
+  .nav-links{gap:22px}
+  .nav-links a{white-space:nowrap}
+}
 @media (max-width:960px){
   .hero-grid,.cta-grid{grid-template-columns:1fr;gap:40px}
   .services{grid-template-columns:1fr 1fr}
@@ -521,7 +527,7 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
   .brand span{font-size:18px}
   .nav-cta{gap:6px}
   .nav-cta .btn{padding:10px 14px;font-size:13px}
-  .nav-cta .btn:first-child{display:none}
+  .nav-cta .btn-ghost{display:none}
 
   .hero{padding:40px 0 20px}
   .hero-grid{gap:32px}
@@ -1235,6 +1241,7 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
       <a href="#faq">Вопросы</a>
     </nav>
     <div class="nav-cta">
+      <a class="btn btn-ghost" href="https://wms.korobfulfillment.ru/demo">Попробовать демо</a>
       <a class="btn btn-ghost" href="#contacts">Контакты</a>
       <a class="btn btn-primary" href="#contacts">Оставить заявку</a>
     </div>
@@ -1251,6 +1258,7 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
       <div class="hero-actions">
         <a class="btn btn-primary btn-lg" href="#contacts">Рассчитать стоимость</a>
         <a class="btn btn-ghost btn-lg" href="#services">Смотреть тарифы</a>
+        <a class="btn btn-ghost btn-lg" href="https://wms.korobfulfillment.ru/demo">Попробовать демо</a>
       </div>
       <div class="hero-trust">
         <span><b>без минимума</b> по объёму</span>
