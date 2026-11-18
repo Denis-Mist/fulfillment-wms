@@ -5,8 +5,12 @@ import { billingApi } from '@/modules/billing/api'
 import { TARIFF_FIELDS } from '@/modules/billing/labels'
 import type { Tariff } from '@/modules/billing/types'
 import { useNotify } from '@/shared/composables/useNotify'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
+
 import { formatMoney } from '@/shared/lib/format'
 import SectionCard from '@/shared/ui/SectionCard.vue'
+
+const { isDemo, hint: demoHint } = useDemoLock()
 
 const props = defineProps<{ contractId: string; title: string; editable: boolean }>()
 const notify = useNotify()
@@ -43,7 +47,7 @@ const save = useMutation({
         size="small"
         @click="draft = data ? { ...data } : null"
       />
-      <Button label="Сохранить" size="small" :loading="save.isPending.value" @click="save.mutate()" />
+      <Button label="Сохранить" size="small" v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" :loading="save.isPending.value" @click="save.mutate()" />
     </template>
     <div v-if="isPending || !draft" class="space-y-2">
       <Skeleton v-for="i in 6" :key="i" height="2.25rem" />

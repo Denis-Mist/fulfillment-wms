@@ -11,6 +11,7 @@ import { SALES_CHANNELS } from '@/shared/config/statuses'
 import { useNotify } from '@/shared/composables/useNotify'
 import { formatDate, formatNumber, formatRelative } from '@/shared/lib/format'
 import { useSessionStore } from '@/stores/session'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'
 import RegistryTable from '@/shared/ui/RegistryTable.vue'
@@ -18,6 +19,7 @@ import SearchInput from '@/shared/ui/SearchInput.vue'
 import ClientDrawer from './ClientDrawer.vue'
 
 const session = useSessionStore()
+const { isDemo, hint: demoHint, lock: demoLock } = useDemoLock()
 const notify = useNotify()
 const confirm = useConfirm()
 const queryClient = useQueryClient()
@@ -218,10 +220,10 @@ function decline(r: ClientRequest) {
                   >
                 </div>
                 <div class="mt-4 flex flex-wrap justify-end gap-2 pt-1">
-                  <Button size="small" severity="secondary" text @click="decline(r)"
+                  <Button size="small" severity="secondary" text v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" @click="decline(r)"
                     ><X class="size-4" />Отклонить</Button
                   >
-                  <Button size="small" @click="startAccept(r)"><Check class="size-4" />Принять</Button>
+                  <Button size="small" v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" @click="startAccept(r)"><Check class="size-4" />Принять</Button>
                 </div>
               </article>
             </div>
@@ -278,7 +280,8 @@ function decline(r: ClientRequest) {
           <Button label="Отмена" severity="secondary" text @click="acceptVisible = false" />
           <Button
             label="Принять"
-            :disabled="!acceptWarehouses.length"
+            v-tooltip="isDemo ? demoHint : undefined"
+            :disabled="demoLock(!acceptWarehouses.length)"
             :loading="decide.isPending.value"
             @click="decide.mutate({ id: accepting.id, decision: 'accept', warehouseIds: acceptWarehouses })"
           />

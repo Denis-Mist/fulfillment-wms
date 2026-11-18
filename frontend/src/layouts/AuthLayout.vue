@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { BrainCircuit, ScanLine, Warehouse } from '@lucide/vue'
 import AppLogo from '@/shared/ui/AppLogo.vue'
+import DemoBanner from '@/shared/ui/DemoBanner.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 
 const features = [
@@ -13,7 +14,9 @@ const bars = [42, 58, 51, 66, 73, 61, 84, 78, 92, 88]
 </script>
 
 <template>
-  <div class="grid min-h-screen bg-white lg:grid-cols-[1.05fr_1fr] dark:bg-surface-950">
+  <div class="flex min-h-screen flex-col bg-white dark:bg-surface-950">
+  <DemoBanner />
+  <div class="grid min-h-0 flex-1 bg-white lg:grid-cols-[1.05fr_1fr] dark:bg-surface-950">
     <aside
       class="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-700 p-12 text-white lg:flex"
     >
@@ -80,5 +83,6 @@ const bars = [42, 58, 51, 66, 73, 61, 84, 78, 92, 88]
         </div>
       </div>
     </main>
+  </div>
   </div>
 </template>

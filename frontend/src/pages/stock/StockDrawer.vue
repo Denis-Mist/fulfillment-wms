@@ -10,6 +10,9 @@ import InfoList from '@/shared/ui/InfoList.vue'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import StockActionDialog from './StockActionDialog.vue'
 import ToneBadge from './ToneBadge.vue'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
+
+const { isDemo, hint: demoHint } = useDemoLock()
 
 const props = defineProps<{ item: StockItem | null; canOperate: boolean }>()
 const visible = defineModel<boolean>('visible', { required: true })
@@ -95,7 +98,7 @@ function open(type: OperationType) {
         <Button size="small" severity="secondary" outlined @click="open('inventory')"
           ><ClipboardCheck class="size-4" />Пересчитать</Button
         >
-        <Button size="small" severity="danger" outlined @click="open('writeoff')"
+        <Button size="small" severity="danger" outlined v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" @click="open('writeoff')"
           ><Trash2 class="size-4" />Списать</Button
         >
       </div>

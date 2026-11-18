@@ -351,6 +351,17 @@ export function seed(now = Date.now()): Collections {
         memberships: [{ organizationId: id, role: member.role }],
       }),
     )
+    if (fcIndex === 0) {
+      c.users.push({
+        id: 'usr_fc1_12',
+        email: 'am@fc1.demo.ru',
+        password: DEMO_PASSWORD,
+        fullName: 'Елена Волкова',
+        phone: phone(rng),
+        isPlatformAdmin: false,
+        memberships: [{ organizationId: id, role: 'fc_account_manager' }],
+      })
+    }
     fcReceivers.set(
       id,
       staff.filter((member) => member.role === 'fc_receiver' || member.role === 'fc_supervisor').map((m) => m.fullName),

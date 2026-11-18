@@ -11,6 +11,7 @@ import type { Employee, Shift } from '@/modules/staff/types'
 import { useNotify } from '@/shared/composables/useNotify'
 import { formatNumber } from '@/shared/lib/format'
 import { useSessionStore } from '@/stores/session'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
 import FilterChips from '@/shared/ui/FilterChips.vue'
 import KpiCard from '@/shared/ui/KpiCard.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'
@@ -22,6 +23,7 @@ import ToneBadge from '@/pages/stock/ToneBadge.vue'
 import EmployeeDrawer from './EmployeeDrawer.vue'
 
 const session = useSessionStore()
+const { isDemo, hint: demoHint, lock: demoLock } = useDemoLock()
 const notify = useNotify()
 const qc = useQueryClient()
 const warehouseId = computed(() => session.warehouseId || undefined)
@@ -86,7 +88,7 @@ const setShift = useMutation({
   onError: (e: unknown) => notify.error(e),
 })
 function cycle(e: Employee, day: number) {
-  if (!canPlan.value) return
+  if (!canPlan.value || isDemo.value) return
   const next = SHIFT_CYCLE[(SHIFT_CYCLE.indexOf(e.shifts[day]!) + 1) % SHIFT_CYCLE.length]!
   setShift.mutate({ id: e.id, day, shift: next })
 }
@@ -255,8 +257,8 @@ function open(e: Employee) {
                           SHIFTS[s].cls,
                           canPlan ? 'cursor-pointer hover:ring-2 hover:ring-primary-300' : 'cursor-default',
                         ]"
-                        :title="SHIFTS[s].label"
-                        :disabled="!canPlan"
+                        :title="isDemo ? demoHint : SHIFTS[s].label"
+                        :disabled="demoLock(!canPlan)"
                         @click="cycle(e, i)"
                       >
                         {{ SHIFTS[s].short }}

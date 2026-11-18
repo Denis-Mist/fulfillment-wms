@@ -5,7 +5,11 @@ import { stockApi } from '@/modules/stock/api'
 import { ERROR_REASONS } from '@/modules/stock/labels'
 import type { ErrorReason, OperationType, StockItem, StockLocationOption } from '@/modules/stock/types'
 import { useNotify } from '@/shared/composables/useNotify'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
+
 import { formatNumber } from '@/shared/lib/format'
+
+const { isDemo, hint: demoHint } = useDemoLock()
 
 const props = defineProps<{ type: OperationType; item?: StockItem | null; warehouseId?: string }>()
 const visible = defineModel<boolean>('visible', { required: true })
@@ -229,7 +233,8 @@ const mutation = useMutation({
           type="submit"
           :label="type === 'writeoff' ? 'Списать' : 'Провести'"
           :severity="type === 'writeoff' ? 'danger' : undefined"
-          :disabled="!!error"
+          v-tooltip="type === 'writeoff' && isDemo ? demoHint : undefined"
+          :disabled="(type === 'writeoff' && isDemo) || !!error"
           :loading="mutation.isPending.value"
         />
       </div>

@@ -4,6 +4,7 @@ import { onKeyStroke, useStorage } from '@vueuse/core'
 import AppSidebar from './components/AppSidebar.vue'
 import AppTopbar from './components/AppTopbar.vue'
 import CommandPalette from './components/CommandPalette.vue'
+import DemoBanner from '@/shared/ui/DemoBanner.vue'
 import QueryErrorBoundary from '@/shared/ui/QueryErrorBoundary.vue'
 
 const collapsed = useStorage('wms.sidebarCollapsed', false)
@@ -33,7 +34,10 @@ onKeyStroke('k', (event) => {
     </Drawer>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <AppTopbar @open-nav="mobileNav = true" @open-search="searchOpen = true" />
+      <div class="sticky top-0 z-20">
+        <DemoBanner />
+        <AppTopbar @open-nav="mobileNav = true" @open-search="searchOpen = true" />
+      </div>
       <main class="mx-auto w-full max-w-[1480px] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <QueryErrorBoundary>
           <RouterView v-slot="{ Component, route }">

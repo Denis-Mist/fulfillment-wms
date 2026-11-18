@@ -27,9 +27,11 @@ public interface IPasswordHasher
     bool Verify(string hash, string password);
 }
 
+public sealed record AccessTokenRequest(int? LifetimeMinutes = null, IReadOnlyDictionary<string, string>? ExtraClaims = null);
+
 public interface ITokenService
 {
-    string CreateAccessToken(User user);
+    string CreateAccessToken(User user, AccessTokenRequest? request = null);
 }
 
 public interface IClock

@@ -8,6 +8,8 @@ import { organizationsApi } from '@/modules/organizations/api'
 import type { AdminOrganization, ModerationAction } from '@/modules/organizations/types'
 import { ORGANIZATION_STATUSES, ORGANIZATION_TYPES } from '@/shared/config/statuses'
 import { useNotify } from '@/shared/composables/useNotify'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
+
 import { useRegistry } from '@/shared/composables/useRegistry'
 import { formatDateTime, formatRelative } from '@/shared/lib/format'
 import FilterChips from '@/shared/ui/FilterChips.vue'
@@ -16,6 +18,8 @@ import RegistryTable from '@/shared/ui/RegistryTable.vue'
 import SearchInput from '@/shared/ui/SearchInput.vue'
 import StatusTag from '@/shared/ui/StatusTag.vue'
 import type { ChipOption } from '@/shared/ui/types'
+
+const { isDemo, hint: demoHint } = useDemoLock()
 
 const queryClient = useQueryClient()
 const confirm = useConfirm()
@@ -177,12 +181,12 @@ function run(org: AdminOrganization, action: ModerationAction) {
         <template #body="{ data: org }">
           <div class="flex justify-end gap-1.5">
             <template v-if="org.status === 'pending'">
-              <Button label="Отклонить" size="small" severity="danger" text @click="run(org, 'reject')" />
-              <Button label="Одобрить" size="small" @click="run(org, 'approve')" />
+              <Button v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" label="Отклонить" size="small" severity="danger" text @click="run(org, 'reject')" />
+              <Button v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" label="Одобрить" size="small" @click="run(org, 'approve')" />
             </template>
-            <Button v-else-if="org.status === 'active'" label="Заблокировать" size="small" severity="secondary" text @click="run(org, 'block')" />
-            <Button v-else-if="org.status === 'blocked'" label="Разблокировать" size="small" outlined @click="run(org, 'unblock')" />
-            <Button v-else-if="org.status === 'rejected'" label="Одобрить" size="small" outlined @click="run(org, 'approve')" />
+            <Button v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" v-else-if="org.status === 'active'" label="Заблокировать" size="small" severity="secondary" text @click="run(org, 'block')" />
+            <Button v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" v-else-if="org.status === 'blocked'" label="Разблокировать" size="small" outlined @click="run(org, 'unblock')" />
+            <Button v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" v-else-if="org.status === 'rejected'" label="Одобрить" size="small" outlined @click="run(org, 'approve')" />
           </div>
         </template>
       </Column>

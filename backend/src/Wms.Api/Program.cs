@@ -36,6 +36,9 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         o.TokenValidationParameters = jwt.Value.ValidationParameters();
     });
 builder.Services.AddAuthorization(Policies.Register);
+builder.Services.AddWmsForwardedHeaders();
+builder.Services.AddWmsRateLimiting(builder.Configuration);
+builder.Services.AddHostedService<DemoResetHostedService>();
 
 const string CorsPolicy = "frontend";
 builder.Services.AddCors(o => o.AddPolicy(CorsPolicy, p => p
@@ -44,11 +47,14 @@ builder.Services.AddCors(o => o.AddPolicy(CorsPolicy, p => p
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseCors(CorsPolicy);
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<DemoGuardMiddleware>();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 var api = app.MapGroup("/api");

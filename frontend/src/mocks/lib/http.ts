@@ -8,6 +8,7 @@ export interface MockContext {
   user: UserRecord
   org: OrgRecord | null
   role: Role
+  isDemo: boolean
 }
 
 export function problem(status: number, title: string, detail?: string) {
@@ -62,22 +63,60 @@ export async function handleBodyErrors(run: () => Response | Promise<Response>):
 
 const TOKEN_PREFIX = 'mock.'
 
-export const tokenFor = (userId: string) => `${TOKEN_PREFIX}${userId}`
+export const tokenFor = (userId: string, isDemo = false) =>
+  isDemo ? `${TOKEN_PREFIX}demo:${userId}` : `${TOKEN_PREFIX}${userId}`
+
+function parseMockToken(token: string): { userId: string; isDemo: boolean } | null {
+  if (!token.startsWith(TOKEN_PREFIX)) return null
+  const rest = token.slice(TOKEN_PREFIX.length)
+  if (rest.startsWith('demo:')) return { userId: rest.slice(5), isDemo: true }
+  return { userId: rest, isDemo: false }
+}
+
+/** Стоп-лист мутаций для демо-токена (SPEC §2.3), путь без префикса /api */
+const DEMO_STOP: RegExp[] = [
+  /^POST \/admin\/organizations\/[^/]+\/(approve|reject|block|unblock)$/,
+  /^POST \/admin\/users\/[^/]+\/(reset-password|block|unblock)$/,
+  /^POST \/admin\/references$/,
+  /^POST \/admin\/references\/[^/]+\/toggle$/,
+  /^POST \/integrations\/[^/]+\/(connect|disconnect|sync)$/,
+  /^PUT \/integrations\/[^/]+$/,
+  /^PUT \/settings\/profile$/,
+  /^POST \/settings\/team\/invite$/,
+  /^POST \/settings\/team\/[^/]+\/revoke$/,
+  /^POST \/fc\/client-requests\/[^/]+\/[^/]+$/,
+  /^POST \/seller\/fulfillments\/[^/]+\/connect$/,
+  /^PUT \/billing\/tariffs\/[^/]+$/,
+  /^POST \/warehouses\/[^/]+\/(zones|locations)$/,
+  /^PUT \/staff\/[^/]+$/,
+  /^POST \/staff\/[^/]+\/shifts$/,
+  /^POST \/catalog\/products\/[^/]+\/archive$/,
+  /^POST \/analytics\/slotting\/apply$/,
+  /^POST \/stock\/writeoff$/,
+  /^POST \/tasks\/[^/]+\/cancel$/,
+  /^POST \/admin\/demo\/reset$/,
+]
+
+export function isDemoStopped(method: string, pathname: string) {
+  const path = pathname.replace(/^\/api/, '') || pathname
+  const key = `${method.toUpperCase()} ${path.replace(/\/+$/, '')}`
+  return DEMO_STOP.some((re) => re.test(key))
+}
 
 export function resolveContext(request: Request): MockContext | Response {
   const header = request.headers.get('Authorization') ?? ''
   const token = header.replace(/^Bearer\s+/i, '')
-  const userId = token.startsWith(TOKEN_PREFIX) ? token.slice(TOKEN_PREFIX.length) : null
-  const user = userId ? db.data.users.find((candidate) => candidate.id === userId) : undefined
+  const parsed = parseMockToken(token)
+  const user = parsed ? db.data.users.find((candidate) => candidate.id === parsed.userId) : undefined
   if (!user) return problem(401, 'Требуется авторизация')
-  if (user.isPlatformAdmin) return { user, org: null, role: 'platform_admin' }
+  if (user.isPlatformAdmin) return { user, org: null, role: 'platform_admin', isDemo: parsed!.isDemo }
 
   const organizationId = request.headers.get('X-Organization-Id')
   const membership =
     user.memberships.find((m) => m.organizationId === organizationId) ?? user.memberships[0]
   if (!membership) return problem(403, 'Нет доступа к организации')
   const org = db.data.organizations.find((o) => o.id === membership.organizationId) ?? null
-  return { user, org, role: membership.role }
+  return { user, org, role: membership.role, isDemo: parsed!.isDemo }
 }
 
 export const latency = () => delay(150 + Math.random() * 300)
@@ -101,7 +140,11 @@ export function withAuth(
       return problem(403, 'Организация не активна', 'Доступ откроется после проверки администратором.')
     }
     if (options.roles && !options.roles.includes(ctx.role)) return problem(403, 'Недостаточно прав')
-    return handleBodyErrors(() => resolver({ request, params, ctx, url: new URL(request.url) }))
+    const url = new URL(request.url)
+    if (ctx.isDemo && isDemoStopped(request.method, url.pathname)) {
+      return problem(403, 'В демо-режиме это действие недоступно')
+    }
+    return handleBodyErrors(() => resolver({ request, params, ctx, url }))
   }
 }
 

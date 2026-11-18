@@ -118,8 +118,18 @@ export const http = {
   delete: <T>(path: string) => request<T>('DELETE', path),
 }
 
+const DEMO_STATUS_TEXT: Record<number, string> = {
+  403: 'В демо-режиме это действие недоступно',
+  429: 'Слишком много попыток, попробуйте позже',
+  503: 'Демо-данные обновляются, подождите минуту',
+}
+
 export function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.problem.detail ?? error.problem.title
+  if (error instanceof ApiError) {
+    const text = error.problem.detail ?? error.problem.title
+    if (text) return text
+    return DEMO_STATUS_TEXT[error.status] ?? 'Ошибка запроса'
+  }
   if (error instanceof Error) return error.message
   return 'Неизвестная ошибка'
 }

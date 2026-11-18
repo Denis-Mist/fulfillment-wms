@@ -14,6 +14,10 @@ public record MembershipDto(string OrganizationId, string OrganizationName, Orga
     OrganizationStatus OrganizationStatus, Role Role);
 
 public record CurrentUserDto(string Id, string Email, string FullName, string? Phone, bool IsPlatformAdmin,
-    IReadOnlyList<MembershipDto> Memberships);
+    IReadOnlyList<MembershipDto> Memberships, bool IsDemo = false);
 
 public record AuthResponse(string AccessToken, CurrentUserDto User);
+
+public record DemoLoginRequest(string? Persona);
+
+public record DemoStatusDto(bool Enabled);

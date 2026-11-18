@@ -5,9 +5,13 @@ import { Archive, ArchiveRestore, Pencil } from '@lucide/vue'
 import { catalogApi } from '@/modules/catalog/api'
 import type { ProductListItem } from '@/modules/catalog/types'
 import { useNotify } from '@/shared/composables/useNotify'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
+
 import { formatMoney, formatNumber } from '@/shared/lib/format'
 import EmptyState from '@/shared/ui/EmptyState.vue'
 import InfoList from '@/shared/ui/InfoList.vue'
+
+const { isDemo, hint: demoHint } = useDemoLock()
 
 const props = defineProps<{ product: ProductListItem | null; editable: boolean }>()
 const visible = defineModel<boolean>('visible', { required: true })
@@ -78,6 +82,8 @@ const archive = useMutation({
           size="small"
           severity="secondary"
           outlined
+          v-tooltip="isDemo ? demoHint : undefined"
+          :disabled="isDemo"
           :loading="archive.isPending.value"
           @click="archive.mutate()"
         >

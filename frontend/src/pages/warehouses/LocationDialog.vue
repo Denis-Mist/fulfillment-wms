@@ -6,6 +6,9 @@ import type { LocationInput, Zone } from '@/modules/warehouses/types'
 import { z } from 'zod'
 import { useFormValidation } from '@/shared/composables/useFormValidation'
 import { useNotify } from '@/shared/composables/useNotify'
+import { useDemoLock } from '@/shared/composables/useDemoLock'
+
+const { isDemo, hint: demoHint } = useDemoLock()
 
 const props = defineProps<{ warehouseId: string; zones: Zone[] }>()
 const visible = defineModel<boolean>('visible', { required: true })
@@ -146,7 +149,7 @@ const create = useMutation({
     </form>
     <template #footer>
       <Button label="Отмена" severity="secondary" outlined @click="visible = false" />
-      <Button label="Добавить" type="submit" form="location-form" :loading="create.isPending.value" />
+      <Button label="Добавить" type="submit" form="location-form" v-tooltip="isDemo ? demoHint : undefined" :disabled="isDemo" :loading="create.isPending.value" />
     </template>
   </Dialog>
 </template>
