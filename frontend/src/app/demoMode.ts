@@ -30,12 +30,21 @@ export function isDemoTab(): boolean {
 
 export function enterDemoTab(): void {
   sessionStorage.setItem(DEMO_FLAG, '1')
-  localStorage.setItem(DEMO_FLAG, '1')
+  // Защита от остатка флага из релиза 411df4f, который писал его и в localStorage (§12: только sessionStorage).
+  try {
+    localStorage.removeItem(DEMO_FLAG)
+  } catch {
+    /* private mode */
+  }
 }
 
 export function leaveDemoTab(): void {
   sessionStorage.removeItem(DEMO_FLAG)
-  localStorage.removeItem(DEMO_FLAG)
+  try {
+    localStorage.removeItem(DEMO_FLAG)
+  } catch {
+    /* private mode */
+  }
 }
 
 export function shouldStartMocksOnBoot(): boolean {
@@ -47,9 +56,9 @@ export function expectMockResponse(): boolean {
   return isAlwaysMocks() || isDemoTab()
 }
 
-/** Боевая вкладка на том же origin не ставит заголовок — handlers делают passthrough. */
+/** При VITE_USE_MOCKS=true — всегда (§12 Q-3); иначе только демо-вкладка. Боевая вкладка заголовок не ставит — handlers делают passthrough. */
 export function shouldSendDemoHeader(): boolean {
-  return isDemoTab()
+  return isAlwaysMocks() || isDemoTab()
 }
 
 export function isMockIntercept(request: Request): boolean {
