@@ -38,7 +38,6 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
 builder.Services.AddAuthorization(Policies.Register);
 builder.Services.AddWmsForwardedHeaders();
 builder.Services.AddWmsRateLimiting(builder.Configuration);
-builder.Services.AddHostedService<DemoResetHostedService>();
 
 const string CorsPolicy = "frontend";
 builder.Services.AddCors(o => o.AddPolicy(CorsPolicy, p => p
@@ -54,7 +53,6 @@ app.UseCors(CorsPolicy);
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<DemoGuardMiddleware>();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 var api = app.MapGroup("/api");

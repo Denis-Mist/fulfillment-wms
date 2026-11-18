@@ -32,20 +32,13 @@ public sealed class JwtOptions
 
 internal sealed class JwtTokenService(IOptions<JwtOptions> options, IClock clock) : ITokenService
 {
-    public string CreateAccessToken(User user, AccessTokenRequest? request = null)
+    public string CreateAccessToken(User user)
     {
         var o = options.Value;
         var now = clock.UtcNow.UtcDateTime;
-        var lifetime = request?.LifetimeMinutes ?? o.LifetimeMinutes;
-        var claims = new List<Claim>
-        {
-            new(JwtRegisteredClaimNames.Sub, user.Id),
-            new(JwtRegisteredClaimNames.Email, user.Email),
-        };
-        if (request?.ExtraClaims is { Count: > 0 } extra)
-            claims.AddRange(extra.Select(kv => new Claim(kv.Key, kv.Value)));
-        var token = new JwtSecurityToken(o.Issuer, o.Audience, claims,
-            notBefore: now, expires: now.AddMinutes(lifetime),
+        var token = new JwtSecurityToken(o.Issuer, o.Audience,
+            [new Claim(JwtRegisteredClaimNames.Sub, user.Id), new Claim(JwtRegisteredClaimNames.Email, user.Email)],
+            notBefore: now, expires: now.AddMinutes(o.LifetimeMinutes),
             signingCredentials: new SigningCredentials(o.Key(), SecurityAlgorithms.HmacSha256));
         return new JwtSecurityTokenHandler().WriteToken(token);
     }

@@ -18,6 +18,5 @@ public record CurrentUserDto(string Id, string Email, string FullName, string? P
 
 public record AuthResponse(string AccessToken, CurrentUserDto User);
 
-public record DemoLoginRequest(string? Persona);
 
 public record DemoStatusDto(bool Enabled);

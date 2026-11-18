@@ -1,8 +1,6 @@
 using System.Security.Claims;
 using Wms.Api.Infrastructure;
 using Wms.Application.Auth;
-using Wms.Application.Demo;
-using Microsoft.Extensions.Options;
 
 namespace Wms.Api.Endpoints;
 
@@ -20,16 +18,15 @@ public static class AuthEndpoints
             Results.Json(await handler.HandleAsync(body, ct), statusCode: StatusCodes.Status201Created))
             .RequireRateLimiting(RateLimitingSetup.AuthPolicy);
 
-        group.MapGet("/demo/status", (IOptions<DemoOptions> options) =>
-            Results.Ok(new DemoStatusDto(options.Value.Enabled)));
+        // Публичный stub: серверный демо-контур упразднён, демо живёт в MSW на клиенте.
+        group.MapGet("/demo/status", () => Results.Ok(new DemoStatusDto(Enabled: false)));
 
-        group.MapPost("/demo", async (DemoLoginRequest body, DemoLoginHandler handler, CancellationToken ct) =>
-            Results.Ok(await handler.HandleAsync(body, ct)))
-            .RequireRateLimiting(RateLimitingSetup.DemoPolicy);
+        // Страховка, если UI стукнул в /api при нестартовавшем MSW: никогда не логинит в сиды.
+        group.MapPost("/demo", () => Results.Problem(Problems.Create(StatusCodes.Status404NotFound, "Не найдено")));
 
         // allowInactive в моках: /auth/me доступен и пользователю организации «на проверке»
         group.MapGet("/me", async (ClaimsPrincipal principal, GetCurrentUserHandler handler, CancellationToken ct) =>
-            Results.Ok(await handler.HandleAsync(principal.FindFirstValue("sub")!, DemoClaims.IsDemo(principal), ct)))
+            Results.Ok(await handler.HandleAsync(principal.FindFirstValue("sub")!, ct)))
             .RequireAuthorization();
 
         return group;

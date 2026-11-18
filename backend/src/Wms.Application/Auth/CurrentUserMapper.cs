@@ -5,13 +5,13 @@ namespace Wms.Application.Auth;
 
 public interface ICurrentUserMapper
 {
-    Task<CurrentUserDto> MapAsync(User user, CancellationToken ct, bool isDemo = false);
+    Task<CurrentUserDto> MapAsync(User user, CancellationToken ct);
 }
 
 /// <summary>Аналог toCurrentUser из моков: членства без организации отбрасываются.</summary>
 public sealed class CurrentUserMapper(IOrganizationRepository organizations) : ICurrentUserMapper
 {
-    public async Task<CurrentUserDto> MapAsync(User user, CancellationToken ct, bool isDemo = false)
+    public async Task<CurrentUserDto> MapAsync(User user, CancellationToken ct)
     {
         var orgs = (await organizations.GetByIdsAsync(user.Memberships.Select(m => m.OrganizationId), ct))
             .ToDictionary(o => o.Id);
@@ -23,6 +23,7 @@ public sealed class CurrentUserMapper(IOrganizationRepository organizations) : I
                 return new MembershipDto(org.Id, org.Name, org.Type, org.Status, m.Role);
             })
             .ToList();
-        return new CurrentUserDto(user.Id, user.Email, user.FullName, user.Phone, user.IsPlatformAdmin, memberships, isDemo);
+        // isDemo всегда false: серверный демо-вход упразднён, поле оставлено для совместимости контракта.
+        return new CurrentUserDto(user.Id, user.Email, user.FullName, user.Phone, user.IsPlatformAdmin, memberships, IsDemo: false);
     }
 }

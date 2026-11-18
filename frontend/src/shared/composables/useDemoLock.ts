@@ -1,14 +1,14 @@
 import { computed } from 'vue'
-import { DEMO_ACTION_HINT } from '@/modules/auth/demoPersonas'
-import { useSessionStore } from '@/stores/session'
 
-/** Блокировка стоп-лист действий в UI, когда сессия с isDemo */
+/**
+ * v2: демо — личная песочница в браузере, учебные мутации разрешены.
+ * Композабл оставлен, чтобы не трогать десятки шаблонов: кнопки больше не блокируются.
+ */
 export function useDemoLock() {
-  const session = useSessionStore()
-  const isDemo = computed(() => session.isDemo)
+  const isDemo = computed(() => false)
   return {
     isDemo,
-    hint: DEMO_ACTION_HINT,
-    lock: (alreadyDisabled = false) => alreadyDisabled || isDemo.value,
+    hint: undefined as string | undefined,
+    lock: (alreadyDisabled = false) => alreadyDisabled,
   }
 }
