@@ -1,5 +1,6 @@
 using Wms.Api.Infrastructure;
 using Wms.Application.Admin;
+using Wms.Application.Demo;
 using Wms.Domain.Enums;
 
 namespace Wms.Api.Endpoints;
@@ -38,6 +39,11 @@ public static class AdminEndpoints
             Results.Ok(await h.HandleAsync(http.Ctx(), id, ct)));
 
         admin.MapGet("/overview", async (PlatformOverviewHandler h, CancellationToken ct) => Results.Ok(await h.HandleAsync(ct)));
+        admin.MapPost("/demo/reset", async (IDemoResetService reset, CancellationToken ct) =>
+        {
+            await reset.ResetAsync(ct);
+            return Results.Ok(new { status = "ok" });
+        });
         return api;
     }
 }

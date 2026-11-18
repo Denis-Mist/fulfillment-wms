@@ -330,6 +330,20 @@
    ]
   },
   {
+   "id": "usr_fc1_12",
+   "email": "am@fc1.demo.ru",
+   "password": "demo",
+   "fullName": "Марина Федорова",
+   "phone": "+7 915 640-22-18",
+   "isPlatformAdmin": false,
+   "memberships": [
+    {
+     "organizationId": "org_fc1",
+     "role": "fc_account_manager"
+    }
+   ]
+  },
+  {
    "id": "usr_fc2_1",
    "email": "owner@fc2.demo.ru",
    "password": "demo",

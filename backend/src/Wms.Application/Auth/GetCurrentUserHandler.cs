@@ -5,9 +5,9 @@ namespace Wms.Application.Auth;
 
 public sealed class GetCurrentUserHandler(IUserRepository users, ICurrentUserMapper mapper)
 {
-    public async Task<CurrentUserDto> HandleAsync(string userId, CancellationToken ct)
+    public async Task<CurrentUserDto> HandleAsync(string userId, bool isDemo, CancellationToken ct)
     {
         var user = await users.FindByIdAsync(userId, ct) ?? throw AppException.Unauthorized();
-        return await mapper.MapAsync(user, ct);
+        return await mapper.MapAsync(user, ct, isDemo);
     }
 }

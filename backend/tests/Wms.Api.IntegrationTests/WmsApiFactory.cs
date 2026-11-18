@@ -10,7 +10,7 @@ namespace Wms.Api.IntegrationTests;
 /// <summary>
 /// Поднимает Api на настоящем Postgres: из WMS_TEST_CONNECTION (если задан) или Testcontainers (нужен Docker).
 /// </summary>
-public sealed class WmsApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
+public class WmsApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private PostgreSqlContainer? _container;
     private string _connectionString = string.Empty;
@@ -28,11 +28,18 @@ public sealed class WmsApiFactory : WebApplicationFactory<Program>, IAsyncLifeti
         _connectionString = _container.GetConnectionString();
     }
 
+    protected virtual void ApplySettings(IWebHostBuilder builder) { }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:Wms", _connectionString);
         builder.UseSetting("Database:MigrateOnStartup", "true");
         builder.UseSetting("Database:Seed", "true");
+        // Общий лимит логина 20/мин иначе мешает пачкам интеграционных тестов на одном IP.
+        builder.UseSetting("RateLimiting:AuthPerMinute", "10000");
+        builder.UseSetting("RateLimiting:DemoPerMinute", "10000");
+        builder.UseSetting("RateLimiting:DemoPerHour", "100000");
+        ApplySettings(builder);
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton<IMarketplaceClientResolver, TestMarketplaceClientResolver>();
