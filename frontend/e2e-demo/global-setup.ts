@@ -10,14 +10,41 @@ export default async function globalSetup() {
   if (process.env.E2E_DEMO_SKIP_PRECHECK !== '1') await precheckApi()
   if (IS_PROD) return
 
+  // Холодный Vite дооптимизирует зависимости и перезагружает страницу посреди сценария — обходим кабинеты заранее
   const browser = await chromium.launch()
-  const page = await browser.newPage()
-  for (const path of ['/login', '/demo', '/login', '/demo']) {
-    await page.goto(`${BASE_URL}${path}`)
-    await page.waitForLoadState('networkidle').catch(() => {})
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let reloaded = false
+    for (const [email, paths] of WARMUP) {
+      const page = await browser.newPage()
+      await page.route(`${API_URL}/**`, (route) =>
+        route.continue({ headers: { ...route.request().headers(), 'x-forwarded-for': '10.76.0.1' } }),
+      )
+      for (const path of ['/demo', '/login']) {
+        await page.goto(`${BASE_URL}${path}`)
+        await page.waitForLoadState('networkidle').catch(() => {})
+      }
+      await page.locator('#email').fill(email)
+      await page.locator('#password').fill('demo')
+      await page.keyboard.press('Enter')
+      await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 }).catch(() => (reloaded = true))
+      for (const path of paths) {
+        await page.goto(`${BASE_URL}${path}`)
+        await page.waitForLoadState('networkidle').catch(() => {})
+      }
+      await page.close()
+    }
+    if (!reloaded) break
   }
   await browser.close()
 }
+
+const WARMUP: [string, string[]][] = [
+  ['director@demo.ru', ['/fc', '/fc/orders', '/fc/clients', '/fc/billing', '/fc/products', '/fc/tasks', '/fc/picking', '/fc/analytics', '/fc/settings']],
+  ['seller@demo.ru', ['/seller', '/seller/products', '/seller/integrations']],
+  ['admin@demo.ru', ['/admin', '/admin/moderation', '/admin/users', '/admin/references']],
+  ['picker@demo.ru', ['/work', '/work/scan']],
+  ['owner1@pending.demo.ru', ['/pending']],
+]
 
 async function precheckApi() {
   const api = await request.newContext()

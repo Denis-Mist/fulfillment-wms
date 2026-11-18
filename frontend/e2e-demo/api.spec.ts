@@ -30,7 +30,7 @@ test.describe('API: вход в демо', () => {
   })
 
   test('неизвестная персона → 422', async () => {
-    for (const persona of ['ghost', 'FC_OWNER', '']) {
+    for (const persona of ['ghost', 'admin', '']) {
       const res = await demoLogin(api, persona)
       expect(res.status(), `persona=${JSON.stringify(persona)}`).toBe(422)
     }

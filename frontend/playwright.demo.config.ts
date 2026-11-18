@@ -25,7 +25,9 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   grep: IS_PROD ? /@prod-smoke/ : undefined,
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report-demo' }]],
-  outputDir: 'test-results-demo',
+  // Артефакты (трейсы пишутся по ходу теста) — вне отслеживаемых Vite файлов, иначе dev-сервер
+  // перезагружает страницу посреди сценария. node_modules Vite не наблюдает.
+  outputDir: 'node_modules/.cache/e2e-demo/test-results',
   metadata: { apiUrl: API_URL },
   use: {
     baseURL: BASE_URL,
