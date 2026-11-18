@@ -1,8 +1,8 @@
 import { randomBytes } from 'node:crypto'
 import type { Page } from '@playwright/test'
-import { DEMO_FLAG_KEY, DEMO_HEADER, DEMO_HEADER_VALUE, DEMO_TOKEN_PREFIX, MOCK_COLLECTION_PREFIX, MOCKDB_KEY, TEXT } from './contract'
+import { DEMO_FLAG_KEY, DEMO_HEADER, DEMO_HEADER_VALUE, DEMO_TOKEN_PREFIX, MOCK_COLLECTION_PREFIX, MOCKDB_KEY, TESTID, TEXT } from './contract'
 import {
-  confirmIfAsked,
+  demoFlag,
   demoTokenEntry,
   enterDemo,
   expect,
@@ -64,7 +64,22 @@ async function productRow(page: Page, sku: string) {
   await page.getByPlaceholder('Артикул, название, штрихкод…').fill(sku)
   await page.waitForTimeout(600) // debounce поиска
   await waitReady(page)
-  return page.getByText(sku, { exact: true })
+  // SKU показан в ячейке «Товар» вместе с категорией («SKU · E2E»); пустая выдача тоже печатает запрос, поэтому ищем именно «SKU · категория»
+  return page.getByRole('row').filter({ hasText: `${sku} · E2E` })
+}
+
+/** Подтвердить диалог PrimeVue и дождаться перезахода текущей ролью (accept не ждёт async-колбэк) */
+async function acceptConfirm(page: Page) {
+  const accept = page.locator('.p-confirmdialog-accept-button')
+  await expect(accept).toBeVisible()
+  const relogin = page.waitForResponse((r) => new URL(r.url()).pathname.endsWith('/auth/demo') && r.request().method() === 'POST')
+  await accept.click()
+  await relogin
+}
+
+async function resetViaBanner(page: Page) {
+  await visibleAction(page, TEXT.resetData).first().click()
+  await acceptConfirm(page)
 }
 
 async function switchRole(page: Page, to: Persona) {
@@ -96,7 +111,7 @@ test.describe('Перезагрузка остаётся в демо (SPEC-v2 §
       await waitReady(page)
       expect(pathname(page)).toBe(path)
       await expectBanner(page, persona)
-      expect((await storage(page))[DEMO_FLAG_KEY]).toBe('1')
+      expect(await demoFlag(page), `${DEMO_FLAG_KEY} (sessionStorage)`).toBe('1')
     })
   }
 
@@ -119,7 +134,7 @@ test.describe('Сменить роль / Сбросить данные (SPEC-v2 
     await visibleAction(page, TEXT.switchRole).first().click()
     await expect.poll(() => pathname(page)).toBe('/demo')
     // На /demo остаёмся в демо-режиме, база не сброшена
-    expect((await storage(page))[DEMO_FLAG_KEY]).toBe('1')
+    expect(await demoFlag(page)).toBe('1')
     await enterDemo(page, 'seller_manager')
     await expectBanner(page, 'seller_manager')
     const managerToken = (await demoTokenEntry(page))?.[1]
@@ -142,15 +157,11 @@ test.describe('Сменить роль / Сбросить данные (SPEC-v2 
     const product = await createDemoProduct(page, 'seller_owner')
     await expect(await productRow(page, product.sku)).toBeVisible()
 
-    await visibleAction(page, TEXT.resetData).first().click()
-    await confirmIfAsked(page)
-    // §2.2: перезаход текущей ролью (или /demo, если сессии нет)
-    await expect.poll(() => pathname(page)).toMatch(new RegExp(`${PERSONAS.seller_owner.home.source}|^/demo$`))
+    await resetViaBanner(page)
+    // §2.2: перезаход текущей ролью — остаёмся на странице, под той же персоной
     await waitReady(page)
-    const ls = await storage(page)
-    expect(ls[DEMO_FLAG_KEY], 'после сброса остаёмся в демо').toBe('1')
-    expect(JSON.stringify(ls), 'overlay очищен от учебных изменений').not.toContain(product.sku)
-    if (pathname(page) === '/demo') await enterDemo(page, 'seller_owner')
+    expect(await demoFlag(page), 'после сброса остаёмся в демо').toBe('1')
+    expect(JSON.stringify(await storage(page)), 'overlay очищен от учебных изменений').not.toContain(product.sku)
     await expectBanner(page, 'seller_owner')
     // Seed восстановлен и в памяти, а не только в storage (§3.5: db.reset() раньше этого не делал)
     await expect(await productRow(page, product.sku)).toHaveCount(0)
@@ -160,10 +171,9 @@ test.describe('Сменить роль / Сбросить данные (SPEC-v2 
     await enterDemo(page, 'seller_owner')
     const product = await createDemoProduct(page, 'seller_owner')
     await openDemo(page)
-    await visibleAction(page, TEXT.resetOnDemoPage).first().click()
-    await confirmIfAsked(page)
-    await page.waitForLoadState('networkidle')
-    expect(JSON.stringify(await storage(page))).not.toContain(product.sku)
+    await page.getByTestId(TESTID.resetOnPage).click()
+    await acceptConfirm(page)
+    await expect.poll(async () => JSON.stringify(await storage(page))).not.toContain(product.sku)
     if (pathname(page) === '/demo') await enterDemo(page, 'seller_owner')
     await expect(await productRow(page, product.sku)).toHaveCount(0)
   })

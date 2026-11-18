@@ -1,7 +1,7 @@
 import { DEMO_FLAG_KEY, DEMO_HEADER, DEMO_TOKEN_PREFIX, looksLikeJwt, MOCKDB_KEY, REAL_SESSION_KEYS, REAL_TOKEN_KEY, TEXT } from './contract'
 import {
   banner,
-  confirmIfAsked,
+  demoFlag,
   demoTokenEntry,
   enterDemo,
   expect,
@@ -38,7 +38,6 @@ const noDemoHeader = (page: Page) => {
 
 async function demoLogout(page: Page) {
   await visibleAction(page, TEXT.logout).first().click()
-  await confirmIfAsked(page)
 }
 
 test.describe('Выход из демо → реальный API (SPEC-v2 §2.2, §3.3, §7)', () => {
@@ -48,7 +47,8 @@ test.describe('Выход из демо → реальный API (SPEC-v2 §2.2,
     await expect.poll(() => pathname(page)).toBe('/login')
     await expect(banner(page)).toHaveCount(0)
     const ls = await storage(page)
-    expect(ls[DEMO_FLAG_KEY] ?? '', `${DEMO_FLAG_KEY} снят`).not.toBe('1')
+    expect(await demoFlag(page), `${DEMO_FLAG_KEY} снят (sessionStorage)`).toBeNull()
+    expect(ls[DEMO_FLAG_KEY], `${DEMO_FLAG_KEY} не появился в localStorage`).toBeUndefined()
     expect(Object.values(ls).filter((v) => v.startsWith(DEMO_TOKEN_PREFIX)), 'демо-токен удалён').toEqual([])
     expect(ls[REAL_TOKEN_KEY] ?? '', 'в боевой ключ мок-токен не попал').toBe('')
     await page.goto('/work')
@@ -128,17 +128,20 @@ test.describe('Боевая сессия не затирается демо (SPE
     expect(demo?.[0], 'демо-токен лежит в отдельном ключе').not.toBe(REAL_TOKEN_KEY)
 
     await demoLogout(page)
-    await expect.poll(() => pathname(page)).toMatch(/^\/(login|pending)$/)
+    // §12 Q-2: «Выйти» ведёт на /login, а при живой боевой сессии /login сам перекидывает в её кабинет (/pending у новой организации)
+    await expect.poll(() => pathname(page)).toBe('/pending')
+    expect(await demoFlag(page)).toBeNull()
     const after = await storage(page)
     expect(after[REAL_TOKEN_KEY], 'боевой токен восстановлен').toBe(before[REAL_TOKEN_KEY])
 
     // Реальная сессия жива: кабинет открывается без входа, /auth/me — от реального API
     const demoHeaders = noDemoHeader(page)
     const me = page.waitForResponse((r) => new URL(r.url()).pathname.endsWith('/auth/me'))
-    await page.goto('/')
+    await page.goto('/login')
     const meRes = await me
     expect(meRes.status()).toBe(200)
     expect(((await meRes.json()) as { email: string }).email).toBe(account.email)
+    // /login при живой боевой сессии перекидывает в кабинет (Q-2)
     await expect.poll(() => pathname(page)).toBe('/pending')
     await expect(banner(page)).toHaveCount(0)
     expect(demoHeaders()).toEqual([])
@@ -189,7 +192,9 @@ test.describe('Две вкладки одного origin (SPEC-v2 §3.4, §7)', 
     const second = await context.newPage()
     const demoHeaders = noDemoHeader(second)
     await second.goto('/login')
-    // Если вкладка унаследовала демо (общий флаг в localStorage), на /login будет баннер и мок-логин — это и ловим
+    // Флаг демо — в sessionStorage (§12 Q-1): новая вкладка боевая, баннера нет
+    expect(await demoFlag(second), 'флаг в соседней вкладке').toBeNull()
+    await expect(banner(second)).toHaveCount(0)
     const res = await loginUI(second, account.email, account.password)
     expect(res.status(), 'логин реального пользователя (мок его не знает)').toBe(200)
     expect(looksLikeJwt(((await res.json()) as { accessToken: string }).accessToken)).toBe(true)

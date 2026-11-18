@@ -1,5 +1,5 @@
 import { test as base, expect, type BrowserContext, type Locator, type Page, type Request, type Response } from '@playwright/test'
-import { DEMO_HEADER, DEMO_HEADER_VALUE, DEMO_TOKEN_PREFIX, MOCK_TOKEN_PREFIX, TEXT } from './contract'
+import { DEMO_FLAG_KEY, DEMO_HEADER, DEMO_HEADER_VALUE, DEMO_TOKEN_PREFIX, MOCK_TOKEN_PREFIX, TESTID, TEXT } from './contract'
 import { API_PATH, REAL_API_URL } from './env'
 import { PERSONAS, type Persona } from './personas'
 import type { RealAccount } from './real-api'
@@ -80,15 +80,19 @@ export async function waitReady(page: Page) {
 }
 
 const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-const ALL_TITLES = new RegExp(`^\\s*(${Object.values(PERSONAS).map((p) => esc(p.title)).join('|')})(\\s|$)`)
 
-/** Карточка персоны на /demo */
+/** Карточка персоны на /demo (testid фронта) */
 export function personaCard(page: Page, persona: Persona): Locator {
-  return page.getByRole('main').getByRole('button', { name: new RegExp(`^\\s*${esc(PERSONAS[persona].title)}(\\s|$)`) })
+  return page.getByTestId(TESTID.persona(persona))
 }
 
 /** Все карточки ролей (в v2 в main есть ещё кнопка «Сбросить демо-данные» — её не считаем) */
-export const personaCards = (page: Page) => page.getByRole('main').getByRole('button', { name: ALL_TITLES })
+export const personaCards = (page: Page) => page.locator('[data-testid^="demo-persona-"]')
+
+/** Заголовок карточки совпадает с ожидаемым (сверка текстов с PERSONAS) */
+export async function expectCardTitle(page: Page, persona: Persona) {
+  await expect(personaCard(page, persona), `заголовок карточки ${persona}`).toHaveText(new RegExp(`^\\s*${esc(PERSONAS[persona].title)}`))
+}
 
 export async function openDemo(page: Page) {
   await page.goto('/demo')
@@ -117,7 +121,7 @@ export async function enterDemo(page: Page, persona: Persona) {
   return body.accessToken
 }
 
-export const banner = (page: Page) => page.getByText(TEXT.bannerPrefix).filter({ visible: true })
+export const banner = (page: Page) => page.getByTestId(TESTID.banner).filter({ visible: true })
 
 /** Видимая кнопка/ссылка (баннер, /demo) по точному имени */
 export const visibleAction = (page: Page, name: string) =>
@@ -126,6 +130,7 @@ export const visibleAction = (page: Page, name: string) =>
 /** §2.2: «Вы в демо-режиме как {роль} · Сменить роль · Сбросить данные · Выйти» */
 export async function expectBanner(page: Page, persona: Persona) {
   await expect(banner(page).first()).toBeVisible()
+  await expect(banner(page).first()).toContainText(TEXT.bannerPrefix)
   await expect(banner(page).first()).toContainText(PERSONAS[persona].bannerRole)
   for (const name of [TEXT.switchRole, TEXT.resetData, TEXT.logout]) {
     await expect(visibleAction(page, name).first(), `в баннере «${name}»`).toBeVisible()
@@ -140,6 +145,9 @@ export async function confirmIfAsked(page: Page) {
     await accept.click()
   }
 }
+
+/** Признак демо этой вкладки: sessionStorage (SPEC-v2 §12, Q-1) */
+export const demoFlag = (page: Page) => page.evaluate((k) => sessionStorage.getItem(k), DEMO_FLAG_KEY)
 
 /** Весь localStorage вкладки */
 export const storage = (page: Page) => page.evaluate(() => ({ ...localStorage }) as Record<string, string>)
@@ -180,6 +188,9 @@ export async function registerUI(page: Page, account: RealAccount) {
   await page.locator('#u-email').fill(account.email)
   await page.locator('#u-phone').fill('+7 900 000-00-00')
   await page.locator('#u-password').fill(account.password)
+  // Оверлей-подсказка силы пароля перекрывает чекбокс — убираем фокус с поля
+  await page.keyboard.press('Escape')
+  await page.getByRole('heading', { name: 'Регистрация' }).click()
   await page.getByText('Согласен с условиями').click()
   const res = page.waitForResponse(isRealPost('/auth/register'))
   await page.getByRole('button', { name: 'Отправить заявку', exact: true }).click()

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { DEMO_FLAG_KEY, REAL_TOKEN_KEY, TEXT } from './contract'
-import { expect, isApiUrl, openDemo, pathname, personaCard, personaCards, storage, test, visibleAction } from './fixtures'
+import { DEMO_FLAG_KEY, REAL_TOKEN_KEY, TESTID, TEXT } from './contract'
+import { banner, demoFlag, enterDemo, expect, expectCardTitle, isApiUrl, openDemo, pathname, personaCard, personaCards, storage, test, visibleAction } from './fixtures'
 import { ALL_PERSONAS } from './personas'
 
 /** Ресурсы слоя моков: чанк src/mocks (в сборке — browser-*.js), msw, mockServiceWorker.js */
@@ -14,16 +14,19 @@ test.describe('Вход в демо: кнопки и /demo (SPEC-v2 §2.1, §3.1
     // §2.1: сетка быстрого входа с паролем `demo` — только при VITE_USE_MOCKS=true
     await expect(page.getByText(/войдите как демо-пользователь/i)).toHaveCount(0)
     await expect(page.getByText(/director@demo\.ru|парол[ья]\s*[:—-]?\s*demo\b/i)).toHaveCount(0)
-    await visibleAction(page, TEXT.tryDemo).first().click()
+    await page.getByTestId(TESTID.tryDemo).click()
     await expect.poll(() => pathname(page)).toBe('/demo')
   })
 
   test('/register: есть «Попробовать демо» → /demo (новое в v2) @prod-smoke', async ({ page }) => {
     await page.goto('/register')
     await expect(page.getByRole('heading', { name: 'Регистрация' })).toBeVisible()
-    const cta = visibleAction(page, TEXT.tryDemo).or(page.getByRole('link', { name: /демо/i }).filter({ visible: true }))
-    await expect(cta.first()).toBeVisible()
-    await cta.first().click()
+    await expect(page.getByTestId(TESTID.tryDemo)).toHaveText(TEXT.tryDemo)
+    await page.getByTestId(TESTID.tryDemo).click()
+    await expect.poll(() => pathname(page)).toBe('/demo')
+    // Вторая точка входа: ссылка «Попробовать демо» внизу формы («Уже зарегистрированы? Войти · Попробовать демо»)
+    await page.goto('/register')
+    await page.getByRole('link', { name: TEXT.tryDemo, exact: true }).click()
     await expect.poll(() => pathname(page)).toBe('/demo')
   })
 
@@ -46,7 +49,7 @@ test.describe('Вход в демо: кнопки и /demo (SPEC-v2 §2.1, §3.1
     await expect(page.getByText(TEXT.demoNoNightly)).toHaveCount(0)
     await expect(personaCards(page)).toHaveCount(11)
     for (const persona of ALL_PERSONAS) {
-      await expect(personaCard(page, persona), `карточка ${persona}`).toBeVisible()
+      await expectCardTitle(page, persona)
     }
     await expect(visibleAction(page, TEXT.resetOnDemoPage).first()).toBeVisible()
     await expect(page.getByText(/парол[ья]\s*[:—-]?\s*demo/i)).toHaveCount(0)
@@ -87,13 +90,15 @@ test.describe('Ленивая загрузка моков (SPEC-v2 §3.1)', () =
     const regs = await page.evaluate(async () => ((await navigator.serviceWorker?.getRegistrations()) ?? []).length)
     expect(regs, 'регистрации service worker до входа в демо').toBe(0)
     const ls = await storage(page)
-    expect(ls[DEMO_FLAG_KEY] ?? '', `${DEMO_FLAG_KEY} без входа в демо`).toBe('')
+    expect(await demoFlag(page), `${DEMO_FLAG_KEY} без входа в демо`).toBeNull()
+    expect(ls[DEMO_FLAG_KEY] ?? '').toBe('')
   })
 
   test('открыть /demo ещё не значит включить демо: флага и SW нет, пока роль не выбрана', async ({ page }) => {
     await openDemo(page)
     await page.waitForLoadState('networkidle')
     const ls = await storage(page)
+    expect(await demoFlag(page)).toBeNull()
     expect(ls[DEMO_FLAG_KEY] ?? '').toBe('')
     expect(ls[REAL_TOKEN_KEY] ?? '').toBe('')
   })
@@ -115,7 +120,8 @@ test.describe('Service worker не поднялся (SPEC-v2 §2.4)', () => {
     [
       'serviceWorker недоступен в браузере',
       () => {
-        Object.defineProperty(Navigator.prototype, 'serviceWorker', { configurable: true, get: () => undefined })
+        // как в браузере без SW (небезопасный контекст, часть приватных режимов): свойства navigator.serviceWorker нет вовсе
+        delete (Navigator.prototype as unknown as Record<string, unknown>).serviceWorker
       },
     ],
   ] as const) {
@@ -125,17 +131,38 @@ test.describe('Service worker не поднялся (SPEC-v2 §2.4)', () => {
       await page.addInitScript(script)
       await openDemo(page)
       await personaCard(page, 'fc_owner').click()
-      await expect(page.getByText(TEXT.swFailed)).toBeVisible()
+      await expect(page.getByTestId(TESTID.startError)).toContainText(TEXT.swFailed)
       await expect(page.getByText(TEXT.v1Disabled)).toHaveCount(0)
-      const toLogin = visibleAction(page, TEXT.toLogin).first()
+      const toLogin = page.getByTestId(TESTID.startError).getByRole('button', { name: TEXT.toLogin })
       await expect(toLogin).toBeVisible()
       // Реальный API не должен получить демо-вход как боевой (§2.4); страж demoLeaks дополнительно ловит X-WMS-Demo/mock.
       expect(demoPosts, 'запросы /auth/demo при неподнятом SW').toEqual([])
       const ls = await storage(page)
       expect(ls[REAL_TOKEN_KEY] ?? '', 'боевой токен не появился').toBe('')
-      expect(ls[DEMO_FLAG_KEY] ?? '', `${DEMO_FLAG_KEY} не остаётся включённым после неудачи`).not.toBe('1')
+      expect(await demoFlag(page), `${DEMO_FLAG_KEY} не остаётся включённым после неудачи`).not.toBe('1')
       await toLogin.click()
       await expect.poll(() => pathname(page)).toBe('/login')
     })
   }
+})
+
+test.describe('Флаг демо — на вкладку, а не на браузер (SPEC-v2 §12 Q-1, §3.4)', () => {
+  test('флаг wms.demo.active лежит в sessionStorage, в localStorage его нет', async ({ page }) => {
+    await enterDemo(page, 'fc_owner')
+    expect(await demoFlag(page), 'sessionStorage').toBe('1')
+    expect((await storage(page))[DEMO_FLAG_KEY], 'localStorage не должен содержать флаг (§12)').toBeUndefined()
+  })
+
+  test('новая вкладка того же браузера открывается как боевая; перезагрузка демо-вкладки остаётся демо', async ({ page, context }) => {
+    await enterDemo(page, 'seller_owner')
+    const other = await context.newPage()
+    await other.goto('/')
+    await expect.poll(() => pathname(other)).toBe('/login')
+    expect(await demoFlag(other), 'флаг в новой вкладке').toBeNull()
+    await expect(banner(other)).toHaveCount(0)
+    await other.close()
+    await page.reload()
+    await expect(banner(page).first()).toBeVisible()
+    expect(await demoFlag(page)).toBe('1')
+  })
 })

@@ -3,13 +3,18 @@
  * Если фронт v2 выберет другие имена (в §3.3/§3.4 часть из них дана как «например»), правится только этот файл.
  */
 
-/** §3.2, §11.2: флаг демо в localStorage */
+/**
+ * §3.2, §11.2, §12 (Q-1): признак «эта вкладка в демо» — ТОЛЬКО в sessionStorage (на вкладку), чтобы соседняя боевая
+ * вкладка того же origin не переключилась в демо. В localStorage флага быть не должно. Читать — `demoFlag()` из fixtures.
+ */
 export const DEMO_FLAG_KEY = 'wms.demo.active'
+/** Последняя выбранная персона (localStorage) — по ней «Сбросить данные» перезаходит текущей ролью */
+export const DEMO_PERSONA_KEY = 'wms.demo.persona'
 /** §3.3: ключи боевой сессии — вход в демо не должен их трогать */
 export const REAL_TOKEN_KEY = 'wms.token'
 export const REAL_SESSION_KEYS = ['wms.token', 'wms.organizationId', 'wms.warehouseId'] as const
-/** §3.3 (например): ключи демо-сессии. Тесты ищут демо-токен по значению, а не только по имени ключа */
-export const DEMO_TOKEN_KEY_HINT = 'wms.demo.token'
+/** §3.3: ключи демо-сессии (localStorage), фронт v2: src/app/demoMode.ts. Демо-токен ищем по значению mock.demo:… */
+export const DEMO_TOKEN_KEY = 'wms.demo.token'
 /** Мок-токены: `mock.<userId>` / `mock.demo:<userId>` (src/mocks/lib/http.ts) */
 export const MOCK_TOKEN_PREFIX = 'mock.'
 export const DEMO_TOKEN_PREFIX = 'mock.demo:'
@@ -26,9 +31,11 @@ export const MOCK_COLLECTION_PREFIX = 'wms.mock.'
 export const TEXT = {
   tryDemo: 'Попробовать демо',
   loginHint: 'Аккаунт не нужен — выберите роль и посмотрите систему',
+  /** Подпись в баннере (фронт v2, §2.3) */
+  bannerHint: 'Это учебный стенд в браузере, на настоящую WMS не влияет',
   demoTitle: 'Попробуйте систему в демо',
   /** §2.1: данные личные, живут в этом браузере */
-  demoPersonal: /в этом браузере|личн/i,
+  demoPersonal: /личная песочница/i,
   /** §2.1, §3.7: про общий ночной сброс стенда больше не писать */
   demoNoNightly: /03:00|каждую ночь|ночн|стенд общий|данные общие/i,
   resetOnDemoPage: 'Сбросить демо-данные',
@@ -47,4 +54,13 @@ export const TEXT = {
 } as const
 
 /** Признак JWT реального API (мок-токены начинаются с `mock.`) */
+/** data-testid фронта v2 (оставлены только там, где роль/текст неоднозначны) */
+export const TESTID = {
+  banner: 'demo-banner',
+  persona: (id: string) => `demo-persona-${id}`,
+  tryDemo: 'try-demo',
+  resetOnPage: 'demo-reset-page',
+  startError: 'demo-start-error',
+} as const
+
 export const looksLikeJwt = (token: string | null | undefined) => !!token && /^eyJ[\w-]+\.[\w-]+\.[\w-]+$/.test(token)

@@ -1,9 +1,12 @@
+import type { Response } from '@playwright/test'
 import { DEMO_FLAG_KEY, DEMO_HEADER, DEMO_HEADER_VALUE, TEXT } from './contract'
 import {
   banner,
+  demoFlag,
   enterDemo,
   expect,
   expectBanner,
+  isApiUrl,
   pathname,
   recordApiRequests,
   sidebarLink,
@@ -19,10 +22,12 @@ test.describe('11 ролей: вход, кабинет, баннер (SPEC-v2 §
   for (const persona of ALL_PERSONAS) {
     test(`${persona}: кабинет ${PERSONAS[persona].home.source}, баннер, все /api — моки с ${DEMO_HEADER}`, async ({ page }) => {
       const requests = recordApiRequests(page)
+      const responses: Response[] = []
+      page.on('response', (r) => isApiUrl(r.url()) && responses.push(r))
       await enterDemo(page, persona)
       await expectBanner(page, persona)
       const ls = await storage(page)
-      expect(ls[DEMO_FLAG_KEY], `флаг ${DEMO_FLAG_KEY}`).toBe('1')
+      expect(await demoFlag(page), `флаг ${DEMO_FLAG_KEY} в sessionStorage`).toBe('1')
       // Пароль нигде не сохраняется
       expect(JSON.stringify(ls)).not.toMatch(/"password"|"demo"/i)
 
@@ -37,8 +42,11 @@ test.describe('11 ролей: вход, кабинет, баннер (SPEC-v2 §
       expect(requests.length).toBeGreaterThan(0)
       for (const r of requests) {
         expect(r.headers()[DEMO_HEADER], `${DEMO_HEADER}: ${r.method()} ${r.url()}`).toBe(DEMO_HEADER_VALUE)
-        const res = await r.response()
-        if (res) expect(res.fromServiceWorker(), `ответ от MSW: ${r.method()} ${r.url()}`).toBe(true)
+      }
+      // Ответы — только полученные: отменённые навигацией запросы response() не дождутся (зависание)
+      expect(responses.length).toBeGreaterThan(0)
+      for (const res of responses) {
+        expect(res.fromServiceWorker(), `ответ от MSW: ${res.request().method()} ${res.url()}`).toBe(true)
       }
     })
   }
