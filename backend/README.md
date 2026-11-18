@@ -50,7 +50,7 @@ CORS по умолчанию разрешён для `http://localhost:5173` (`C
 | am@fc1.demo.ru | fc_account_manager (СкладПро Фулфилмент) |
 
 Снимок организаций и пользователей — `src/Wms.Infrastructure/Seeding/Data/identity.json`, сгенерирован из
-`frontend/src/mocks/db/seed.ts` (`seed()` детерминирован, seed 20261002). Пользователь `am@fc1.demo.ru` (`fc_account_manager`) добавлен в сид отдельно для демо-режима.
+`frontend/src/mocks/db/seed.ts` (`seed()` детерминирован, seed 20261002). Пользователь `am@fc1.demo.ru` (`fc_account_manager`) добавлен в сид для локальной разработки.
 
 ## Тесты
 
@@ -80,44 +80,30 @@ dotnet ef database update -p src/Wms.Infrastructure -s src/Wms.Api
 |---|---|---|
 | POST | /api/auth/login | 200 `{ accessToken, user }` / 401 |
 | POST | /api/auth/register | 201 `{ accessToken, user }`, организация `pending` / 400 / 409 |
-| GET | /api/auth/me | 200 `CurrentUser` (есть `isDemo`) / 401 |
-| GET | /api/auth/demo/status | 200 `{ enabled }` (публичный) |
-| POST | /api/auth/demo | 200 `AuthResponse` (`isDemo: true`) / 404 / 422 / 429 |
-| POST | /api/admin/demo/reset | 200 `{ status: "ok" }` (не-демо `platform_admin`) / 403 / 404 / 409 |
-| GET | /health | 200 (в том числе во время сброса демо-данных) |
+| GET | /api/auth/me | 200 `CurrentUser` (`isDemo` всегда `false`) / 401 |
+| GET | /api/auth/demo/status | 200 `{ "enabled": false }` (публичный stub) |
+| POST | /api/auth/demo | 404 (серверный демо-вход упразднён) |
+| GET | /health | 200 |
 
 Ключ подписи JWT в `appsettings.json` — только для разработки; в окружениях задавайте `Jwt__SigningKey`.
 
 ## Демо-режим
 
-Секция конфигурации `Demo` (в `appsettings.json` выключена; на проде включать только через `/opt/wms/.env`, в репозиторий секреты не класть):
+Серверный демо-контур (вход `POST /api/auth/demo` в сиды этой же БД, claim `demo`, стоп-лист, ночной `TRUNCATE`, `POST /api/admin/demo/reset`) **упразднён**. Учебное демо работает в браузере на слое MSW и не ходит в этот API. Ключи `Demo__*` на сервере не задавать и не включать.
 
-```
-Demo__Enabled=false          # на проде true
-Demo__TokenLifetimeMinutes=120
-Demo__ResetHourMoscow=3      # ежедневный сброс в 03:00 Europe/Moscow
-```
+Оставшиеся заглушки (страховка, если UI всё же стукнул в `/api`):
 
-- `GET /api/auth/demo/status` — публичный, `{ "enabled": true|false }`. Когда демо выключено, статус всё равно 200 с `enabled: false`.
-- `POST /api/auth/demo` `{ "persona": "fc_owner" }` — тот же `AuthResponse`, что и логин. JWT с claim `demo=true` и сроком `Demo:TokenLifetimeMinutes` (не 720). В DTO пользователя и в `GET /api/auth/me` поле `isDemo: true` (берётся из claim, не из записи пользователя).
-- Если `Demo:Enabled=false` → `POST /api/auth/demo` отвечает 404 (как будто эндпоинта нет). Неизвестная персона → 422.
-- 11 персон и канонические сиды: `platform_admin` → `admin@demo.ru`, `fc_owner` → `director@demo.ru`, `fc_manager` → `manager@demo.ru`, `fc_supervisor` → `staff8@fc1.demo.ru`, `fc_account_manager` → `am@fc1.demo.ru`, `fc_receiver` → `staff1@fc1.demo.ru`, `fc_picker` → `picker@demo.ru`, `fc_packer` → `staff6@fc1.demo.ru`, `seller_owner` → `seller@demo.ru`, `seller_manager` → `manager@ud.demo.ru`, `pending` → `owner1@pending.demo.ru`. Вторую пачку учёток не создаём.
-- Ограничения стоп-листа действуют **только** для demo-токена. Обычный вход по паролю `demo` даёт `isDemo: false` и полный доступ (для комиссии и владельца).
-- Стоп-лист (403 ProblemDetails, title «В демо-режиме это действие недоступно»):  
-  `POST /api/admin/organizations/{id}/{approve|reject|block|unblock}`,  
-  `POST /api/admin/users/{id}/{reset-password|block|unblock}`,  
-  `POST /api/admin/references`, `POST /api/admin/references/{id}/toggle`,  
-  `POST /api/admin/demo/reset`,  
-  `POST /api/integrations/{channel}/connect`, `.../disconnect`, `PUT /api/integrations/{channel}`, `POST /api/integrations/{channel}/sync`,  
-  `PUT /api/settings/profile`, `POST /api/settings/team/invite`, `POST /api/settings/team/{id}/revoke`,  
-  `POST /api/fc/client-requests/{id}/{decision}`, `POST /api/seller/fulfillments/{id}/connect`,  
-  `PUT /api/billing/tariffs/{id}`, `POST /api/warehouses/{id}/zones`, `POST /api/warehouses/{id}/locations`,  
-  `PUT /api/staff/{id}`, `POST /api/staff/{id}/shifts`, `POST /api/catalog/products/{id}/archive`,  
-  `POST /api/analytics/slotting/apply`, `POST /api/stock/writeoff`, `POST /api/tasks/{id}/cancel`.
-- Ночной сброс: `IHostedService` в 03:00 Europe/Moscow при `Demo:Enabled`. Ручной: `POST /api/admin/demo/reset` только для `platform_admin` с обычным (не демо) токеном. Алгоритм: эксклюзивный lock → флаг «идёт сброс» → `TRUNCATE … CASCADE` всех бизнес-таблиц (не `__EFMigrationsHistory`) → `DbSeeder` → `BillingHandler.ProvisionAsync`. Потоково, без копии БД в память.
-- Пока идёт сброс: все `/api/*` кроме `GET /api/auth/demo/status` отвечают 503 с заголовком `Retry-After: 60` и title «Демо-данные обновляются, подождите минуту». `GET /health` всегда 200.
-- Rate limiting (по IP, `Microsoft.AspNetCore.RateLimiting`): `POST /api/auth/demo` — 10/мин и 60/час; `POST /api/auth/login` и `/register` — 20/мин. 429 ProblemDetails, title «Слишком много попыток, попробуйте позже». Включён `UseForwardedHeaders` (`X-Forwarded-For` / `X-Forwarded-Proto`, известный прокси только `127.0.0.1` / `::1`).
-- Сид `am@fc1.demo.ru` (`usr_fc1_12`, роль `fc_account_manager` в `org_fc1`). Меню «Задания» / «Комплектация» на фронте нужно ограничить ролями `fc_owner` / `fc_manager` / `fc_supervisor` — API их этой роли не открывает. На уже заполненной прод-БД учётка появится только после сброса демо-данных (прод без явного разрешения не сбрасывать).
+- `GET /api/auth/demo/status` — публичный, всегда `{ "enabled": false }`, без побочных эффектов.
+- `POST /api/auth/demo` — всегда 404 ProblemDetails, title «Не найдено»; в сидовых пользователей не логинит.
+- `POST /api/admin/demo/reset` — маршрута нет (404). Кода сброса БД в приложении больше нет.
+- Поле `isDemo` в DTO пользователя и в `GET /api/auth/me` сохранено для совместимости и **всегда `false`**. JWT не содержит claim `demo`.
+
+Общая гигиена API (не «демо-контур»):
+
+- Rate limiting по IP: `POST /api/auth/login` и `POST /api/auth/register` — 20 запросов/мин. 429 ProblemDetails, title «Слишком много попыток, попробуйте позже».
+- `UseForwardedHeaders` (`X-Forwarded-For` / `X-Forwarded-Proto`), известный прокси только `127.0.0.1` / `::1`.
+
+Сиды в `identity.json` (включая `am@fc1.demo.ru`) остаются инструментом локальной разработки и тестов (`Database__Seed=true` при старте, только если таблица пользователей пуста). На заполненную прод-БД сидер сам ничего не накатывает.
 
 
 ## Отклонения от моков (PR2: организации, справочники, настройки)
