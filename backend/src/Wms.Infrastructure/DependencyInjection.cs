@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Wms.Application.Abstractions;
+using Wms.Application.Demo;
 using Wms.Application.Catalog;
 using Wms.Infrastructure.Persistence;
 using Wms.Infrastructure.Persistence.Repositories;
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.Section));
+        services.Configure<DemoOptions>(configuration.GetSection(DemoOptions.Section));
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
         services.AddSingleton<IClock, SystemClock>();
@@ -42,6 +44,7 @@ public static class DependencyInjection
         services.AddHttpClient(MarketplaceClientNames.Ozon, c => c.Timeout = TimeSpan.FromSeconds(30));
         services.AddSingleton<IMarketplaceClientResolver, MarketplaceClientResolver>();
         services.AddScoped<DbSeeder>();
+        services.AddScoped<IDatabaseReset, DatabaseReset>();
         return services;
     }
 
