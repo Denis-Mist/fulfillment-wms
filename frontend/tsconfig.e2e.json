@@ -13,5 +13,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["e2e/**/*.ts", "e2e-demo/**/*.ts", "e2e-runtime/**/*.ts", "playwright.config.ts", "playwright.demo.config.ts", "playwright.runtime.config.ts"]
+  "include": ["e2e/**/*.ts", "e2e-demo/**/*.ts", "e2e-runtime/**/*.ts", "playwright.config.ts", "playwright.demo.config.ts", "playwright.runtime.config.ts", "vite.e2e-demo.config.ts"]
 }
