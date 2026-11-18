@@ -5,7 +5,6 @@ using Wms.Application.Auth;
 using Wms.Application.Catalog;
 using Wms.Application.Clients;
 using Wms.Application.Common;
-using Wms.Application.Demo;
 using Wms.Application.Directory;
 using Wms.Application.Notifications;
 using Wms.Application.Partners;
@@ -26,9 +25,6 @@ public static class DependencyInjection
         services.AddScoped<LoginHandler>();
         services.AddScoped<RegisterHandler>();
         services.AddScoped<GetCurrentUserHandler>();
-        services.AddScoped<DemoLoginHandler>();
-        services.AddSingleton<IDemoResetGate, DemoResetGate>();
-        services.AddScoped<IDemoResetService, DemoResetService>();
 
         // Admin
         services.AddScoped<IOrganizationOwnerLookup, OrganizationOwnerLookup>();
