@@ -1,0 +1,2181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>КОРОБ — фулфилмент для маленьких селлеров</title>
+<meta name="description" content="Склад в Люберцах: приёмка, хранение, маркировка, упаковка, доставка на WB и Ozon, возвраты. Работаем с небольшими объёмами, которые не берут крупные фулфилменты.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:        hsl(220 18% 97%);
+  --surface:   hsl(0 0% 100%);
+  --surface-2: hsl(220 16% 94%);
+  --surface-3: hsl(220 14% 90%);
+  --ink:       hsl(222 28% 9%);
+  --muted:     hsl(220 10% 42%);
+  --dim:       hsl(220 8% 56%);
+  --line:      hsl(220 14% 88%);
+  --line-soft: hsl(220 14% 92%);
+  --accent:    hsl(23 94% 54%);
+  --accent-ink:hsl(18 78% 26%);
+  --accent-soft: hsl(23 94% 54% / .11);
+  --accent-glow: hsl(23 94% 54% / .22);
+  --ok:        hsl(152 58% 36%);
+  --r:         10px;
+  --r-lg:      16px;
+  --r-xl:      22px;
+  --display:'Archivo',sans-serif;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --maxw:1180px;
+  --ease:cubic-bezier(.22,.8,.28,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --shadow-sm: 0 4px 16px -6px hsl(220 30% 20% / .08);
+  --shadow-md: 0 18px 40px -18px hsl(220 30% 18% / .18);
+  --shadow-lg: 0 32px 64px -28px hsl(220 30% 16% / .28);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--sans);font-weight:400;font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+a{color:inherit;text-decoration:none}
+h1,h2,h3{margin:0;font-family:var(--display);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+p{margin:0}
+::selection{background:var(--accent);color:#fff}
+.container{width:100%;max-width:var(--maxw);margin:0 auto;padding-inline:24px}
+.mono{font-family:var(--mono)}
+
+/* фон */
+.bg-fx{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, hsl(23 94% 54% / .06), transparent 60%),
+    linear-gradient(hsl(220 14% 91%) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(220 14% 91%) 1px, transparent 1px);
+  background-size:100% 100%, 72px 72px, 72px 72px;
+  mask-image:linear-gradient(180deg,#000 0%,#000 380px,transparent 680px);
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 380px,transparent 680px);
+  opacity:.7;
+}
+.wrap{position:relative;z-index:1}
+
+/* кнопки */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  font-family:var(--sans);font-weight:700;font-size:15px;
+  padding:13px 24px;border-radius:999px;border:1.5px solid transparent;cursor:pointer;
+  transition:transform .25s var(--ease),background .25s var(--ease),border-color .25s var(--ease),box-shadow .25s var(--ease);
+  white-space:nowrap;position:relative;overflow:hidden;
+}
+.btn::after{
+  content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--x,50%) var(--y,50%), hsl(0 0% 100% / .18), transparent 60%);
+  opacity:0;transition:opacity .3s;
+}
+.btn:hover::after{opacity:1}
+.btn:hover{transform:translateY(-3px)}
+.btn:active{transform:translateY(-1px)}
+.btn-primary{
+  background:var(--ink);color:#fff;
+  box-shadow:0 8px 24px -8px hsl(222 28% 9% / .45);
+}
+.btn-primary:hover{
+  background:var(--accent-ink);
+  box-shadow:0 12px 28px -8px hsl(18 78% 26% / .4);
+}
+.btn-ghost{
+  border-color:var(--line);color:var(--ink);background:var(--surface);
+  box-shadow:var(--shadow-sm);
+}
+.btn-ghost:hover{
+  border-color:var(--ink);
+  box-shadow:var(--shadow-md);
+}
+.btn-lg{padding:16px 30px;font-size:16px}
+
+/* ───────────── шапка ───────────── */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:hsl(220 18% 97% / .78);
+  backdrop-filter:blur(16px) saturate(1.4);
+  -webkit-backdrop-filter:blur(16px) saturate(1.4);
+  border-bottom:1px solid transparent;
+  transition:border-color .3s, background .3s, box-shadow .3s;
+}
+.nav.scrolled{
+  border-bottom-color:var(--line);
+  box-shadow:0 8px 32px -16px hsl(220 30% 20% / .12);
+}
+.nav-in{display:flex;align-items:center;justify-content:space-between;gap:24px;height:74px}
+.brand{display:flex;align-items:center;gap:10px;transition:transform .25s var(--ease)}
+.brand:hover{transform:scale(1.03)}
+.brand .mark{width:34px;height:34px;flex-shrink:0;transition:transform .4s var(--ease)}
+.brand:hover .mark{transform:rotate(-8deg)}
+.brand span{font-family:var(--display);font-weight:900;font-size:21px;letter-spacing:-.02em}
+.nav-links{display:flex;gap:30px;font-size:14.5px;font-weight:600;color:var(--muted)}
+.nav-links a{
+  position:relative;padding:4px 0;
+  transition:color .25s;
+}
+.nav-links a::after{
+  content:'';position:absolute;left:0;bottom:-2px;width:0;height:2px;
+  background:var(--accent);border-radius:2px;
+  transition:width .3s var(--ease);
+}
+.nav-links a:hover,.nav-links a.active{color:var(--ink)}
+.nav-links a:hover::after,.nav-links a.active::after{width:100%}
+.nav-cta{display:flex;align-items:center;gap:10px}
+
+/* ───────────── герой ───────────── */
+.hero{padding:72px 0 40px}
+.hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:60px;align-items:center}
+.kicker{
+  display:inline-flex;align-items:center;gap:9px;
+  font-family:var(--mono);font-size:12.5px;color:var(--muted);
+  background:var(--surface);border:1px solid var(--line);
+  padding:7px 14px 7px 12px;border-radius:999px;
+  box-shadow:var(--shadow-sm);
+}
+.kicker i{
+  width:7px;height:7px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft);
+  animation:pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 3px var(--accent-soft)}
+  50%{box-shadow:0 0 0 6px hsl(23 94% 54% / .08)}
+}
+.hero h1{font-size:clamp(40px,5.6vw,64px);margin-top:22px}
+.hero h1 em{
+  font-style:normal;color:var(--accent-ink);
+  background:linear-gradient(transparent 58%, var(--accent-soft) 0);
+  padding:0 2px;
+}
+.hero-sub{margin-top:22px;font-size:18.5px;color:var(--muted);max-width:490px;line-height:1.65}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.hero-trust{
+  display:flex;gap:28px;flex-wrap:wrap;margin-top:30px;
+  font-size:13.5px;color:var(--dim);
+}
+.hero-trust b{color:var(--ink);font-weight:700}
+
+/* накладная */
+.slip{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r-xl);
+  padding:0;
+  box-shadow:var(--shadow-lg);
+  position:relative;
+  transition:transform .5s var(--ease-out), box-shadow .5s var(--ease);
+  transform-style:preserve-3d;
+}
+.slip:hover{
+  box-shadow:0 40px 80px -30px hsl(220 30% 16% / .32);
+}
+.slip-head{
+  padding:22px 24px 18px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  border-bottom:1px dashed var(--line);
+}
+.slip-head .t1{font-family:var(--mono);font-size:11.5px;color:var(--dim);letter-spacing:.05em}
+.slip-head .t2{font-family:var(--mono);font-size:14.5px;font-weight:600;margin-top:5px}
+.slip-stamp{
+  font-family:var(--display);font-weight:900;font-size:13px;color:var(--ok);
+  border:2px solid var(--ok);border-radius:6px;padding:6px 11px;
+  transform:rotate(-8deg);
+  letter-spacing:.03em;
+  animation:stampIn .7s var(--ease-out) .4s both;
+}
+@keyframes stampIn{
+  from{opacity:0;transform:rotate(-8deg) scale(1.4)}
+  to{opacity:1;transform:rotate(-8deg) scale(1)}
+}
+.barcode{display:flex;align-items:flex-end;gap:2px;height:38px;padding:20px 24px 0}
+.barcode i{
+  display:block;background:var(--ink);flex-shrink:0;
+  transform-origin:bottom;
+  animation:barGrow .6s var(--ease-out) both;
+}
+@keyframes barGrow{
+  from{transform:scaleY(0);opacity:0}
+  to{transform:scaleY(1);opacity:1}
+}
+.slip-rows{padding:8px 24px 6px}
+.slip-row{
+  display:grid;grid-template-columns:1.3fr .6fr 1fr;gap:10px;
+  padding:12px 0;border-bottom:1px solid var(--line-soft);font-size:14px;
+  opacity:0;transform:translateY(8px);
+  animation:rowIn .5s var(--ease-out) both;
+}
+.slip-row:nth-child(1){animation-delay:.55s}
+.slip-row:nth-child(2){animation-delay:.68s}
+.slip-row:nth-child(3){animation-delay:.81s}
+@keyframes rowIn{
+  to{opacity:1;transform:none}
+}
+.slip-row:last-child{border-bottom:none}
+.slip-row .sku{font-family:var(--mono);font-size:13px}
+.slip-row .qty{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.slip-row .st{
+  font-size:12.5px;font-weight:600;justify-self:start;
+  padding:3px 10px;border-radius:100px;
+  background:var(--accent-soft);color:var(--accent-ink);white-space:nowrap;
+}
+.slip-row .st.wait{background:var(--surface-2);color:var(--muted)}
+.slip-foot{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:6px;padding:18px 24px;
+  border-top:1px solid var(--line);
+  background:linear-gradient(180deg,var(--surface-2),hsl(220 16% 95%));
+  border-radius:0 0 var(--r-xl) var(--r-xl);
+}
+.slip-foot .lbl{font-size:12.5px;color:var(--muted)}
+.slip-foot .val{font-family:var(--mono);font-weight:600;font-size:22px}
+
+/* бегущая строка */
+.ticker{
+  border-block:1px solid var(--line);margin-top:64px;overflow:hidden;
+  background:var(--surface);
+  mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);
+}
+.ticker-track{display:flex;width:max-content}
+
+.tick{
+  display:flex;align-items:center;gap:10px;padding:14px 28px;
+  border-right:1px solid var(--line-soft);
+  font-family:var(--mono);font-size:13.5px;white-space:nowrap;color:var(--muted);
+  transition:color .25s;
+}
+.tick:hover{color:var(--ink)}
+.tick b{color:var(--ink);font-weight:600}
+
+/* секции */
+section{padding:112px 0}
+.sec-head{max-width:640px;margin-bottom:52px}
+.eyebrow{
+  font-family:var(--mono);font-size:12.5px;color:var(--dim);
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.sec-head h2{font-size:clamp(30px,3.8vw,44px);margin-top:14px}
+.sec-head p{margin-top:18px;font-size:17.5px;color:var(--muted);line-height:1.6}
+
+/* статистика */
+.stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r-xl);overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+.stat{
+  background:var(--surface);padding:32px 24px;
+  transition:background .3s;
+  position:relative;
+}
+.stat:hover{background:var(--surface-2)}
+.stat b{
+  display:block;font-family:var(--mono);font-weight:600;
+  font-size:34px;letter-spacing:-.02em;
+  background:linear-gradient(135deg,var(--ink),var(--accent-ink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.stat span{display:block;margin-top:8px;font-size:13.5px;color:var(--muted)}
+
+/* услуги */
+.services{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r-xl);overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+.svc{
+  background:var(--surface);padding:34px 28px;
+  transition:background .3s, transform .35s var(--ease);
+  position:relative;
+}
+.svc:hover{background:var(--surface-2);z-index:2}
+.svc-ico{
+  width:44px;height:44px;display:grid;place-items:center;
+  color:var(--accent-ink);background:var(--accent-soft);
+  border-radius:12px;transition:transform .4s var(--ease), background .3s;
+}
+.svc:hover .svc-ico{
+  transform:translateY(-4px) scale(1.08);
+  background:var(--accent-glow);
+}
+.svc h3{font-size:17.5px;margin:18px 0 10px;font-weight:700;font-family:var(--sans);letter-spacing:-.01em}
+.svc p{color:var(--muted);font-size:14.5px;line-height:1.55}
+.svc .price{
+  margin-top:18px;font-family:var(--mono);font-size:14.5px;font-weight:600;
+  color:var(--accent-ink);display:inline-flex;align-items:center;gap:6px;
+}
+.svc .price::before{
+  content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);
+  opacity:.7;
+}
+
+/* versus */
+.versus{
+  border:1px solid var(--line);border-radius:var(--r-xl);overflow:hidden;
+  background:var(--surface);box-shadow:var(--shadow-sm);
+}
+.v-row{display:grid;grid-template-columns:1.1fr 1fr 1fr}
+.v-row + .v-row{border-top:1px solid var(--line)}
+.v-cell{padding:20px 24px;font-size:14.5px;transition:background .25s}
+.v-row.head .v-cell{
+  font-family:var(--mono);font-size:12.5px;color:var(--dim);
+  padding-top:18px;padding-bottom:18px;background:var(--surface-2);
+}
+.v-cell.feat{color:var(--muted);font-weight:600}
+.v-cell.them{color:var(--dim)}
+.v-cell.them::before{content:'−  ';color:var(--dim)}
+.v-cell.us{
+  color:var(--ink);font-weight:600;
+  background:linear-gradient(90deg,var(--accent-soft),transparent);
+}
+.v-cell.us::before{content:'✓  ';color:var(--accent-ink)}
+.v-row:not(.head) .v-cell:not(.feat):not(.them):not(.us){display:none}
+
+/* процесс */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.step{
+  padding:28px 24px;border:1px solid var(--line);border-radius:var(--r-xl);
+  background:var(--surface);box-shadow:var(--shadow-sm);
+  transition:transform .35s var(--ease), box-shadow .35s var(--ease), border-color .3s;
+  position:relative;
+}
+.step:hover{
+  transform:translateY(-6px);
+  box-shadow:var(--shadow-md);
+  border-color:hsl(220 14% 82%);
+}
+.step-n{
+  font-family:var(--mono);font-size:24px;font-weight:600;
+  color:var(--accent);
+  background:linear-gradient(135deg,var(--accent),hsl(23 94% 42%));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.step h3{font-size:17px;margin:16px 0 10px;font-weight:700;font-family:var(--sans)}
+.step p{color:var(--muted);font-size:14px;line-height:1.55}
+
+/* FAQ */
+.faq{border-top:1px solid var(--line)}
+details{border-bottom:1px solid var(--line)}
+summary{
+  list-style:none;cursor:pointer;padding:24px 0;
+  display:flex;justify-content:space-between;align-items:center;gap:20px;
+  font-size:17.5px;font-weight:700;transition:color .25s;
+}
+summary:hover{color:var(--accent-ink)}
+summary::-webkit-details-marker{display:none}
+summary .pm{
+  flex-shrink:0;width:28px;height:28px;border:1.5px solid var(--line);
+  border-radius:50%;display:grid;place-items:center;
+  font-family:var(--mono);font-size:16px;color:var(--muted);
+  transition:transform .35s var(--ease), border-color .3s, color .3s, background .3s;
+}
+details[open] summary .pm{
+  transform:rotate(45deg);border-color:var(--accent);
+  color:var(--accent-ink);background:var(--accent-soft);
+}
+details p{
+  padding:0 48px 26px 0;color:var(--muted);font-size:15.5px;line-height:1.65;
+  animation:faqOpen .4s var(--ease-out);
+}
+@keyframes faqOpen{
+  from{opacity:0;transform:translateY(-6px)}
+  to{opacity:1;transform:none}
+}
+
+/* контакты */
+.cta-box{
+  border:1px solid var(--line);border-radius:var(--r-xl);
+  padding:60px 48px;background:var(--surface);
+  position:relative;overflow:hidden;
+  box-shadow:var(--shadow-md);
+}
+.cta-box::before{
+  content:'';position:absolute;top:-40%;right:-20%;width:60%;height:100%;
+  background:radial-gradient(circle, var(--accent-soft), transparent 70%);
+  pointer-events:none;
+}
+.cta-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:52px;align-items:center;position:relative}
+.cta-box h2{font-size:clamp(28px,3.8vw,40px)}
+.cta-box p{margin-top:18px;color:var(--muted);font-size:16.5px;max-width:430px;line-height:1.6}
+.cta-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+.contact-list{display:flex;flex-direction:column;gap:14px}
+.contact-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:15px 18px;border:1px solid var(--line);border-radius:var(--r);
+  font-size:14.5px;background:var(--bg);transition:border-color .25s, background .25s;
+}
+.contact-item:hover{border-color:var(--ink);background:var(--surface)}
+.contact-item .lbl{color:var(--dim);font-family:var(--mono);font-size:12px;letter-spacing:.03em}
+.contact-item .val{font-weight:600}
+.contact-person{
+  border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);
+  padding:20px;transition:transform .3s var(--ease), border-color .3s, box-shadow .3s;
+}
+.contact-person:hover{
+  transform:translateY(-4px);border-color:hsl(220 14% 78%);
+  box-shadow:var(--shadow-md);
+}
+.contact-person + .contact-person{margin-top:10px}
+.contact-person-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.contact-person-title{font-family:var(--display);font-size:15.5px;font-weight:800}
+.contact-person-status{
+  display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);
+  font-size:10.5px;color:var(--ok);text-transform:uppercase;letter-spacing:.04em;
+}
+.contact-person-status i{
+  width:7px;height:7px;border-radius:50%;background:var(--ok);
+  animation:pulse 2s ease-in-out infinite;
+}
+.contact-links{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.contact-link{
+  display:flex;align-items:center;gap:11px;padding:12px 13px;
+  border:1px solid var(--line-soft);border-radius:var(--r);
+  background:var(--bg);transition:border-color .25s, background .25s, transform .25s;
+}
+.contact-link:hover{
+  border-color:var(--ink);background:var(--surface);
+  transform:translateY(-2px);
+}
+.contact-link-icon{
+  width:32px;height:32px;display:grid;place-items:center;flex-shrink:0;
+  border-radius:50%;background:var(--ink);color:#fff;font-size:14px;
+  transition:transform .3s var(--ease);
+}
+.contact-link:hover .contact-link-icon{transform:scale(1.1)}
+.contact-link-icon.tg{background:var(--accent);font-weight:800}
+.contact-link small{display:block;color:var(--dim);font-size:10.5px;font-family:var(--mono);text-transform:uppercase;line-height:1.2}
+.contact-link strong{
+  display:block;
+  margin-top:2px;
+  font-size:13.5px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.placeholder{
+  color:var(--accent-ink);background:var(--accent-soft);
+  padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:12.5px;
+}
+
+/* подвал */
+footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)}
+.foot-top{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap}
+.foot-brand p{margin-top:14px;color:var(--dim);font-size:13.5px;max-width:290px;line-height:1.6}
+.foot-bot{
+  margin-top:40px;padding-top:24px;border-top:1px solid var(--line-soft);
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:12px;color:var(--dim);
+}
+.disclaimer{max-width:560px;line-height:1.7}
+
+/* reveal */
+.rv{
+  opacity:0;transform:translateY(28px);
+  transition:opacity .7s var(--ease-out), transform .7s var(--ease-out);
+}
+.rv.in{opacity:1;transform:none}
+.rv-d1{transition-delay:.08s}
+.rv-d2{transition-delay:.16s}
+.rv-d3{transition-delay:.24s}
+.rv-d4{transition-delay:.32s}
+.rv-d5{transition-delay:.40s}
+.rv-d6{transition-delay:.48s}
+
+@media (max-width:960px){
+  .hero-grid,.cta-grid{grid-template-columns:1fr;gap:40px}
+  .services{grid-template-columns:1fr 1fr}
+  .steps{grid-template-columns:1fr 1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .nav-links{display:none}
+  .v-row{grid-template-columns:1fr}
+  .v-cell.feat{background:var(--surface-2);font-family:var(--mono);font-size:12px}
+  section{padding:84px 0}
+}
+@media (max-width:640px){
+  #contacts{
+    padding-top:48px;
+  }
+
+  #contacts .cta-box{
+    transition:opacity .9s var(--ease-out), transform .9s var(--ease-out);
+  }
+
+  .container{padding-inline:16px}
+  .nav-in{height:64px;gap:10px}
+  .brand{gap:8px}
+  .brand .mark{width:30px;height:30px}
+  .brand span{font-size:18px}
+  .nav-cta{gap:6px}
+  .nav-cta .btn{padding:10px 14px;font-size:13px}
+  .nav-cta .btn:first-child{display:none}
+
+  .hero{padding:40px 0 20px}
+  .hero-grid{gap:32px}
+  .hero h1{font-size:clamp(34px,9.5vw,46px);line-height:1.04}
+  .hero-sub{font-size:16.5px;line-height:1.55;margin-top:18px}
+  .hero-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:26px}
+  .hero-actions .btn{width:100%}
+  .hero-trust{display:grid;grid-template-columns:1fr;gap:8px;margin-top:22px;font-size:13px}
+
+  .slip-head{padding:18px 18px 14px}
+  .slip-rows{padding:6px 18px}
+  .barcode{padding-left:18px;padding-right:18px}
+  .slip-foot{padding:15px 18px}
+  .slip-foot .val{font-size:19px}
+  .slip-row{grid-template-columns:1fr auto;gap:4px 12px;padding:11px 0}
+  .slip-row .sku{grid-column:1}
+  .slip-row .qty{grid-column:2;grid-row:1}
+  .slip-row .st{grid-column:1 / -1}
+
+  section{padding:64px 0}
+  .sec-head{margin-bottom:36px}
+  .sec-head h2{font-size:30px}
+  .sec-head p{font-size:15.5px}
+
+  .services,.steps,.stats{grid-template-columns:1fr}
+  .svc{padding:26px 22px}
+  .step{padding:24px 20px}
+  .stat{padding:24px 20px}
+  .stat b{font-size:30px}
+
+  .v-row{grid-template-columns:1fr}
+  .v-row.head{display:none}
+  .v-cell{padding:14px 18px}
+  .v-cell.feat{padding-bottom:6px}
+  .v-cell.them,.v-cell.us{padding-top:6px}
+  .v-cell.us{padding-bottom:16px}
+
+  summary{padding:20px 0;font-size:16px}
+  details p{padding:0 32px 22px 0;font-size:14.5px}
+
+  #contacts{
+    padding-top:48px;
+  }
+  .cta-box{padding:32px 20px}
+  .cta-grid{gap:32px}
+  .cta-box h2{font-size:28px}
+  .cta-box p{font-size:15.5px}
+  .cta-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:24px}
+  .cta-actions .btn{width:100%}
+
+  .contact-list{gap:12px}
+  .contact-person{padding:16px}
+  .contact-person-head{align-items:flex-start;margin-bottom:14px}
+  .contact-links{grid-template-columns:1fr;gap:8px}
+  .contact-item{align-items:flex-start;flex-direction:column;gap:6px;padding:14px 16px}
+  .contact-item .val{font-size:13.5px;overflow-wrap:anywhere}
+
+  footer{padding:40px 0}
+  .foot-bot{margin-top:28px;display:block}
+  .foot-bot > span:last-child{display:block;margin-top:14px}
+
+  /* ticker — убираем паддинг по бокам чтобы не было отступов */
+  .ticker{margin-top:40px}
+  .tick{padding:12px 18px;font-size:12.5px}
+}
+@media (max-width:360px){
+  .container{padding-inline:14px}
+  .nav-cta .btn{padding:9px 11px;font-size:12px}
+  .hero h1{font-size:32px}
+  .cta-box{padding:28px 16px}
+  .cta-box h2{font-size:26px}
+  .price-tab{padding:9px 11px;font-size:11.5px}
+  .price-table td:nth-child(3){font-size:16px;padding-right:12px}
+  .price-table .size-btn{font-size:11px;min-height:38px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .rv{opacity:1;transform:none}
+  .slip-stamp,.barcode i,.slip-row{animation:none;opacity:1;transform:none}
+}
+
+/* ───────────── новый прайс ───────────── */
+.price-section{padding-top:96px}
+.price-intro{max-width:760px}
+.price-note{
+  margin-top:16px;padding:13px 16px;border:1px solid var(--line);
+  border-radius:var(--r);background:var(--surface);color:var(--muted);
+  font-size:13.5px;display:inline-flex;gap:8px;align-items:flex-start;
+}
+.price-note b{color:var(--ink)}
+.price-panel{
+  margin-top:36px;border:1px solid var(--line);border-radius:var(--r-xl);
+  overflow:hidden;background:var(--surface);box-shadow:var(--shadow-md);
+}
+.price-tabs{
+  display:flex;padding:6px;border-bottom:1px solid var(--line);
+  background:var(--surface-2);overflow-x:auto;
+  position:relative;gap:2px;
+}
+/* скользящий фон-индикатор */
+.price-tabs-slider{
+  position:absolute;top:6px;height:calc(100% - 12px);
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;
+  box-shadow:0 2px 8px -4px hsl(220 30% 20% / .12);
+  transition:left .3s cubic-bezier(.22,.8,.28,1), width .3s cubic-bezier(.22,.8,.28,1);
+  pointer-events:none;
+  z-index:0;
+}
+.price-tab{
+  position:relative;z-index:1;
+  border:none;background:transparent;
+  border-radius:9px;padding:11px 20px;
+  font:600 13.5px var(--sans);
+  cursor:pointer;white-space:nowrap;
+  transition:color .25s;
+  display:flex;align-items:center;gap:8px;
+  color:var(--muted);
+}
+.price-tab:hover{color:var(--ink)}
+.price-tab.active{color:var(--ink)}
+/* цветные иконки-точки перед каждой вкладкой */
+.price-tab::before{
+  content:'';display:inline-block;
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  transition:transform .25s, opacity .25s;
+  opacity:.45;
+}
+.price-tab[data-price-tab="main"]::before   { background:var(--accent); }
+.price-tab[data-price-tab="storage"]::before { background:hsl(210 80% 52%); }
+.price-tab[data-price-tab="shipping"]::before{ background:hsl(152 58% 36%); }
+.price-tab[data-price-tab="returns"]::before { background:hsl(280 60% 55%); }
+.price-tab.active::before{ opacity:1; transform:scale(1.25); }
+.price-table-wrap{overflow-x:auto}
+.price-table{width:100%;border-collapse:collapse;min-width:680px}
+.price-table th{
+  text-align:left;padding:16px 22px;background:var(--surface-2);
+  color:var(--dim);font:500 11.5px var(--mono);text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.price-table td{
+  padding:17px 22px;border-top:1px solid var(--line-soft);
+  font-size:14px;vertical-align:middle;
+}
+.price-table td:first-child{font-weight:650;color:var(--ink);min-width:270px}
+.price-table td:nth-child(2){color:var(--muted);white-space:nowrap}
+.price-table td:nth-child(3){
+  color:var(--accent-ink);font:700 14px var(--mono);white-space:nowrap;
+}
+.price-table td:last-child{color:var(--muted);font-size:13px;min-width:250px}
+.price-table tr.price-row-highlight{background:var(--accent-soft)}
+.price-table tr.price-row-highlight td{background:transparent}
+.price-table tr.price-row-highlight td:first-child{
+  font-weight:800;
+  box-shadow:inset 4px 0 0 var(--accent);
+}
+.price-table tr:hover td{background:hsl(220 18% 98%)}
+.price-table tr.price-row-highlight:hover td{background:transparent}
+.price-table tr.price-row-highlight:hover{background:hsl(23 94% 54% / .16)}
+.price-table tr.price-divider td{
+  padding:10px 22px;background:var(--surface-2);
+  border-top:1px solid var(--line);font:500 11px var(--mono);
+  color:var(--dim);text-transform:uppercase;letter-spacing:.04em;
+}
+.price-param{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.price-param-note{color:var(--muted);font-size:12.5px;line-height:1.45}
+.price-foot{
+  padding:16px 22px;border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;gap:20px;align-items:center;
+  color:var(--muted);font-size:13px;background:var(--surface-2);
+}
+.price-foot strong{color:var(--ink)}
+.price-more{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:16px;border-top:1px solid var(--line-soft);
+  color:var(--ink);font-size:13.5px;font-weight:700;cursor:pointer;
+}
+.price-more span{transition:transform .3s}
+.price-more.open span{transform:rotate(180deg)}
+.price-hidden{display:none}
+.price-hidden.open{display:table-row}
+
+/* ───── size picker в таблице прайса ───── */
+.size-picker{
+  display:inline-flex;gap:4px;flex-wrap:wrap;align-items:center;
+}
+.size-btn{
+  border:1.5px solid var(--line);background:var(--surface-2);color:var(--muted);
+  border-radius:6px;padding:5px 10px;font:600 11.5px var(--mono);
+  cursor:pointer;transition:border-color .18s,background .18s,color .18s,transform .18s;
+  white-space:nowrap;
+}
+.size-btn:hover{border-color:var(--dim);color:var(--ink);background:var(--surface);transform:translateY(-1px)}
+.size-btn.active{
+  border-color:var(--ink);background:var(--ink);color:#fff;
+  box-shadow:0 3px 10px -4px hsl(220 30% 10% / .35);
+}
+.price-val{
+  display:inline-block;
+  font:700 14px var(--mono);color:var(--accent-ink);
+  transition:opacity .18s,transform .18s;
+}
+.price-val.changing{opacity:0;transform:translateY(-4px)}
+
+/* ───── кастомный пикер в калькуляторе ───── */
+.calc-picker{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:6px;
+}
+.calc-picker.calc-picker-sm{
+  grid-template-columns:repeat(3,1fr);
+}
+.calc-picker.calc-picker-wide{
+  grid-template-columns:repeat(2,1fr);
+}
+.calc-pick-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:10px 6px;
+  border:1.5px solid var(--line);border-radius:var(--r);
+  background:var(--surface-2);cursor:pointer;
+  transition:border-color .18s,background .18s,box-shadow .18s,transform .18s;
+  text-align:center;
+}
+.calc-pick-btn:hover{
+  border-color:var(--dim);background:var(--surface);
+  transform:translateY(-1px);
+}
+.calc-pick-btn strong{
+  display:block;font:700 14px var(--mono);color:var(--ink);line-height:1;
+}
+.calc-pick-btn small{
+  display:block;font:500 10.5px var(--mono);color:var(--muted);
+  white-space:nowrap;line-height:1.3;
+}
+.calc-pick-btn.active{
+  border-color:var(--ink);background:var(--ink);
+  box-shadow:0 4px 14px -6px hsl(220 30% 10% / .4);
+  transform:translateY(-1px);
+}
+.calc-pick-btn.active strong{color:#fff}
+.calc-pick-btn.active small{color:hsl(0 0% 100% / .65)}
+
+/* широкие кнопки (направление доставки) */
+.calc-picker-wide .calc-pick-btn{
+  flex-direction:column;align-items:flex-start;
+  justify-content:center;gap:3px;
+  padding:14px 18px;text-align:left;
+  min-width:0;
+}
+.calc-picker-wide .calc-pick-btn strong{
+  font-size:14px;font-family:var(--sans);font-weight:700;
+  white-space:normal;word-break:break-word;line-height:1.2;
+}
+.calc-picker-wide .calc-pick-btn small{
+  font-size:12px;font-family:var(--mono);opacity:.75;
+}
+.calc-picker-wide .calc-pick-btn.active small{
+  opacity:.65;color:hsl(0 0% 100% / .7);
+}
+
+@media(max-width:640px){
+  /* пикер размера: XS–XL — 3+2 вместо 5 в ряд */
+  .calc-picker{grid-template-columns:repeat(3,1fr)}
+  .calc-pick-btn{padding:9px 4px}
+  .calc-pick-btn small{font-size:10px;white-space:normal;line-height:1.2}
+  /* пикер S/M/L — оставляем 3 в ряд, просто уменьшаем паддинг */
+  .calc-picker-sm .calc-pick-btn{padding:10px 4px}
+  /* доставка — стекаем вертикально */
+  .calc-picker-wide{grid-template-columns:1fr}
+}
+
+.calc{
+  margin-top:26px;border:1px solid var(--line);border-radius:var(--r-xl);
+  background:linear-gradient(135deg,var(--surface),hsl(23 94% 54% / .045));
+  padding:30px;box-shadow:var(--shadow-sm);
+}
+.calc-head{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
+.calc-head h3{font-size:22px}
+.calc-head p{margin-top:7px;color:var(--muted);font-size:14px}
+.calc-grid{
+  margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:12px;
+}
+.calc-control{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:15px 16px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--surface);
+}
+.calc-label{font-size:14px;font-weight:650}
+.calc-sub{display:block;margin-top:3px;font-size:11.5px;color:var(--dim)}
+.stepper{display:flex;align-items:center;gap:9px}
+.stepper button{
+  width:32px;height:32px;border:1px solid var(--line);background:var(--surface-2);
+  border-radius:50%;font:600 18px var(--mono);cursor:pointer;color:var(--ink);
+}
+.stepper button:hover{border-color:var(--ink)}
+.stepper input{
+  width:58px;text-align:center;border:0;background:transparent;
+  font:600 15px var(--mono);color:var(--ink);outline:0;
+}
+.calc-check{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  padding:15px 16px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--surface);font-size:14px;font-weight:650;
+}
+.calc-check input{accent-color:var(--accent);width:17px;height:17px}
+.calc-result{
+  margin-top:18px;padding:20px 22px;border-radius:var(--r-lg);
+  background:var(--ink);color:#fff;display:flex;justify-content:space-between;
+  align-items:center;gap:20px;
+}
+.calc-result small{display:block;color:hsl(0 0% 100% / .65);font-size:11px;font-family:var(--mono);text-transform:uppercase}
+.calc-result strong{display:block;margin-top:4px;font:700 27px var(--mono)}
+.calc-result .calc-action{
+  color:#fff;border:1px solid hsl(0 0% 100% / .22);background:hsl(0 0% 100% / .08);
+  padding:11px 16px;border-radius:999px;font-size:13px;font-weight:700;
+}
+.calc-hint{margin-top:11px;color:var(--dim);font-size:12px;line-height:1.5}
+
+.audience{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:var(--r-xl);
+  overflow:hidden;box-shadow:var(--shadow-sm);
+}
+.audience-card{background:var(--surface);padding:28px 24px}
+.audience-card b{display:block;font-size:15px}
+.audience-card p{margin-top:9px;color:var(--muted);font-size:13.5px;line-height:1.55}
+
+.launch-box{
+  margin-top:30px;padding:24px;border:1px solid var(--line);
+  border-radius:var(--r-lg);background:var(--surface);
+}
+.launch-box b{font-size:15px}
+.launch-box p{margin-top:7px;color:var(--muted);font-size:14px;line-height:1.6}
+
+
+/* ───────────── расширенный калькулятор ───────────── */
+.calc-large{padding:34px}
+.calc-large .calc-head{align-items:flex-start}
+.calc-badge{
+  flex:none;padding:9px 13px;border:1px solid var(--line);border-radius:999px;
+  color:var(--muted);font:500 11px var(--mono);background:var(--surface-2);
+}
+.calc-section{
+  margin-top:26px;padding-top:25px;border-top:1px solid var(--line-soft);
+}
+.calc-section-title{display:flex;align-items:center;gap:12px}
+.calc-section-title b{display:block;font-size:15px}
+.calc-section-title small{display:block;margin-top:3px;color:var(--muted);font-size:12px}
+.calc-number{
+  width:34px;height:34px;display:grid;place-items:center;border-radius:50%;
+  background:var(--ink);color:#fff;font:600 11px var(--mono);
+}
+.calc-fields{display:grid;gap:12px;margin-top:17px}
+.calc-fields-2{grid-template-columns:1fr 1fr}
+.calc-field label{
+  display:block;margin-bottom:8px;color:var(--muted);
+  font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.03em;
+}
+.calc-field select,.calc-field input:not([type=checkbox]){
+  width:100%;height:48px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--surface);color:var(--ink);padding:0 14px;
+  font:500 13px var(--sans);outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.calc-field select:focus,.calc-field input:not([type=checkbox]):focus{
+  border-color:var(--ink);box-shadow:0 0 0 3px hsl(220 20% 10% / .05);
+}
+.calc-input-stepper{
+  height:48px;display:flex;align-items:center;border:1px solid var(--line);
+  border-radius:var(--r);background:var(--surface);overflow:hidden;
+}
+.calc-input-stepper button{
+  width:48px;height:100%;border:0;background:var(--surface-2);
+  color:var(--ink);font:500 21px var(--mono);cursor:pointer;
+}
+.calc-input-stepper button:hover{background:var(--line-soft)}
+.calc-input-stepper input{
+  flex:1;min-width:0;height:100%;border:0!important;text-align:center;
+  font:600 15px var(--mono)!important;box-shadow:none!important;padding:0!important;
+}
+.calc-options{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:17px}
+.calc-options-3{grid-template-columns:repeat(2,1fr)}
+.calc-option{
+  position:relative;display:flex;align-items:center;gap:12px;
+  min-height:72px;padding:14px 45px 14px 14px;border:1px solid var(--line);
+  border-radius:var(--r);background:var(--surface);cursor:pointer;transition:.2s;
+}
+.calc-option:hover{border-color:var(--dim);transform:translateY(-1px)}
+.calc-option input{position:absolute;opacity:0;pointer-events:none}
+.calc-option:has(input:checked){
+  border-color:var(--ink);background:var(--surface-2);
+  box-shadow:inset 0 0 0 1px var(--ink);
+}
+.calc-option-body strong{display:block;font-size:13.5px}
+.calc-option-body small{display:block;margin-top:4px;color:var(--muted);font:500 11px var(--mono)}
+.calc-checkmark{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  width:24px;height:24px;border:1px solid var(--line);border-radius:50%;
+  display:grid;place-items:center;color:transparent;font-size:12px;font-weight:800;
+}
+.calc-option:has(input:checked) .calc-checkmark{background:var(--ink);border-color:var(--ink);color:#fff}
+.calc-toggle{
+  min-height:48px;display:flex;align-items:center;gap:11px;padding:11px 14px;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--surface);cursor:pointer;
+}
+.calc-toggle input{position:absolute;opacity:0}
+.calc-toggle-ui{
+  width:39px;height:22px;border-radius:999px;background:var(--line);
+  position:relative;flex:none;transition:.2s;
+}
+.calc-toggle-ui:after{
+  content:"";position:absolute;width:18px;height:18px;top:2px;left:2px;
+  border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transition:.2s;
+}
+.calc-toggle:has(input:checked) .calc-toggle-ui{background:var(--ink)}
+.calc-toggle:has(input:checked) .calc-toggle-ui:after{left:19px}
+.calc-toggle strong{display:block;font-size:13.5px}
+.calc-toggle small{display:block;margin-top:3px;color:var(--muted);font-size:11.5px}
+.calc-number-input{
+  height:48px;display:flex;align-items:center;border:1px solid var(--line);
+  border-radius:var(--r);background:var(--surface);overflow:hidden;
+}
+.calc-number-input input{
+  flex:1!important;border:0!important;box-shadow:none!important;height:100%;
+  font:600 14px var(--mono)!important;padding:0 14px!important;outline:none;
+}
+.calc-number-input span{padding:0 14px;color:var(--muted);font:500 11px var(--mono);white-space:nowrap}
+.calc-delivery-extra{margin-top:12px}
+.calc-route-hint{
+  display:flex;align-items:center;padding:0 15px;min-height:48px;
+  border-radius:var(--r);background:var(--surface-2);color:var(--muted);
+  margin-top:10px;
+  font-size:13px;
+}
+.calc-return-qty{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;
+}
+.calc-field-hint{
+  display:block;margin-top:6px;
+  font:500 11.5px var(--mono);color:var(--dim);
+}
+.calc-result-large{
+  margin-top:30px;padding:25px 24px;display:grid;
+  grid-template-columns:minmax(220px,1fr) minmax(240px,1.2fr) auto;align-items:center;
+}
+.calc-result-main strong{font-size:31px}
+.calc-result-caption,.calc-result-main span{
+  display:block;margin-top:5px;color:hsl(0 0% 100% / .62);font-size:12px;
+}
+.calc-result-breakdown{
+  display:flex;flex-wrap:wrap;gap:7px;justify-content:center;
+}
+.calc-breakdown-item{
+  padding:8px 10px;border:1px solid hsl(0 0% 100% / .14);
+  border-radius:999px;color:hsl(0 0% 100% / .78);font-size:11px;
+}
+.calc-breakdown-item b{color:#fff;font-family:var(--mono)}
+
+@media(max-width:960px){
+  .audience{grid-template-columns:1fr 1fr}
+  .calc-large{padding:21px 17px}
+  .calc-badge{margin-top:14px}
+  .calc-fields-2,.calc-options,.calc-options-3,.calc-result-large{grid-template-columns:1fr}
+  .calc-result-breakdown{justify-content:flex-start;margin-top:17px}
+  .calc-result-large .calc-action{width:100%;justify-content:center;text-align:center}
+}
+
+@media(max-width:640px){
+  .price-section{padding-top:64px}
+
+  .price-panel{border-radius:var(--r-lg)}
+  .price-table-wrap{
+    overflow-x:visible;
+    padding:10px 12px 4px;
+    background:var(--surface-2);
+  }
+  .price-table{
+    min-width:0;
+    display:block;
+  }
+
+  /* табы — горизонтальный скролл с подсказкой */
+  .price-tabs{
+    padding:4px;gap:0;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .price-tabs::-webkit-scrollbar{display:none}
+  .price-tab{
+    padding:10px 14px;font-size:12.5px;gap:6px;
+    scroll-snap-align:start;flex-shrink:0;
+  }
+  .price-tab::before{width:6px;height:6px}
+  .price-tabs-slider{border-radius:8px}
+
+  .price-table thead{display:none}
+
+  /* карточка услуги */
+  .price-table tbody{display:flex;flex-direction:column;gap:10px}
+  .price-table tr{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:
+      "title price"
+      "unit unit"
+      "params params";
+    border:1px solid var(--line);
+    border-radius:var(--r-lg);
+    background:var(--surface);
+    overflow:hidden;
+    box-shadow:var(--shadow-sm);
+  }
+  .price-table tr.price-row-highlight{
+    border-color:hsl(23 94% 54% / .35);
+    box-shadow:0 6px 20px -12px hsl(23 94% 54% / .35);
+  }
+  .price-table tr.price-divider{
+    display:block;
+    border:none;border-radius:0;
+    background:transparent;box-shadow:none;
+    margin:4px 0 2px;
+  }
+  .price-table tr.price-divider td{
+    display:block;
+    padding:6px 4px 2px;
+    background:transparent;
+    border:none;
+    font-size:10.5px;
+  }
+  .price-table tr:hover td{background:transparent}
+
+  .price-table td{
+    display:block;
+    padding:0;
+    border-top:none;
+    font-size:13.5px;
+    min-width:0;
+  }
+  .price-table td:first-child{
+    grid-area:title;
+    font-size:15px;font-weight:700;
+    line-height:1.3;
+    padding:14px 10px 14px 14px;
+    background:var(--surface-2);
+    align-self:stretch;
+    display:flex;align-items:center;
+    min-width:0;
+    overflow-wrap:anywhere;
+  }
+  .price-table td:nth-child(2){
+    grid-area:unit;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:10px 14px;
+    border-top:1px solid var(--line-soft);
+    color:var(--muted);
+  }
+  .price-table td:nth-child(3){
+    grid-area:price;
+    display:flex;align-items:center;justify-content:flex-end;
+    padding:14px 14px 14px 8px;
+    background:var(--surface-2);
+    font-size:18px;font-weight:700;
+    white-space:nowrap;
+    flex-shrink:0;
+    max-width:46%;
+  }
+  .price-table tr.price-row-highlight td:first-child,
+  .price-table tr.price-row-highlight td:nth-child(3){
+    background:transparent;
+  }
+
+  /* строки без пикера (доставка, возвраты): название и цена друг под другом */
+  .price-table tr.price-row-simple{
+    grid-template-columns:1fr;
+    grid-template-areas:
+      "title"
+      "price"
+      "unit"
+      "params";
+  }
+  .price-table tr.price-row-simple td:first-child{
+    padding:14px 14px 8px;
+  }
+  .price-table tr.price-row-simple td:nth-child(3){
+    grid-area:price;
+    max-width:none;
+    width:100%;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:12px;
+    padding:0 14px 14px;
+    font-size:17px;
+    white-space:normal;
+  }
+  .price-table tr.price-row-simple td:nth-child(3)::before{
+    display:block;
+    flex-shrink:0;
+    font-size:10.5px;
+    padding-top:2px;
+  }
+  .price-table tr.price-row-simple td:nth-child(3) .price-val{
+    text-align:right;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .price-table td:nth-child(4),
+  .price-table td:last-child{
+    grid-area:params;
+    padding:12px 14px 14px;
+    border-top:1px solid var(--line-soft);
+    font-size:13px;line-height:1.45;
+  }
+
+  .price-table td[data-label]::before{
+    content:attr(data-label);
+    font:500 10.5px var(--mono);
+    color:var(--dim);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .price-table td:first-child::before,
+  .price-table td:nth-child(3)::before{display:none}
+
+  .price-table td:nth-child(2)::before{flex-shrink:0}
+
+  /* блок параметров: подпись сверху, контент ниже */
+  .price-table td:nth-child(4)::before,
+  .price-table td:last-child:not(:nth-child(3))::before{
+    display:block;
+    margin-bottom:8px;
+  }
+  .price-table td:nth-child(4) .price-param,
+  .price-table td:last-child .price-param{width:100%}
+
+  .price-table .size-picker{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:6px;width:100%;
+  }
+  .price-table tr:has(.size-picker) .size-picker{
+    grid-template-columns:repeat(5,minmax(0,1fr));
+  }
+  .price-table tr:has([data-stsize]) .size-picker,
+  .price-table tr:has([data-rtsize]) .size-picker{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  .price-table .size-btn{
+    padding:10px 4px;font-size:12px;
+    min-height:40px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .price-foot{
+    flex-direction:column;align-items:stretch;gap:12px;
+    padding:14px;text-align:center;
+  }
+  .price-foot .btn{width:100%;justify-content:center}
+  .price-table td:nth-child(4),
+  .price-table td:last-child{overflow-wrap:anywhere}
+
+  /* калькулятор */
+  .calc{padding:18px}
+  .calc-head{display:block}
+  .calc-head h3{font-size:19px}
+  .calc-grid{grid-template-columns:1fr}
+
+  /* результат — блочный */
+  .calc-result{display:block}
+  .calc-result .calc-action{display:inline-flex;margin-top:14px}
+  .calc-result-large{padding:18px;display:block}
+  .calc-result-large .calc-action{
+    display:block;width:100%;text-align:center;margin-top:16px;
+  }
+  .calc-result-breakdown{justify-content:flex-start;margin-top:14px}
+  .calc-result-main strong{font-size:26px}
+
+  /* секции калькулятора */
+  .calc-section{margin-top:20px;padding-top:18px}
+  .calc-fields-2{grid-template-columns:1fr}
+  .calc-options{grid-template-columns:1fr}
+
+  /* поля возвратов */
+  .calc-return-qty{grid-template-columns:1fr}
+
+  .audience{grid-template-columns:1fr}
+}
+
+</style>
+</head>
+<body>
+<div class="bg-fx"></div>
+<div class="wrap">
+
+<header class="nav" id="nav">
+  <div class="container nav-in">
+    <a class="brand" href="#top">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <path d="M16 3 L28 9 V23 L16 29 L4 23 V9 Z" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M4 9 L16 15 L28 9" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M16 15 V29" stroke="var(--ink)" stroke-width="2"/>
+        <rect x="13" y="17.5" width="6" height="4" fill="var(--accent)"/>
+      </svg>
+      <span>КОРОБ</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#services">Прайс</a>
+      <a href="#why">Почему мы</a>
+      <a href="#process">Как работаем</a>
+      <a href="#faq">Вопросы</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="#contacts">Контакты</a>
+      <a class="btn btn-primary" href="#contacts">Оставить заявку</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+<div class="hero">
+  <div class="container hero-grid">
+    <div class="rv in">
+      <span class="kicker"><i></i> Люберцы · небольшие партии · без минимального объёма</span>
+      <h1>Пока большие выбирают обороты —<br>мы выбираем <em>клиентов.</em></h1>
+      <p class="hero-sub">Принимаем маленькие партии без минимального объёма. Приёмка, маркировка, упаковка и отгрузка на склады Wildberries, Ozon, Яндекс.Маркет и другие маркетплейсы — быстро и без очереди на входе.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary btn-lg" href="#contacts">Рассчитать стоимость</a>
+        <a class="btn btn-ghost btn-lg" href="#services">Смотреть тарифы</a>
+      </div>
+      <div class="hero-trust">
+        <span><b>без минимума</b> по объёму</span>
+        <span><b>3 дня</b> бесплатного хранения</span>
+        <span><b>от 4 ₽</b> за приёмку</span>
+      </div>
+    </div>
+
+    <div class="slip rv in" id="slip">
+      <div class="slip-head">
+        <div>
+          <div class="t1">НАКЛАДНАЯ НА ПРИЁМКУ</div>
+          <div class="t2">№ 0148 · Люберцы</div>
+        </div>
+        <div class="slip-stamp">ПРИНЯТО</div>
+      </div>
+      <div class="barcode" id="barcode"></div>
+      <div class="slip-rows">
+        <div class="slip-row">
+          <span class="sku">ФШ-2201-M</span>
+          <span class="qty">42 шт</span>
+          <span class="st">Принято</span>
+        </div>
+        <div class="slip-row">
+          <span class="sku">ФШ-2202-S</span>
+          <span class="qty">18 шт</span>
+          <span class="st">Принято</span>
+        </div>
+        <div class="slip-row">
+          <span class="sku">ФШ-2203-L</span>
+          <span class="qty">7 шт</span>
+          <span class="st wait">Сортировка</span>
+        </div>
+      </div>
+      <div class="slip-foot">
+        <span class="lbl">Полный цикл на единицу, от</span>
+        <span class="val">60 ₽</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticker">
+    <div class="ticker-track" id="track"></div>
+  </div>
+</div>
+
+<section style="padding-top:88px">
+  <div class="container">
+    <div class="stats rv">
+      <div class="stat"><b data-count="40">50-60 м²</b><span>тёплый склад с охраной, Люберцы</span></div>
+      <div class="stat"><b>24/7</b><span>приёмка и обработка партий</span></div>
+      <div class="stat"><b>3 дня</b><span>бесплатного хранения короба</span></div>
+      <div class="stat"><b>0 шт</b><span>минимальный объём для старта</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="services" class="price-section">
+  <div class="container">
+    <div class="sec-head price-intro rv">
+      <span class="eyebrow">Прайс КОРОБ</span>
+      <h2>Прозрачные цены<br>на нужные услуги</h2>
+      <p>Ниже только актуальные расценки из рабочего клиентского прайса КОРОБ: основной цикл и дополнительные услуги.</p>
+      <div class="price-note"><b>Важно:</b> первые 3 дня хранения короба — бесплатно. Точный тариф доставки зависит от маршрута и конкретной поставки.</div>
+    </div>
+
+    <div class="price-panel rv">
+      <div class="price-tabs" role="tablist" id="priceTabs">
+        <div class="price-tabs-slider" id="priceSlider"></div>
+        <button class="price-tab active" data-price-tab="main">Основной прайс</button>
+        <button class="price-tab" data-price-tab="storage">Хранение</button>
+        <button class="price-tab" data-price-tab="shipping">Доставка</button>
+        <button class="price-tab" data-price-tab="returns">Возвраты</button>
+      </div>
+
+      <div class="price-table-wrap">
+        <table class="price-table">
+          <thead>
+            <tr><th>Услуга</th><th>Единица</th><th>Цена</th><th>Параметры</th></tr>
+          </thead>
+          <tbody id="price-body"></tbody>
+        </table>
+      </div>
+      <div class="price-foot">
+        <span><strong></strong></span>
+        <a class="btn btn-primary" href="#calculator">Рассчитать партию</a>
+      </div>
+    </div>
+
+    <div class="calc calc-large rv rv-d2" id="calculator">
+      <div class="calc-head">
+        <div>
+          <span class="eyebrow">Онлайн-калькулятор</span>
+          <h3>Рассчитайте стоимость партии</h3>
+          <p>Выберите размер и количество товара, затем добавьте нужные дополнительные услуги. Расчёт использует только текущие тарифы КОРОБ.</p>
+        </div>
+        <div class="calc-badge">Ориентировочный расчёт</div>
+      </div>
+
+      <div class="calc-section">
+        <div class="calc-section-title">
+          <span class="calc-number">01</span>
+          <div><b>Основной заказ</b><small>Размер товара и количество единиц</small></div>
+        </div>
+
+        <div class="calc-fields calc-fields-2">
+          <div class="calc-field">
+            <label for="calcQty">Количество товаров</label>
+            <div class="calc-input-stepper">
+              <button type="button" data-calc-action="qty-minus">−</button>
+              <input id="calcQty" value="50" inputmode="numeric" aria-label="Количество товаров">
+              <button type="button" data-calc-action="qty-plus">+</button>
+            </div>
+          </div>
+
+          <div class="calc-field">
+            <label>Размер товара</label>
+            <div class="calc-picker" id="calcPackSize" data-value="M" role="group" aria-label="Размер товара">
+              <button type="button" class="calc-pick-btn" data-pick="XS">
+                <strong>XS</strong><small>до 300 г · 40 ₽</small>
+              </button>
+              <button type="button" class="calc-pick-btn" data-pick="S">
+                <strong>S</strong><small>до 1 кг · 50 ₽</small>
+              </button>
+              <button type="button" class="calc-pick-btn active" data-pick="M">
+                <strong>M</strong><small>1–3 кг · 62 ₽</small>
+              </button>
+              <button type="button" class="calc-pick-btn" data-pick="L">
+                <strong>L</strong><small>3–8 кг · 110 ₽</small>
+              </button>
+              <button type="button" class="calc-pick-btn" data-pick="XL">
+                <strong>XL</strong><small>8–15 кг · 160 ₽</small>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-options">
+          <label class="calc-option">
+            <input type="radio" name="calcMainMode" id="calcFullCycle" value="full" checked>
+            <span class="calc-option-body">
+              <strong>Полный цикл</strong>
+              <small>Приёмка + маркировка + сортировка + упаковка</small>
+            </span>
+            <span class="calc-checkmark">✓</span>
+          </label>
+          <label class="calc-option">
+            <input type="radio" name="calcMainMode" id="calcCustomCycle" value="custom">
+            <span class="calc-option-body">
+              <strong>Выбрать операции</strong>
+              <small>Рассчитать только нужные услуги</small>
+            </span>
+            <span class="calc-checkmark">✓</span>
+          </label>
+        </div>
+
+        <div class="calc-options" id="calcCustomOptions" style="display:none">
+          <label class="calc-option">
+            <input type="checkbox" id="calcReceiving" checked>
+            <span class="calc-option-body"><strong>Приёмка</strong><small>XS/S/M 5 ₽ · L 7 ₽ · XL 8 ₽ / шт</small></span>
+            <span class="calc-checkmark">✓</span>
+          </label>
+          <label class="calc-option">
+            <input type="checkbox" id="calcMarking" checked>
+            <span class="calc-option-body"><strong>Маркировка</strong><small>XS/S 9 ₽ · M 10 ₽ · L 12 ₽ · XL 15 ₽ / шт</small></span>
+            <span class="calc-checkmark">✓</span>
+          </label>
+          <label class="calc-option">
+            <input type="checkbox" id="calcSorting" checked>
+            <span class="calc-option-body"><strong>Сортировка</strong><small>XS/S 4 ₽ · M 5 ₽ · L 6 ₽ · XL 7 ₽ / шт</small></span>
+            <span class="calc-checkmark">✓</span>
+          </label>
+          <label class="calc-option">
+            <input type="checkbox" id="calcPackaging" checked>
+            <span class="calc-option-body"><strong>Упаковка</strong><small>XS 22 ₽ · S 32 ₽ · M 42 ₽ · L 85 ₽ · XL 130 ₽ / шт</small></span>
+            <span class="calc-checkmark">✓</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="calc-section">
+        <div class="calc-section-title">
+          <span class="calc-number">02</span>
+          <div><b>Хранение</b><small>Первые 3 дня — бесплатно</small></div>
+        </div>
+        <div class="calc-fields calc-fields-2">
+          <label class="calc-toggle">
+            <input type="checkbox" id="calcStorage">
+            <span class="calc-toggle-ui"></span>
+            <span><strong>Добавить хранение</strong><small>Тарифы: S — 4 ₽, M — 6–7 ₽, L — 9–10 ₽ / короб / сутки</small></span>
+          </label>
+          <div class="calc-field">
+            <label>Размер короба</label>
+            <div class="calc-picker calc-picker-sm" id="calcStorageSize" data-value="M" role="group" aria-label="Размер короба">
+              <button type="button" class="calc-pick-btn" data-pick="S">
+                <strong>S</strong><small>4 ₽/сутки</small>
+              </button>
+              <button type="button" class="calc-pick-btn active" data-pick="M">
+                <strong>M</strong><small>6–7 ₽/сутки</small>
+              </button>
+              <button type="button" class="calc-pick-btn" data-pick="L">
+                <strong>L</strong><small>9–10 ₽/сутки</small>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="calc-fields calc-fields-2">
+          <div class="calc-field" id="calcStorageDaysWrap">
+            <label for="calcStorageDays">Всего дней хранения</label>
+            <div class="calc-number-input"><input id="calcStorageDays" type="number" min="1" value="7" inputmode="numeric"><span>дней</span></div>
+          </div>
+          <div class="calc-field">
+            <label for="calcBoxes">Количество коробов</label>
+            <div class="calc-number-input"><input id="calcBoxes" type="number" min="1" value="1" inputmode="numeric"><span>короб</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-section">
+        <div class="calc-section-title">
+          <span class="calc-number">03</span>
+          <div><b>Доставка</b><small>Доставка на склады маркетплейсов</small></div>
+        </div>
+        <div class="calc-fields calc-fields-2">
+          <label class="calc-toggle">
+            <input type="checkbox" id="calcDelivery">
+            <span class="calc-toggle-ui"></span>
+            <span><strong>Добавить доставку</strong><small>Цена указана за короб</small></span>
+          </label>
+        </div>
+        <div class="calc-field" id="calcDeliveryFields" style="margin-top:12px;margin-bottom:4px">
+          <label>Направление доставки</label>
+          <div class="calc-picker calc-picker-wide" id="calcDestination" data-value="near" role="group" aria-label="Направление доставки">
+            <button type="button" class="calc-pick-btn active" data-pick="near">
+              <strong>Близкие склады</strong><small>WB / Ozon · 650–700 ₽ / короб</small>
+            </button>
+            <button type="button" class="calc-pick-btn" data-pick="far">
+              <strong>Дальние склады</strong><small>Тула, Коледино · 800–850 ₽ / короб</small>
+            </button>
+          </div>
+        </div>
+        <div class="calc-route-hint" id="calcRouteHint">Близкие: Подольск, Электросталь</div>
+      </div>
+
+
+      <div class="calc-result calc-result-large">
+        <div class="calc-result-main">
+          <small>Ориентировочная стоимость</small>
+          <strong id="calcTotal">3 100 ₽</strong>
+          <span id="calcResultCaption">Полный цикл · 50 шт</span>
+        </div>
+        <div class="calc-result-breakdown" id="calcBreakdown"></div>
+        <a class="calc-action" href="#contacts">Получить точный расчёт →</a>
+      </div>
+      <div class="calc-hint">Расчёт ориентировочный. Первые 3 дня хранения бесплатны. Для хранения используются только тарифы S/M/L, указанные в рабочем прайсе; доставка зависит от маршрута.</div>
+    </div>
+  </div>
+</section>
+
+<section id="audience">
+  <div class="container">
+    <div class="sec-head rv">
+      <span class="eyebrow">Кому подходит КОРОБ</span>
+      <h2>Не нужен большой фулфилмент,<br>если партия пока небольшая</h2>
+      <p>Мы работаем в формате, рассчитанном на продавцов с небольшими партиями и индивидуальными задачами.</p>
+    </div>
+    <div class="audience">
+      <div class="audience-card rv rv-d1"><b>Начинающим селлерам</b><p>Первые поставки без необходимости сразу работать с большим складом.</p></div>
+      <div class="audience-card rv rv-d2"><b>Небольшим объёмам</b><p>Нет минимального объёма — можно начать с небольшой партии.</p></div>
+      <div class="audience-card rv rv-d3"><b>Тестированию товара</b><p>Удобно обработать пробную партию перед увеличением объёма.</p></div>
+      <div class="audience-card rv rv-d4"><b>Тем, кто делегирует рутину</b><p>Приёмка, маркировка, упаковка, хранение и отгрузка — в одном месте.</p></div>
+    </div>
+    <div class="launch-box rv">
+      <b>КОРОБ запускается в Люберцах</b>
+      <p>Сейчас мы формируем первую базу продавцов. Поэтому каждую небольшую партию можем рассматривать индивидуально и заранее согласовать состав работ и стоимость.</p>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="container">
+    <div class="sec-head rv">
+      <span class="eyebrow">Формат КОРОБ</span>
+      <h2>Фулфилмент для небольших партий</h2>
+      <p>Не нужно подстраиваться под большой минимальный объём. Состав работ можно собрать под конкретную поставку.</p>
+    </div>
+    <div class="versus rv">
+      <div class="v-row head">
+        <div class="v-cell">Что важно</div><div class="v-cell">КОРОБ</div><div class="v-cell">Как это работает</div>
+      </div>
+      <div class="v-row"><div class="v-cell feat">Минимальный объём</div><div class="v-cell us">без минимума</div><div class="v-cell them">Можно начать с небольшой партии</div></div>
+      <div class="v-row"><div class="v-cell feat">Оплата услуг</div><div class="v-cell us">по операциям</div><div class="v-cell them">Считается состав фактически необходимых работ</div></div>
+      <div class="v-row"><div class="v-cell feat">Хранение</div><div class="v-cell us">3 дня бесплатно</div><div class="v-cell them">Далее — по размеру короба</div></div>
+      <div class="v-row"><div class="v-cell feat">Индивидуальные задачи</div><div class="v-cell us">по запросу</div><div class="v-cell them">Точную стоимость согласуем до начала работ</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="process">
+  <div class="container">
+    <div class="sec-head rv">
+      <span class="eyebrow">Как мы работаем</span>
+      <h2>Четыре шага от коробки<br>до продажи</h2>
+    </div>
+    <div class="steps">
+      <div class="step rv rv-d1">
+        <div class="step-n">1</div>
+        <h3>Заявка</h3>
+        <p>Пишете в Telegram или звоните — уточняем товар, объём и нужные операции, после чего считаем ориентировочную стоимость.</p>
+      </div>
+      <div class="step rv rv-d2">
+        <div class="step-n">2</div>
+        <h3>Привозите товар</h3>
+        <p>Заберем товар у вас или вы можете привезти его на наш склад самостоятельно.</p>
+      </div>
+      <div class="step rv rv-d3">
+        <div class="step-n">3</div>
+        <h3>Обрабатываем</h3>
+        <p>Приёмка, маркировка, упаковка по размеру — с фиксацией в таблице учёта по каждой позиции.</p>
+      </div>
+      <div class="step rv rv-d4">
+        <div class="step-n">4</div>
+        <h3>Отгружаем</h3>
+        <p>Везём короба на склад Wildberries, Ozon, Яндекс.Маркет и другие маркетплейсы по расписанию поставок.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <div class="sec-head rv">
+      <span class="eyebrow">Вопросы</span>
+      <h2>Коротко о главном</h2>
+    </div>
+    <div class="faq rv">
+      <details open>
+        <summary>Какой у вас минимальный объём?<span class="pm">+</span></summary>
+        <p>Минимального объёма нет — берём даже небольшие партии в 10–20 единиц. Это и есть наша ниша: клиенты, которых разворачивают крупные фулфилменты.</p>
+      </details>
+      <details>
+        <summary>Работаете с «Честным знаком»?<span class="pm">+</span></summary>
+        <p>Да, наносим маркировку на товары, для которых она обязательна — одежда, обувь, парфюмерия — в рамках услуги маркировки.</p>
+      </details>
+      <details>
+        <summary>Что с возвратами?<span class="pm">+</span></summary>
+        <p>Принимаем возврат, оцениваем состояние (новый / требует переупаковки / брак) и готовим товар к повторной продаже или к списанию по вашему решению.</p>
+      </details>
+      <details>
+        <summary>Как оплата?<span class="pm">+</span></summary>
+        <p>Оплата удобным для вас способом</p>
+      </details>
+      <details>
+        <summary>Сколько хранится товар бесплатно?<span class="pm">+</span></summary>
+        <p>3 дня бесплатного хранения по текущему предложению. Дальше — 4 ₽/сутки для S, 6–7 ₽/сутки для M и 9–10 ₽/сутки для L.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="contacts" style="padding-top:48px">
+  <div class="container">
+    <div class="cta-box rv">
+      <div class="cta-grid">
+        <div>
+          <span class="eyebrow">Связаться</span>
+          <h2 style="margin-top:14px">Привезите первую партию —<br>посчитаем стоимость.</h2>
+          <p>Ответим по телефону или в Telegram, уточним детали партии и согласуем состав работ и стоимость.</p>
+          <div class="cta-actions">
+            <a class="btn btn-primary btn-lg" href="https://t.me/dimcchka" target="_blank" rel="noopener">Написать в Telegram</a>
+            <a class="btn btn-ghost btn-lg" href="tel:+79063574676">Позвонить</a>
+          </div>
+        </div>
+                <div class="contact-list">
+          <div class="contact-person">
+            <div class="contact-person-head">
+              <span class="contact-person-title">Дмитрий</span>
+            </div>
+            <div class="contact-links">
+              <a class="contact-link" href="tel:+79063574676">
+                <span class="contact-link-icon">☎</span>
+                <span>
+                  <small>Телефон</small>
+                  <strong>+7 (906) 357-46-76</strong>
+                </span>
+              </a>
+              <a class="contact-link" href="https://t.me/dimcchka" target="_blank" rel="noopener">
+                <span class="contact-link-icon tg">↗</span>
+                <span>
+                  <small>Telegram</small>
+                  <strong>@dimcchka</strong>
+                </span>
+              </a>
+              <a class="contact-link" href="https://max.ru/u/f9LHodD0cOLKYRLZURwlGZolRvKX6mOBDdquH55uZ5FYjkcV2bB7HV8kwAM" target="_blank" rel="noopener">
+                <span class="contact-link-icon tg">↗</span>
+                <span>
+                  <small>MAX</small>
+                  <strong>Написать в MAX</strong>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <div class="contact-person">
+            <div class="contact-person-head">
+              <span class="contact-person-title">Денис</span>
+            </div>
+            <div class="contact-links">
+              <a class="contact-link" href="tel:+79257807253">
+                <span class="contact-link-icon">☎</span>
+                <span>
+                  <small>Телефон</small>
+                  <strong>+7 (925) 780-72-53</strong>
+                </span>
+              </a>
+              <a class="contact-link" href="https://t.me/Mistt_tt" target="_blank" rel="noopener">
+                <span class="contact-link-icon tg">↗</span>
+                <span>
+                  <small>Telegram</small>
+                  <strong>@Mistt_tt</strong>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <div class="contact-item"><span class="lbl">АДРЕС СКЛАДА</span><span>Люберцы</span></div>
+          <div class="contact-item"><span class="lbl">РЕЖИМ РАБОТЫ</span><span class="val">Пн–Пт: 9:00–18:00, Сб–Вс: 10:00–16:00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <div class="brand">
+          <svg class="mark" viewBox="0 0 32 32" fill="none">
+            <path d="M16 3 L28 9 V23 L16 29 L4 23 V9 Z" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M4 9 L16 15 L28 9" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M16 15 V29" stroke="var(--ink)" stroke-width="2"/>
+            <rect x="13" y="17.5" width="6" height="4" fill="var(--accent)"/>
+          </svg>
+          <span>КОРОБ</span>
+        </div>
+        <p>Фулфилмент-склад в Люберцах для небольших продавцов Wildberries, Ozon, Яндекс.Маркет и других маркетплейсов.</p>
+      </div>
+      <div class="contact-list" style="max-width:280px">
+        <!-- <div class="contact-item"><span class="lbl">ИП</span><span class="val placeholder">ТУТ ДОЛЖНЫ БЫТЬ РЕКВИЗИТЫ ИП</span></div> -->
+      </div>
+    </div>
+    <div class="foot-bot">
+      <span class="disclaimer">Информация на странице носит ознакомительный характер и не является публичной офертой. Точную стоимость уточняйте по контактам выше.</span>
+      <span>© 2026 КОРОБ</span>
+    </div>
+  </div>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  // Навигация
+  var nav = document.getElementById('nav');
+  var onScroll = function(){ nav.classList.toggle('scrolled', window.scrollY > 12); };
+  onScroll();
+  window.addEventListener('scroll', onScroll, {passive:true});
+
+  // Активный пункт меню
+  var sections = document.querySelectorAll('section[id]');
+  var navLinks = document.querySelectorAll('.nav-links a');
+  function updateActive(){
+    var scrollY = window.scrollY + 120;
+    sections.forEach(function(sec){
+      var top = sec.offsetTop;
+      var height = sec.offsetHeight;
+      var id = sec.getAttribute('id');
+      if(scrollY >= top && scrollY < top + height){
+        navLinks.forEach(function(link){
+          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }
+  window.addEventListener('scroll', updateActive, {passive:true});
+  updateActive();
+
+  // Ticker — JS-анимация, останавливается точно на месте по hover
+  var items = [
+    ['Приёмка', 'от 5 ₽/шт'],
+    ['Маркировка', 'от 9 ₽/шт'],
+    ['Упаковка', 'от 22 ₽/шт'],
+    ['Хранение', 'от 4 ₽/сутки'],
+    ['Доставка на WB/Ozon', 'от 650 ₽/короб'],
+    ['Возвраты', 'от 11 ₽/шт']
+  ];
+  var track = document.getElementById('track');
+  var html = items.map(function(i){
+    return '<div class="tick">'+i[0]+' <b>'+i[1]+'</b></div>';
+  }).join('');
+  track.innerHTML = html + html;
+
+  var tickerPaused = false;
+  var tickerX = 0;
+  var tickerSpeed = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 0.6;
+  var tickerHalf = 0;
+
+  function tickerStep(){
+    if(!tickerPaused){
+      tickerX -= tickerSpeed;
+      if(tickerHalf && tickerX <= -tickerHalf) tickerX += tickerHalf;
+      track.style.transform = 'translateX(' + tickerX + 'px)';
+    }
+    requestAnimationFrame(tickerStep);
+  }
+
+  // считаем половину ширины после рендера
+  requestAnimationFrame(function(){
+    tickerHalf = track.scrollWidth / 2;
+    requestAnimationFrame(tickerStep);
+  });
+
+  var tickerEl = document.querySelector('.ticker');
+  tickerEl.addEventListener('mouseenter', function(){ tickerPaused = true; });
+  tickerEl.addEventListener('mouseleave', function(){ tickerPaused = false; });
+
+
+  // Актуальный рабочий прайс КОРОБ. Источник — разделы 5 и 8 документа.
+  // Данные для таблицы с выбором размера
+  var mainPriceRows = [
+    {
+      name: 'Приёмка',
+      unit: 'шт.',
+      desc: 'Приём товара на складе',
+      prices: {XS:'5 ₽', S:'5 ₽', M:'5 ₽', L:'7 ₽', XL:'8 ₽'}
+    },
+    {
+      name: 'Маркировка',
+      unit: 'шт.',
+      desc: 'Нанесение этикетки / «Честный знак»',
+      prices: {XS:'9 ₽', S:'9 ₽', M:'10 ₽', L:'12 ₽', XL:'15 ₽'}
+    },
+    {
+      name: 'Сортировка',
+      unit: 'шт.',
+      desc: 'Распределение по артикулам и размерам',
+      prices: {XS:'4 ₽', S:'4 ₽', M:'5 ₽', L:'6 ₽', XL:'7 ₽'}
+    },
+    {
+      name: 'Упаковка',
+      unit: 'шт.',
+      desc: 'XS до 300 г · S до 1 кг · M 1–3 кг · L 3–8 кг · XL 8–15 кг',
+      prices: {XS:'22 ₽', S:'32 ₽', M:'42 ₽', L:'85 ₽', XL:'130 ₽'}
+    },
+    {
+      name: 'Полный цикл',
+      unit: 'шт.',
+      desc: 'Приёмка + маркировка + сортировка + упаковка',
+      prices: {XS:'40 ₽', S:'50 ₽', M:'62 ₽', L:'110 ₽', XL:'160 ₽'},
+      highlight: true
+    }
+  ];
+  var mainSizes = ['XS','S','M','L','XL'];
+  var mainActiveSize = 'M';
+
+  function buildMainTable(){
+    var html = '';
+    mainPriceRows.forEach(function(row, rowIdx){
+      var sizeButtons = mainSizes.map(function(sz){
+        return '<button class="size-btn'+(sz===mainActiveSize?' active':'')+'" data-row="'+rowIdx+'" data-size="'+sz+'">'+sz+'</button>';
+      }).join('');
+      var rowClass = row.highlight ? ' class="price-row-highlight"' : '';
+      html += '<tr'+rowClass+'>'
+        + '<td>'+(row.highlight?'<strong>'+row.name+'</strong>':row.name)+'</td>'
+        + '<td data-label="Единица" style="color:var(--muted)">'+row.unit+'</td>'
+        + '<td data-label="Цена"><span class="price-val" id="pv-'+rowIdx+'">'+row.prices[mainActiveSize]+'</span></td>'
+        + '<td data-label="Размер"><div class="price-param"><div class="size-picker">'+sizeButtons+'</div><span class="price-param-note">'+row.desc+'</span></div></td>'
+        + '</tr>';
+    });
+    priceBody.innerHTML = html;
+    // вешаем обработчики
+    document.querySelectorAll('.size-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var newSize = btn.dataset.size;
+        mainActiveSize = newSize;
+        // обновляем все кнопки и цены
+        mainPriceRows.forEach(function(r, rIdx){
+          var pv = document.getElementById('pv-'+rIdx);
+          if(pv){
+            pv.classList.add('changing');
+            setTimeout(function(){
+              pv.textContent = r.prices[newSize];
+              pv.classList.remove('changing');
+            }, 130);
+          }
+          document.querySelectorAll('[data-row="'+rIdx+'"]').forEach(function(b){
+            b.classList.toggle('active', b.dataset.size===newSize);
+          });
+        });
+      });
+    });
+  }
+
+  // ── Хранение: пикер S/M/L ──
+  var storagePriceRows = [
+    {
+      name: 'Хранение короба',
+      unit: 'короб / сутки',
+      desc: 'Первые 3 дня — бесплатно',
+      prices: {S:'4 ₽', M:'6–7 ₽', L:'9–10 ₽'}
+    }
+  ];
+  var storageSizes = ['S','M','L'];
+  var storageActiveSize = 'M';
+
+  function buildStorageTable(){
+    var html = '';
+    storagePriceRows.forEach(function(row, rowIdx){
+      var sizeButtons = storageSizes.map(function(sz){
+        return '<button class="size-btn'+(sz===storageActiveSize?' active':'')+'" data-strow="'+rowIdx+'" data-stsize="'+sz+'">'+sz+'</button>';
+      }).join('');
+      html += '<tr>'
+        + '<td>'+row.name+'</td>'
+        + '<td data-label="Единица" style="color:var(--muted)">'+row.unit+'</td>'
+        + '<td data-label="Цена"><span class="price-val" id="stpv-'+rowIdx+'">'+row.prices[storageActiveSize]+'</span></td>'
+        + '<td data-label="Размер"><div class="price-param"><div class="size-picker">'+sizeButtons+'</div><span class="price-param-note">'+row.desc+'</span></div></td>'
+        + '</tr>';
+    });
+    priceBody.innerHTML = html;
+    document.querySelectorAll('[data-stsize]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var newSize = btn.dataset.stsize;
+        storageActiveSize = newSize;
+        storagePriceRows.forEach(function(r, rIdx){
+          var pv = document.getElementById('stpv-'+rIdx);
+          if(pv){
+            pv.classList.add('changing');
+            setTimeout(function(){ pv.textContent = r.prices[newSize]; pv.classList.remove('changing'); }, 130);
+          }
+          document.querySelectorAll('[data-strow="'+rIdx+'"]').forEach(function(b){
+            b.classList.toggle('active', b.dataset.stsize===newSize);
+          });
+        });
+      });
+    });
+  }
+
+  // ── Возвраты: фиксированные услуги + хранение с пикером ──
+  var returnsFixedRows = [
+    { name:'Приёмка грузоместа',       unit:'место', price:'36–40 ₽', desc:'Короб / мешок / микс' },
+    { name:'Приёмка + базовый сюрвей', unit:'шт.',   price:'11–12 ₽', desc:'Оценка состояния, фиксация в учёте' },
+    { name:'Расширенный сюрвей',        unit:'шт.',   price:'+5 ₽',    desc:'Фото- и видеофиксация' },
+    { name:'Переупаковка / перемаркировка', unit:'шт.', price:'27–31 ₽', desc:'Новая упаковка и этикетка' }
+  ];
+  var returnsStorageRows = [
+    {
+      name: 'Хранение возврата',
+      unit: 'короб / сутки',
+      desc: 'После бесплатного периода',
+      prices: {S:'4 ₽', M:'6–7 ₽', L:'9–10 ₽'}
+    }
+  ];
+  var returnsSizes = ['S','M','L'];
+  var returnsActiveSize = 'M';
+
+  function buildReturnsTable(){
+    var html = '';
+    // фиксированные строки — без пикера, просто красивые
+    returnsFixedRows.forEach(function(row){
+      html += '<tr class="price-row-simple">'
+        + '<td>'+row.name+'</td>'
+        + '<td data-label="Единица" style="color:var(--muted)">'+row.unit+'</td>'
+        + '<td data-label="Цена"><span class="price-val">'+row.price+'</span></td>'
+        + '<td data-label="Комментарий" style="color:var(--muted);font-size:13px">'+row.desc+'</td>'
+        + '</tr>';
+    });
+    // разделитель
+    html += '<tr class="price-divider"><td colspan="4">Хранение возврата</td></tr>';
+    // строка хранения с пикером
+    returnsStorageRows.forEach(function(row, rowIdx){
+      var sizeButtons = returnsSizes.map(function(sz){
+        return '<button class="size-btn'+(sz===returnsActiveSize?' active':'')+'" data-rtrow="'+rowIdx+'" data-rtsize="'+sz+'">'+sz+'</button>';
+      }).join('');
+      html += '<tr>'
+        + '<td>'+row.name+'</td>'
+        + '<td data-label="Единица" style="color:var(--muted)">'+row.unit+'</td>'
+        + '<td data-label="Цена"><span class="price-val" id="rtpv-'+rowIdx+'">'+row.prices[returnsActiveSize]+'</span></td>'
+        + '<td data-label="Размер"><div class="price-param"><div class="size-picker">'+sizeButtons+'</div><span class="price-param-note">'+row.desc+'</span></div></td>'
+        + '</tr>';
+    });
+    priceBody.innerHTML = html;
+    document.querySelectorAll('[data-rtsize]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var newSize = btn.dataset.rtsize;
+        returnsActiveSize = newSize;
+        returnsStorageRows.forEach(function(r, rIdx){
+          var pv = document.getElementById('rtpv-'+rIdx);
+          if(pv){
+            pv.classList.add('changing');
+            setTimeout(function(){ pv.textContent = r.prices[newSize]; pv.classList.remove('changing'); }, 130);
+          }
+          document.querySelectorAll('[data-rtrow="'+rIdx+'"]').forEach(function(b){
+            b.classList.toggle('active', b.dataset.rtsize===newSize);
+          });
+        });
+      });
+    });
+  }
+
+  var priceData = {
+    main: null,
+    storage: null,
+    shipping: [
+      ['Доставка на близкие склады WB/Ozon','короб','650–700 ₽','Точный тариф зависит от маршрута и конкретной поставки'],
+      ['Доставка на дальние склады','короб','800–850 ₽','Точный тариф зависит от маршрута и конкретной поставки']
+    ],
+    returns: null
+  };
+
+  var priceBody = document.getElementById('price-body');
+  function renderPrice(key){
+    if(key==='main')    { buildMainTable();     return; }
+    if(key==='storage') { buildStorageTable();  return; }
+    if(key==='returns') { buildReturnsTable();  return; }
+    var rows = priceData[key] || [];
+    priceBody.innerHTML = rows.map(function(row){
+      return '<tr class="price-row-simple">'
+        + '<td>'+row[0]+'</td>'
+        + '<td data-label="Единица">'+row[1]+'</td>'
+        + '<td data-label="Цена"><span class="price-val">'+row[2]+'</span></td>'
+        + '<td data-label="Комментарий">'+row[3]+'</td>'
+        + '</tr>';
+    }).join('');
+  }
+  // слайдер табов прайса
+  var priceSlider = document.getElementById('priceSlider');
+  function moveSlider(tab){
+    if(!priceSlider || !tab) return;
+    var tabsEl = document.getElementById('priceTabs');
+    var tabsRect = tabsEl.getBoundingClientRect();
+    var tabRect  = tab.getBoundingClientRect();
+    priceSlider.style.left  = (tabRect.left - tabsRect.left + tabsEl.scrollLeft) + 'px';
+    priceSlider.style.width = tabRect.width + 'px';
+  }
+
+  document.querySelectorAll('.price-tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      document.querySelectorAll('.price-tab').forEach(function(t){t.classList.remove('active')});
+      tab.classList.add('active');
+      moveSlider(tab);
+      renderPrice(tab.getAttribute('data-price-tab'));
+    });
+  });
+
+  // начальное положение слайдера
+  requestAnimationFrame(function(){
+    moveSlider(document.querySelector('.price-tab.active'));
+  });
+  renderPrice('main');
+
+  // Калькулятор использует только актуальные цены из разделов 5 и 8.
+  var calcRates = {
+    receiving: {XS:5,S:5,M:5,L:7,XL:8},
+    marking: {XS:9,S:9,M:10,L:12,XL:15},
+    sorting: {XS:4,S:4,M:5,L:6,XL:7},
+    packaging: {XS:22,S:32,M:42,L:85,XL:130},
+    full: {XS:40,S:50,M:62,L:110,XL:160},
+    storage: {S:[4,4],M:[6,7],L:[9,10]},
+    delivery: {near:[650,700],far:[800,850]},
+    returns: {acceptance:[36,40],survey:[11,12],extended:[5,5],repack:[27,31]}
+  };
+  function el(id){return document.getElementById(id)}
+  // num() — при вводе НЕ перезаписывает поле (разрешает пустое/промежуточное состояние),
+  // возвращает fallback для расчёта. По blur — применяет минимум.
+  function numRaw(id, fallback){
+    var v = parseInt(el(id).value, 10);
+    return Number.isFinite(v) ? v : (fallback || 0);
+  }
+  function numClamp(id, min){
+    var v = numRaw(id, min);
+    v = Math.max(min || 0, v);
+    el(id).value = v;
+    return v;
+  }
+  function range(a,b){return a===b?a.toLocaleString('ru-RU')+' ₽':a.toLocaleString('ru-RU')+'–'+b.toLocaleString('ru-RU')+' ₽'}
+  function add(total,rate,qty){total[0]+=rate[0]*qty;total[1]+=rate[1]*qty}
+
+  function updateCalc(){
+    var qty   = numRaw('calcQty', 1);
+    var boxes = numRaw('calcBoxes', 1);
+    var size  = el('calcPackSize').dataset.value;
+    var total = [0,0], breakdown = [];
+
+    var mode = document.querySelector('input[name="calcMainMode"]:checked').value;
+    if(mode==='full'){
+      total[0]=calcRates.full[size]*qty; total[1]=total[0];
+      breakdown.push(['Полный цикл',total.slice()]);
+    }else{
+      var custom=[['calcReceiving','Приёмка'],['calcMarking','Маркировка'],['calcSorting','Сортировка'],['calcPackaging','Упаковка']];
+      custom.forEach(function(item){if(el(item[0]).checked){var r=calcRates[item[0].replace('calc','').toLowerCase()][size];var sum=r*qty;total[0]+=sum;total[1]+=sum;breakdown.push([item[1],[sum,sum]])}});
+    }
+
+    if(el('calcStorage').checked){
+      var days = numRaw('calcStorageDays', 1);
+      var paid = Math.max(0, days - 3);
+      var r = calcRates.storage[el('calcStorageSize').dataset.value];
+      if(r){var sum=[r[0]*paid*boxes,r[1]*paid*boxes];add(total,r,paid*boxes);breakdown.push(['Хранение',sum])}
+    }
+    if(el('calcDelivery').checked){
+      var dr=calcRates.delivery[el('calcDestination').dataset.value], sum=[dr[0]*boxes,dr[1]*boxes];add(total,dr,boxes);breakdown.push(['Доставка',sum]);
+      el('calcRouteHint').textContent=el('calcDestination').dataset.value==='near'?'Близкие склады: Подольск, Электросталь':'Дальние склады: Тула, Коледино, Софьино';
+    }
+
+
+    el('calcTotal').textContent=range(total[0],total[1]);
+    el('calcResultCaption').textContent=(mode==='full'?'Полный цикл':'Выбранные операции')+' · '+qty+' шт';
+    el('calcBreakdown').innerHTML=breakdown.map(function(x){return '<span class="calc-breakdown-item">'+x[0]+' <b>'+range(x[1][0],x[1][1])+'</b></span>'}).join('');
+    el('calcStorageDaysWrap').style.opacity=el('calcStorage').checked?'1':'.45';
+    el('calcDeliveryFields').style.opacity=el('calcDelivery').checked?'1':'.45';
+  }
+
+  // +/- кнопки: читают текущее, применяют минимум сразу
+  document.querySelectorAll('[data-calc-action]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var v = numRaw('calcQty', 1);
+      v = Math.max(1, v + (btn.dataset.calcAction==='qty-plus' ? 10 : -10));
+      el('calcQty').value = v;
+      updateCalc();
+    });
+  });
+
+  // числовые поля: по blur фиксируем минимум, иначе не мешаем вводу
+  var numericFields = [
+    {id:'calcQty',         min:1},
+    {id:'calcStorageDays', min:1},
+    {id:'calcBoxes',       min:1}
+  ];
+  numericFields.forEach(function(f){
+    var inp = el(f.id);
+    if(!inp) return;
+    inp.addEventListener('input',  updateCalc);
+    inp.addEventListener('change', updateCalc);
+    inp.addEventListener('blur', function(){
+      numClamp(f.id, f.min);
+      updateCalc();
+    });
+    // выделяем весь текст при фокусе — удобно сразу набрать новое число
+    inp.addEventListener('focus', function(){ this.select(); });
+  });
+
+  // пикеры — обработка кликов по кнопкам внутри .calc-picker
+  document.querySelectorAll('.calc-picker').forEach(function(picker){
+    picker.querySelectorAll('.calc-pick-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        picker.querySelectorAll('.calc-pick-btn').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        picker.dataset.value = btn.dataset.pick;
+        updateCalc();
+      });
+    });
+  });
+
+  // остальные поля (checkbox) — без blur-логики
+  ['calcReceiving','calcMarking','calcSorting','calcPackaging',
+   'calcStorage','calcDelivery'
+  ].forEach(function(id){
+    var inp = el(id);
+    if(!inp) return;
+    inp.addEventListener('input',  updateCalc);
+    inp.addEventListener('change', updateCalc);
+  });
+
+  document.querySelectorAll('input[name="calcMainMode"]').forEach(function(r){
+    r.addEventListener('change', function(){
+      el('calcCustomOptions').style.display = r.value==='custom' && r.checked ? 'grid' : 'none';
+      updateCalc();
+    });
+  });
+  updateCalc();
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Reveal
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      e.target.classList.add('in');
+      io.unobserve(e.target);
+    });
+  }, {threshold:.12, rootMargin:'0px 0px -50px 0px'});
+  document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+
+  // Штрихкод
+  var bc = document.getElementById('barcode');
+  var widths = [2,1,3,1,1,4,2,1,3,1,2,1,1,4,2,3,1,1,2,4,1,3,1,2,1,1,3,2,1,4,1,2];
+  bc.innerHTML = widths.map(function(w, i){
+    var h = 14 + (w * 5);
+    return '<i style="width:'+(w*2)+'px;height:'+h+'px;animation-delay:'+(i*0.025)+'s"></i>';
+  }).join('');
+
+  // Параллакс / tilt карточки накладной
+  var slip = document.getElementById('slip');
+  if(slip && !reduced){
+    slip.addEventListener('mousemove', function(e){
+      var rect = slip.getBoundingClientRect();
+      var x = (e.clientX - rect.left) / rect.width - 0.5;
+      var y = (e.clientY - rect.top) / rect.height - 0.5;
+      slip.style.transform = 'perspective(900px) rotateY('+(x*8)+'deg) rotateX('+(-y*6)+'deg) translateY(-4px)';
+    });
+    slip.addEventListener('mouseleave', function(){
+      slip.style.transform = '';
+    });
+  }
+
+  // Ripple-эффект на кнопках
+  document.querySelectorAll('.btn').forEach(function(btn){
+    btn.addEventListener('mousemove', function(e){
+      var rect = btn.getBoundingClientRect();
+      btn.style.setProperty('--x', ((e.clientX - rect.left) / rect.width * 100) + '%');
+      btn.style.setProperty('--y', ((e.clientY - rect.top) / rect.height * 100) + '%');
+    });
+  });
+})();
+</script>
+</body>
+</html>
