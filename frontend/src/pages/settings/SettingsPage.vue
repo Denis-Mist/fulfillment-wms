@@ -306,6 +306,8 @@ const invited = computed(() => (team.value ?? []).filter((m) => m.status === 'in
                   severity="danger"
                   size="small"
                   aria-label="Отозвать приглашение"
+                  v-tooltip="isDemo ? demoHint : undefined"
+                  :disabled="isDemo"
                   @click="askRevoke(m)"
                 >
                   <UserX class="size-4" />

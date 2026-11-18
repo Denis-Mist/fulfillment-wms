@@ -29,8 +29,11 @@ async function bootstrap() {
     getToken: () => session.token || null,
     getOrganizationId: () => session.organizationId || null,
     onUnauthorized: () => {
-      session.logout()
-      void router.push({ name: 'login' })
+      session.handleUnauthorized()
+      if (session.initializing) return
+      void router.replace(
+        session.demoExpired ? { name: 'demo', query: { expired: '1' } } : { name: 'login' },
+      )
     },
   })
 

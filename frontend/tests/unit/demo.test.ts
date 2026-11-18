@@ -7,6 +7,8 @@ import { errorMessage, ApiError } from '@/shared/api/http'
 import { authApi } from '@/modules/auth/api'
 import { useSessionStore } from '@/stores/session'
 import { demoFlags } from '@/mocks/handlers/auth'
+import { tokenLooksDemo } from '@/modules/auth/token'
+import { tokenFor } from '@/mocks/lib/http'
 
 useMockServer()
 
@@ -78,16 +80,39 @@ describe('isDemo', () => {
       expect(session.role, persona).toBe(exp.role)
       expect(session.isDemo, persona).toBe(true)
       if (exp.org) expect(session.activeMembership?.organizationName, persona).toBe(exp.org)
-      if (persona === 'pending') expect(session.isRestricted).toBe(true)
+      if (persona === 'pending') {
+      expect(session.isRestricted).toBe(true)
+      expect(session.organizationId).toBe('org_p1')
+      expect(session.role).toBe('fc_owner')
+    }
     }
   })
 
-  it('неизвестная персона → 422, выключенное демо → 404', async () => {
+  it('персона сопоставляется без учёта регистра', async () => {
     const session = await setup()
-    await expect(session.loginDemo('nope' as never)).rejects.toMatchObject({ status: 422 })
+    await session.loginDemo('FC_Owner' as never)
+    expect(session.user?.email).toBe('director@demo.ru')
+    expect(session.isDemo).toBe(true)
+    expect(session.user?.isDemo).toBe(true)
+  })
+
+  it('неизвестная персона → 422 «Неизвестная персона», выключенное демо → 200 status и 404 POST', async () => {
+    const session = await setup()
+    const unknown = session.loginDemo('nope' as never)
+    await expect(unknown).rejects.toBeInstanceOf(ApiError)
+    await unknown.catch((e: ApiError) => {
+      expect(e.status).toBe(422)
+      expect(e.problem.title).toBe('Неизвестная персона')
+      expect(errorMessage(e)).toBe('Неизвестная персона')
+    })
     demoFlags.enabled = false
     await expect(authApi.demoStatus()).resolves.toEqual({ enabled: false })
-    await expect(session.loginDemo('fc_owner')).rejects.toMatchObject({ status: 404 })
+    const disabled = session.loginDemo('fc_owner')
+    await expect(disabled).rejects.toBeInstanceOf(ApiError)
+    await disabled.catch((e: ApiError) => {
+      expect(e.status).toBe(404)
+      expect(e.problem.title).toBe('Не найдено')
+    })
     demoFlags.enabled = true
   })
 })
@@ -106,5 +131,29 @@ describe('тексты ошибок демо', () => {
     expect(
       errorMessage(new ApiError(403, { title: 'В демо-режиме это действие недоступно', status: 403 })),
     ).toBe('В демо-режиме это действие недоступно')
+    expect(errorMessage(new ApiError(422, { title: 'Неизвестная персона', status: 422 }))).toBe(
+      'Неизвестная персона',
+    )
+  })
+})
+
+describe('истечение демо-токена', () => {
+  it('tokenLooksDemo распознаёт mock- и JWT-токены', () => {
+    expect(tokenLooksDemo(tokenFor('usr_1', true))).toBe(true)
+    expect(tokenLooksDemo(tokenFor('usr_1', false))).toBe(false)
+    const payload = btoa(JSON.stringify({ demo: 'true' })).replaceAll('=', '')
+    expect(tokenLooksDemo(`eyJhbGciOiJub25lIn0.${payload}.sig`)).toBe(true)
+    expect(tokenLooksDemo(`eyJhbGciOiJub25lIn0.${btoa(JSON.stringify({ sub: 'x' })).replaceAll('=', '')}.sig`)).toBe(
+      false,
+    )
+  })
+
+  it('401 по демо-токену помечает сессию как истёкшую', async () => {
+    const session = await setup()
+    await session.loginDemo('fc_owner')
+    expect(session.demoExpired).toBe(false)
+    session.handleUnauthorized()
+    expect(session.demoExpired).toBe(true)
+    expect(session.isAuthenticated).toBe(false)
   })
 })

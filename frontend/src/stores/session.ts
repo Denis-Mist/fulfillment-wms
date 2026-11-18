@@ -13,6 +13,7 @@ import type {
 } from '@/modules/auth/types'
 import { queryClient } from '@/app/query'
 import { ApiError } from '@/shared/api/http'
+import { tokenLooksDemo } from '@/modules/auth/token'
 
 export const useSessionStore = defineStore('session', () => {
   const token = useStorage<string>('wms.token', '')
@@ -23,6 +24,9 @@ export const useSessionStore = defineStore('session', () => {
   let initPromise: Promise<void> | null = null
   /** Ошибка восстановления сессии (5xx/сеть): токен есть, пользователя нет — App покажет экран «Повторить» (FE-S2-1) */
   const initError = ref<unknown>(null)
+  /** 401 по демо-токену: гвард и /demo показывают, что сессия истекла */
+  const demoExpired = ref(false)
+  const initializing = ref(false)
 
   const isAuthenticated = computed(() => !!token.value && !!user.value)
   const isDemo = computed(() => !!user.value?.isDemo)
@@ -49,7 +53,7 @@ export const useSessionStore = defineStore('session', () => {
   )
 
   function setUser(next: CurrentUser) {
-    user.value = next
+    user.value = { ...next, isDemo: Boolean(next.isDemo) }
     if (!next.memberships.some((m) => m.organizationId === organizationId.value)) {
       organizationId.value = next.memberships[0]?.organizationId ?? ''
       warehouseId.value = ''
@@ -57,6 +61,7 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   function applyAuth(response: AuthResponse) {
+    demoExpired.value = false
     token.value = response.accessToken
     queryClient.clear()
     setUser(response.user)
@@ -73,25 +78,30 @@ export const useSessionStore = defineStore('session', () => {
 
   function init() {
     initPromise ??= (async () => {
-      if (!token.value) return
-      // Разлогиниваем только при явном отказе (401/403); 404/5xx/сеть — пара быстрых повторов, затем экран ошибки
-      let lastError: unknown = null
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          setUser(await authApi.me())
-          initError.value = null
-          return
-        } catch (error) {
-          if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-            clear()
+      initializing.value = true
+      try {
+        if (!token.value) return
+        // Разлогиниваем только при явном отказе (401/403); 404/5xx/сеть — пара быстрых повторов, затем экран ошибки
+        let lastError: unknown = null
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            setUser(await authApi.me())
             initError.value = null
             return
+          } catch (error) {
+            if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+              handleUnauthorized()
+              initError.value = null
+              return
+            }
+            lastError = error
+            if (attempt === 0) await new Promise((r) => setTimeout(r, 400))
           }
-          lastError = error
-          if (attempt === 0) await new Promise((r) => setTimeout(r, 400))
         }
+        initError.value = lastError ?? new Error('Не удалось загрузить профиль')
+      } finally {
+        initializing.value = false
       }
-      initError.value = lastError ?? new Error('Не удалось загрузить профиль')
     })()
     return initPromise
   }
@@ -118,7 +128,13 @@ export const useSessionStore = defineStore('session', () => {
     setUser(await authApi.me())
   }
 
+  function handleUnauthorized() {
+    if (isDemo.value || tokenLooksDemo(token.value)) demoExpired.value = true
+    clear()
+  }
+
   function logout() {
+    demoExpired.value = false
     clear()
   }
 
@@ -139,6 +155,9 @@ export const useSessionStore = defineStore('session', () => {
     warehouseId,
     isAuthenticated,
     isDemo,
+    demoExpired,
+    initializing,
+    handleUnauthorized,
     activeMembership,
     role,
     cabinet,

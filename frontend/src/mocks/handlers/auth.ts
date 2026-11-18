@@ -84,8 +84,8 @@ export const authHandlers = [
     await latency()
     if (!demoFlags.enabled) return problem(404, 'Не найдено')
     const body = (await readJson(request)) as { persona?: string }
-    const email = DEMO_PERSONAS[body.persona ?? '']
-    if (!email) return problem(422, 'Неизвестная роль', 'Выберите одну из доступных демо-ролей.')
+    const email = DEMO_PERSONAS[(body.persona ?? '').trim().toLowerCase()]
+    if (!email) return problem(422, 'Неизвестная персона')
     const user = db.data.users.find((u) => u.email.toLowerCase() === email)
     if (!user) return problem(404, 'Пользователь не найден')
     return HttpResponse.json({ accessToken: tokenFor(user.id, true), user: toCurrentUser(user, true) })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import { ArrowLeft } from '@lucide/vue'
 import { authApi, type DemoPersona } from '@/modules/auth/api'
@@ -12,6 +12,7 @@ import { useSessionStore } from '@/stores/session'
 
 const session = useSessionStore()
 const router = useRouter()
+const route = useRoute()
 const error = ref('')
 const loading = ref<DemoPersona | null>(null)
 
@@ -22,6 +23,7 @@ const { data: status, isPending, isError, refetch } = useQuery({
 })
 
 const enabled = computed(() => status.value?.enabled === true)
+const expired = computed(() => route.query.expired === '1' || session.demoExpired)
 
 async function enter(persona: DemoPersona) {
   error.value = ''
@@ -62,7 +64,18 @@ async function enter(persona: DemoPersona) {
         </div>
       </div>
 
-      <div v-else-if="isError || !enabled" class="mx-auto max-w-lg text-center">
+      <div v-else-if="isError" class="mx-auto max-w-lg text-center">
+        <h1 class="text-[28px] font-semibold tracking-tight text-heading sm:text-3xl">Не удалось проверить демо</h1>
+        <p class="mt-3 text-secondary">
+          Проверьте подключение и попробуйте ещё раз. Если демо обновляется, подождите минуту.
+        </p>
+        <div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <Button label="Проверить снова" outlined @click="refetch()" />
+          <Button label="На страницу входа" @click="router.push({ name: 'login' })" />
+        </div>
+      </div>
+
+      <div v-else-if="!enabled" class="mx-auto max-w-lg text-center">
         <h1 class="text-[28px] font-semibold tracking-tight text-heading sm:text-3xl">Демо временно выключено</h1>
         <p class="mt-3 text-secondary">
           Сейчас стенд недоступен для гостевого входа. Попробуйте позже или войдите со своим аккаунтом.
@@ -82,6 +95,9 @@ async function enter(persona: DemoPersona) {
           Стенд общий: около 03:00 по московскому времени данные снова становятся такими, как в учебном наборе.
         </p>
 
+        <Message v-if="expired && !error" severity="warn" :closable="false" class="mt-6" size="small">
+          Сессия демо истекла. Выберите роль, чтобы войти снова.
+        </Message>
         <Message v-if="error" severity="error" :closable="false" class="mt-6" size="small">{{ error }}</Message>
 
         <section v-for="group in DEMO_PERSONA_GROUPS" :key="group.label" class="mt-10">
