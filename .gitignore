@@ -25,4 +25,6 @@ Thumbs.db
 AGENTS.md
 frontend/playwright-report/
 frontend/test-results/
+frontend/playwright-report-demo/
+frontend/test-results-demo/
 frontend/blob-report/
