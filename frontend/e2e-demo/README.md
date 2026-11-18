@@ -1,52 +1,57 @@
-# E2E демо-режима (реальный бэкенд)
+# E2E демо-режима v2 (`test:e2e:demo`)
 
-Сценарии по `SPEC демо-режима §4.3`: `/demo` и 11 карточек, вход ролями (кабинет + баннер), «Сменить роль»/«Выйти»,
-меню и доступ `fc_account_manager`, стоп-лист демо-токена (API и UI), обычный вход без баннера, контракт `/api/auth/demo*`.
+Спецификация: `SPEC-v2` (демо целиком в браузере на MSW + `localStorage`), §7 «Тестирование» и §11.4.
+Демо больше не ходит в серверную БД; серверные `/api/auth/demo*`, стоп-лист 403 и ночной сброс — не критерии
+приёмки. Что выкинуто из v1 — см. [OBSOLETE.md](./OBSOLETE.md).
 
-Отдельно от e2e на моках: свой конфиг `playwright.demo.config.ts`, каталог `e2e-demo/`, скрипт `npm run test:e2e:demo`.
-`npm run test:e2e` / `test:all` и CI `frontend-tests` эти файлы не подхватывают.
+Основной контур (`playwright.config.ts`, `e2e/`, `VITE_USE_MOCKS=true`, CI `frontend-tests`) этот набор не трогает.
 
-## Локальный прогон
+## Стенд
 
-1. Postgres с чистой БД (сид создаётся при первом старте API на пустой БД).
-2. API с включённым демо (CORS по умолчанию пускает `127.0.0.1:5173/5174`):
+- **Фронт** — production-like сборка, как на проде: `vite build` с `VITE_USE_MOCKS=false`, `VITE_API_BASE_URL=/api`,
+  затем `vite preview` (`vite.e2e-demo.config.ts`), где `/api` и `/health` проксируются на реальный API. Это делает
+  `webServer` в `playwright.demo.config.ts`; сборка — в `node_modules/.cache/e2e-demo/dist`.
+- **Реальный API** стенда тестов (по умолчанию `http://127.0.0.1:5080`) с обычной локальной БД. `Demo__Enabled` **не
+  нужен**. Сценарии «выход из демо → реальный логин/регистрация» регистрируют одноразовых пользователей
+  `e2e-demo-v2-*@example.com` (организации в статусе pending) — поэтому только стенд тестов, не прод.
+- Сидовые пароли не используются.
 
-   ```bash
-   cd backend
-   Demo__Enabled=true Demo__TokenLifetimeMinutes=120 \
-   dotnet run --project src/Wms.Api --urls http://127.0.0.1:5080
-   ```
+## Запуск
 
-3. Тесты (Vite с `VITE_USE_MOCKS=false` поднимается сам на `E2E_DEMO_PORT`, по умолчанию 5173):
-
-   ```bash
-   cd frontend
-   npm run test:e2e:demo
-   ```
+```bash
+cd frontend
+npm run test:e2e:demo:list   # перечислить сценарии (без сборки и без API)
+npm run test:e2e:demo        # полный прогон: сборка + preview + тесты, API должен быть поднят
+```
 
 | env | по умолчанию | смысл |
 |---|---|---|
-| `E2E_DEMO_API_URL` | `http://127.0.0.1:5080/api` | базовый URL API (уходит и во `VITE_API_BASE_URL`) |
-| `E2E_DEMO_PORT` | `5173` | порт Vite |
-| `E2E_DEMO_BASE_URL` | — | готовый фронт; тогда Vite не стартует |
-| `E2E_DEMO_REUSE_SERVER` | — | `1` — переиспользовать уже запущенный Vite (только если он с `VITE_USE_MOCKS=false`) |
-| `E2E_DEMO_TTL_MIN` | `120` | ожидаемый `Demo:TokenLifetimeMinutes` |
-| `E2E_DEMO_XFF` | вкл. | `0` — не подставлять `X-Forwarded-For` |
+| `E2E_DEMO_API_TARGET` | `http://127.0.0.1:5080` | куда preview проксирует `/api`, `/health` |
+| `E2E_DEMO_API_URL` | `${E2E_DEMO_API_TARGET}/api` | реальный API для прямых проверок из Node |
+| `E2E_DEMO_PORT` | `4180` | порт `vite preview` |
+| `E2E_DEMO_BASE_URL` | — | готовый фронт (сборка не запускается) |
+| `E2E_DEMO_REUSE_SERVER` | — | `1` — переиспользовать уже запущенный preview |
+| `E2E_DEMO_XFF` | вкл. | `0` — не подставлять `X-Forwarded-For` (rate limit login/register 20/мин на IP) |
+| `E2E_DEMO_SKIP_PRECHECK` | — | `1` — не проверять `/health` API перед прогоном |
 
-Лимит `POST /api/auth/demo` — 10/мин на IP. Тесты дают каждому сценарию свой «IP» через `X-Forwarded-For`
-(API доверяет ему только от прокси `127.0.0.1`), поэтому API надо слушать на `127.0.0.1`, а не на `::1`.
+Артефакты падений: `node_modules/.cache/e2e-demo/test-results`, отчёт — `playwright-report-demo/`.
 
-Набор мутирует БД (попытки из стоп-листа, сохранение профиля обычным директором). После прогона с найденным
-багом стоп-листа БД стоит пересоздать.
+## Контракт
 
-Артефакты падений (скриншоты, трейсы): `node_modules/.cache/e2e-demo/test-results`, отчёт — `playwright-report-demo/`.
+Имена, на которые опираются тесты, собраны в `contract.ts`: флаг `wms.demo.active`, заголовок `X-WMS-Demo: 1`,
+боевые ключи `wms.token`/`wms.organizationId`/`wms.warehouseId`, overlay `wms.mockdb.v2`/`wms.mock.*`, тексты UI.
+Демо-токен ищется по значению `mock.demo:…`, имя ключа не зашито (в спеке — «например `wms.demo.token`»).
 
-## Прод
+Сквозной страж `demoLeaks` (fixtures.ts) валит любой тест, если запрос с `X-WMS-Demo` или мок-токеном дошёл до
+реального API (MSW `passthrough()` или вкладка без SW).
 
-Против `korobfulfillment.ru` полный набор запрещён (конфиг падает). Дымовой прогон — только тесты `@prod-smoke`
-(чтение + один вход в демо), явно:
+## Прод (только после выкладки и только явно)
+
+Полный набор против `korobfulfillment.ru` запрещён (`env.ts` бросает ошибку). Выборочная проверка — тесты
+`@prod-smoke` (только чтение, вход в демо обслуживает MSW в браузере):
 
 ```bash
-E2E_DEMO_ALLOW_PROD=1 E2E_DEMO_BASE_URL=https://wms.korobfulfillment.ru \
-E2E_DEMO_API_URL=https://wms.korobfulfillment.ru/api npm run test:e2e:demo
+E2E_DEMO_ALLOW_PROD=1 E2E_DEMO_BASE_URL=https://wms.korobfulfillment.ru npm run test:e2e:demo
 ```
+
+TgSearch проверяется вручную на сервере (контейнер `tgsearch` Up).

@@ -1,4 +1,7 @@
-/** Персоны демо-режима — SPEC §1.3 (заголовки карточек) и §2.2 (канонические сид-пользователи) */
+/**
+ * Персоны демо-режима — те же 11 id, что в v1 (SPEC-v2 §3.6). Email — пользователь МОК-сида
+ * (src/mocks/handlers/auth.ts DEMO_PERSONAS), в v2 к серверной БД отношения не имеет.
+ */
 export type Persona =
   | 'platform_admin'
   | 'fc_owner'
@@ -15,7 +18,7 @@ export type Persona =
 export interface PersonaDef {
   /** Заголовок карточки на /demo */
   title: string
-  /** Канонический сид-пользователь */
+  /** Пользователь мок-сида, в которого логинит мок POST /api/auth/demo */
   email: string
   /** Роль в membership (null — платформенный админ без membership) */
   role: string | null
@@ -43,7 +46,11 @@ export const PERSONAS: Record<Persona, PersonaDef> = {
 
 export const ALL_PERSONAS = Object.keys(PERSONAS) as Persona[]
 
-/** Обязательные по §4.3 персоны для UI-входа (разные группы) */
-export const UI_PERSONAS: Persona[] = ['platform_admin', 'fc_owner', 'fc_account_manager', 'fc_picker', 'seller_owner', 'pending']
-
-export const DEMO_FORBIDDEN_TITLE = 'В демо-режиме это действие недоступно'
+/** Ещё один раздел кабинета на персону: баннер виден не только на главной */
+export const SECOND_PAGE: Partial<Record<Persona, string>> = {
+  platform_admin: '/admin/users',
+  fc_owner: '/fc/orders',
+  fc_account_manager: '/fc/clients',
+  fc_picker: '/work/scan',
+  seller_owner: '/seller/products',
+}
