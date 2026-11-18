@@ -99,10 +99,18 @@ test.describe('рантайм-демо на сборке VITE_USE_MOCKS=false', 
     expect(kept).toBe(true)
 
     await page.getByRole('button', { name: 'Сбросить данные' }).click()
-    await page.locator('.p-confirmdialog-accept-button').click()
+    const accept = page.locator('.p-confirmdialog-accept-button')
+    await expect(accept).toBeVisible()
+    // accept у PrimeVue не ждёт async-callback: без ожидания re-login проверка storage гоняется со сбросом
+    const relogin = page.waitForResponse(
+      (res) => res.url().includes('/auth/demo') && res.request().method() === 'POST',
+    )
+    await accept.click()
+    await relogin
     await expect(page.getByTestId('demo-banner')).toBeVisible()
-    const cleared = await page.evaluate((name) => localStorage.getItem('wms.mockdb.v2')?.includes(name) === true, marker)
-    expect(cleared).toBe(false)
+    await expect
+      .poll(() => page.evaluate((name) => localStorage.getItem('wms.mockdb.v2')?.includes(name) === true, marker))
+      .toBe(false)
   })
 
   test('боевые /api не перехватываются моками; боевой токен не затирается', async ({ context, page }) => {
