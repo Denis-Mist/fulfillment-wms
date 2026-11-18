@@ -44,6 +44,12 @@ class MockDb {
 
   reset() {
     localStorage.removeItem(STORAGE_KEY)
+    this.overlay = {}
+    const fresh = seed()
+    for (const name of Object.keys(this.data) as CollectionName[]) {
+      const list = this.data[name] as { id: string }[]
+      list.splice(0, list.length, ...(fresh[name] as { id: string }[]))
+    }
   }
 
   private entry<K extends CollectionName>(name: K) {

@@ -28,9 +28,9 @@ useIntervalFn(() => {
   if (status.value === 'pending') void check()
 }, 10_000)
 
-function logout() {
-  session.logout()
-  void router.push({ name: 'login' })
+async function logout() {
+  const dest = await session.logout()
+  void router.replace(dest === 'home' ? '/' : { name: 'login' })
 }
 
 const steps = computed(() => [

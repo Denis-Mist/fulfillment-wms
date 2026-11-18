@@ -25,8 +25,8 @@ async function retrySession() {
   }
 }
 
-function toLogin() {
-  session.logout()
+async function toLogin() {
+  await session.logout()
   void router.replace({ name: 'login', query: { redirect: route.fullPath } })
 }
 

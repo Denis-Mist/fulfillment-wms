@@ -42,6 +42,7 @@ describe('меню аккаунт-менеджера', () => {
 describe('isDemo', () => {
   beforeEach(() => {
     localStorage.clear()
+    sessionStorage.clear()
     demoFlags.enabled = true
   })
 
@@ -155,5 +156,65 @@ describe('истечение демо-токена', () => {
     session.handleUnauthorized()
     expect(session.demoExpired).toBe(true)
     expect(session.isAuthenticated).toBe(false)
+  })
+})
+
+describe('изоляция сессии и сброс мок-БД', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    sessionStorage.clear()
+    demoFlags.enabled = true
+  })
+
+  it('вход в демо не затирает боевой токен', async () => {
+    const session = await setup()
+    await session.login({ email: 'director@demo.ru', password: 'demo' })
+    const real = session.realToken
+    expect(real).toBeTruthy()
+    expect(localStorage.getItem('wms.token')).toBe(real)
+
+    await session.loginDemo('fc_manager')
+    expect(session.isDemo).toBe(true)
+    expect(sessionStorage.getItem('wms.demo.active')).toBe('1')
+    expect(localStorage.getItem('wms.demo.active')).toBe('1')
+    expect(localStorage.getItem('wms.token')).toBe(real)
+    expect(localStorage.getItem('wms.demo.token')?.startsWith('mock.demo:')).toBe(true)
+    expect(session.token).toBe(localStorage.getItem('wms.demo.token'))
+  })
+
+  it('сброс восстанавливает seed в памяти, смена роли данные сохраняет', async () => {
+    const { db } = await import('@/mocks/db/store')
+    const session = await setup()
+    await session.loginDemo('fc_owner')
+    const org = db.data.organizations.find((o) => o.name === 'СкладПро Фулфилмент')
+    expect(org).toBeTruthy()
+    const original = org!.name
+    db.upsert('organizations', { ...org!, name: 'Изменённый ФЦ' })
+    expect(db.data.organizations.find((o) => o.id === org!.id)?.name).toBe('Изменённый ФЦ')
+
+    await session.loginDemo('fc_picker')
+    expect(session.role).toBe('fc_picker')
+    expect(db.data.organizations.find((o) => o.id === org!.id)?.name).toBe('Изменённый ФЦ')
+
+    const dest = await session.resetDemo()
+    expect(dest).toBe('home')
+    expect(db.data.organizations.find((o) => o.id === org!.id)?.name).toBe(original)
+    expect(session.role).toBe('fc_picker')
+    expect(session.isDemo).toBe(true)
+  })
+
+  it('выход из демо восстанавливает боевую сессию', async () => {
+    const session = await setup()
+    await session.login({ email: 'seller@demo.ru', password: 'demo' })
+    const real = session.realToken
+    await session.loginDemo('seller_owner')
+    expect(session.isDemo).toBe(true)
+    const dest = await session.logout()
+    expect(dest).toBe('home')
+    expect(session.isDemo).toBe(false)
+    expect(sessionStorage.getItem('wms.demo.active')).toBeNull()
+    expect(session.token).toBe(real)
+    expect(session.user?.email).toBe('seller@demo.ru')
+    expect(session.user?.isDemo).toBe(false)
   })
 })

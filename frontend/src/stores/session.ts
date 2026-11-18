@@ -12,24 +12,64 @@ import type {
   Role,
 } from '@/modules/auth/types'
 import { queryClient } from '@/app/query'
+import {
+  DEMO_SESSION_KEYS,
+  REAL_SESSION_KEYS,
+  enterDemoTab,
+  isAlwaysMocks,
+  isDemoTab,
+  leaveDemoTab,
+  readDemoPersona,
+  writeDemoPersona,
+} from '@/app/demoMode'
 import { ApiError } from '@/shared/api/http'
 import { tokenLooksDemo } from '@/modules/auth/token'
 
+export type LogoutDestination = 'login' | 'home'
+
 export const useSessionStore = defineStore('session', () => {
-  const token = useStorage<string>('wms.token', '')
-  const organizationId = useStorage<string>('wms.organizationId', '')
-  /** Пустая строка — «Все склады» */
-  const warehouseId = useStorage<string>('wms.warehouseId', '')
+  const realToken = useStorage<string>(REAL_SESSION_KEYS.token, '')
+  const realOrganizationId = useStorage<string>(REAL_SESSION_KEYS.organizationId, '')
+  const realWarehouseId = useStorage<string>(REAL_SESSION_KEYS.warehouseId, '')
+  const demoToken = useStorage<string>(DEMO_SESSION_KEYS.token, '')
+  const demoOrganizationId = useStorage<string>(DEMO_SESSION_KEYS.organizationId, '')
+  const demoWarehouseId = useStorage<string>(DEMO_SESSION_KEYS.warehouseId, '')
+
+  /** Режим этой вкладки; не подписываемся на storage-события, чтобы боевая вкладка не переключилась. */
+  const demoTab = ref(isDemoTab())
+
   const user = ref<CurrentUser | null>(null)
   let initPromise: Promise<void> | null = null
   /** Ошибка восстановления сессии (5xx/сеть): токен есть, пользователя нет — App покажет экран «Повторить» (FE-S2-1) */
   const initError = ref<unknown>(null)
-  /** 401 по демо-токену: гвард и /demo показывают, что сессия истекла */
+  /** Сломанная/пропавшая мок-сессия: гвард ведёт на /demo, не на /login */
   const demoExpired = ref(false)
   const initializing = ref(false)
 
+  const token = computed({
+    get: () => (demoTab.value ? demoToken.value : realToken.value),
+    set: (value) => {
+      if (demoTab.value) demoToken.value = value
+      else realToken.value = value
+    },
+  })
+  const organizationId = computed({
+    get: () => (demoTab.value ? demoOrganizationId.value : realOrganizationId.value),
+    set: (value) => {
+      if (demoTab.value) demoOrganizationId.value = value
+      else realOrganizationId.value = value
+    },
+  })
+  const warehouseId = computed({
+    get: () => (demoTab.value ? demoWarehouseId.value : realWarehouseId.value),
+    set: (value) => {
+      if (demoTab.value) demoWarehouseId.value = value
+      else realWarehouseId.value = value
+    },
+  })
+
   const isAuthenticated = computed(() => !!token.value && !!user.value)
-  const isDemo = computed(() => !!user.value?.isDemo)
+  const isDemo = computed(() => demoTab.value && !!user.value?.isDemo)
 
   const activeMembership = computed(() => {
     if (!user.value || user.value.isPlatformAdmin) return null
@@ -67,13 +107,24 @@ export const useSessionStore = defineStore('session', () => {
     setUser(response.user)
   }
 
-  function clear() {
+  function clearActiveKeys() {
     initError.value = null
     token.value = ''
     user.value = null
     organizationId.value = ''
     warehouseId.value = ''
     queryClient.clear()
+  }
+
+  function clearDemoKeys() {
+    demoToken.value = ''
+    demoOrganizationId.value = ''
+    demoWarehouseId.value = ''
+    writeDemoPersona(null)
+  }
+
+  function resetInit() {
+    initPromise = null
   }
 
   function init() {
@@ -108,7 +159,7 @@ export const useSessionStore = defineStore('session', () => {
 
   /** «Повторить» на экране ошибки: заново запрашиваем /auth/me без перезагрузки */
   async function retryInit() {
-    initPromise = null
+    resetInit()
     await init()
   }
 
@@ -117,6 +168,12 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   async function loginDemo(persona: DemoPersona) {
+    const { startMockWorker } = await import('@/mocks/runtime')
+    await startMockWorker()
+    enterDemoTab()
+    demoTab.value = true
+    resetInit()
+    writeDemoPersona(persona)
     applyAuth(await authApi.demo(persona))
   }
 
@@ -128,14 +185,52 @@ export const useSessionStore = defineStore('session', () => {
     setUser(await authApi.me())
   }
 
-  function handleUnauthorized() {
-    if (isDemo.value || tokenLooksDemo(token.value)) demoExpired.value = true
-    clear()
+  async function resetDemo() {
+    const { resetMockData } = await import('@/mocks/runtime')
+    const persona = (readDemoPersona() ?? undefined) as DemoPersona | undefined
+    resetMockData()
+    queryClient.clear()
+    if (persona && demoTab.value) {
+      applyAuth(await authApi.demo(persona))
+      return 'home' as const
+    }
+    return 'demo' as const
   }
 
-  function logout() {
+  function handleUnauthorized() {
+    if (demoTab.value || tokenLooksDemo(token.value)) {
+      demoExpired.value = true
+      clearActiveKeys()
+      return
+    }
+    clearActiveKeys()
+  }
+
+  async function exitDemo(): Promise<LogoutDestination> {
+    clearDemoKeys()
+    user.value = null
+    initError.value = null
+    queryClient.clear()
     demoExpired.value = false
-    clear()
+    leaveDemoTab()
+    demoTab.value = false
+    resetInit()
+    if (!isAlwaysMocks()) {
+      const { stopMockWorker } = await import('@/mocks/runtime')
+      await stopMockWorker()
+    }
+    if (realToken.value) {
+      await init()
+      if (isAuthenticated.value) return 'home'
+    }
+    return 'login'
+  }
+
+  async function logout(): Promise<LogoutDestination> {
+    if (demoTab.value) return exitDemo()
+    demoExpired.value = false
+    clearActiveKeys()
+    return 'login'
   }
 
   function setOrganization(id: string) {
@@ -155,6 +250,7 @@ export const useSessionStore = defineStore('session', () => {
     warehouseId,
     isAuthenticated,
     isDemo,
+    demoTab,
     demoExpired,
     initializing,
     handleUnauthorized,
@@ -170,7 +266,10 @@ export const useSessionStore = defineStore('session', () => {
     register,
     refreshUser,
     logout,
+    exitDemo,
+    resetDemo,
     setOrganization,
     setWarehouse,
+    realToken,
   }
 })

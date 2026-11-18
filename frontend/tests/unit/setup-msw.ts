@@ -1,13 +1,8 @@
-import type { RequestHandler } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll } from 'vitest'
+import { handlers } from '@/mocks/handlers'
 
-const modules = import.meta.glob<Record<string, unknown>>('../../src/mocks/handlers/*.ts', { eager: true })
-export const handlers = Object.values(modules)
-  .flatMap((module) => Object.values(module))
-  .filter((value): value is RequestHandler[] => Array.isArray(value))
-  .flat()
-
+export { handlers }
 export const server = setupServer(...handlers)
 
 /**
@@ -19,6 +14,7 @@ export function useMockServer() {
   afterEach(() => {
     server.resetHandlers()
     localStorage.clear()
+    sessionStorage.clear()
   })
   afterAll(() => server.close())
 }

@@ -36,6 +36,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: E2E (playwright)
         run: npm run test:e2e
+      - name: E2E runtime demo (VITE_USE_MOCKS=false)
+        run: npm run test:e2e:runtime
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -43,6 +45,7 @@ jobs:
           name: playwright-report
           path: |
             frontend/playwright-report
+            frontend/playwright-report-runtime
             frontend/test-results
           retention-days: 14
           if-no-files-found: ignore

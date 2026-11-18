@@ -133,6 +133,17 @@ async function submit() {
   <div>
     <h1 class="text-[28px] font-semibold tracking-tight text-heading">Регистрация</h1>
     <p class="mt-1.5 text-secondary">Три коротких шага — и заявка отправлена на проверку</p>
+    <Button
+      type="button"
+      label="Попробовать демо"
+      severity="secondary"
+      outlined
+      fluid
+      class="mt-5"
+      data-testid="try-demo"
+      @click="router.push({ name: 'demo' })"
+    />
+    <p class="mt-2 text-center text-sm text-secondary">Аккаунт не нужен — выберите роль и посмотрите систему.</p>
 
     <ol class="mt-7 flex items-center gap-2">
       <li v-for="(label, index) in steps" :key="label" class="flex flex-1 items-center gap-2">
@@ -277,6 +288,8 @@ async function submit() {
     <p class="mt-8 text-center text-sm text-secondary">
       Уже зарегистрированы?
       <RouterLink :to="{ name: 'login' }" class="font-semibold text-primary hover:underline">Войти</RouterLink>
+      <span class="text-surface-300"> · </span>
+      <RouterLink :to="{ name: 'demo' }" class="font-semibold text-primary hover:underline">Попробовать демо</RouterLink>
     </p>
   </div>
 </template>

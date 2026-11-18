@@ -27,3 +27,5 @@ frontend/playwright-report/
 frontend/test-results/
 frontend/playwright-report-demo/
 frontend/blob-report/
+frontend/playwright-report-runtime/
+frontend/dist-runtime/
