@@ -176,7 +176,7 @@ describe('изоляция сессии и сброс мок-БД', () => {
     await session.loginDemo('fc_manager')
     expect(session.isDemo).toBe(true)
     expect(sessionStorage.getItem('wms.demo.active')).toBe('1')
-    expect(localStorage.getItem('wms.demo.active')).toBe('1')
+    expect(localStorage.getItem('wms.demo.active')).toBeNull()
     expect(localStorage.getItem('wms.token')).toBe(real)
     expect(localStorage.getItem('wms.demo.token')?.startsWith('mock.demo:')).toBe(true)
     expect(session.token).toBe(localStorage.getItem('wms.demo.token'))
@@ -216,5 +216,27 @@ describe('изоляция сессии и сброс мок-БД', () => {
     expect(session.token).toBe(real)
     expect(session.user?.email).toBe('seller@demo.ru')
     expect(session.user?.isDemo).toBe(false)
+  })
+})
+
+describe('демо-флаг, заголовок и старт MSW', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    sessionStorage.clear()
+  })
+
+  it('при VITE_USE_MOCKS=true заголовок X-WMS-Demo ставится и без демо-вкладки', async () => {
+    const { shouldSendDemoHeader, isAlwaysMocks, enterDemoTab } = await import('@/app/demoMode')
+    expect(isAlwaysMocks()).toBe(true)
+    expect(shouldSendDemoHeader()).toBe(true)
+    expect(sessionStorage.getItem('wms.demo.active')).toBeNull()
+    enterDemoTab()
+    expect(sessionStorage.getItem('wms.demo.active')).toBe('1')
+    expect(localStorage.getItem('wms.demo.active')).toBeNull()
+  })
+
+  it('в jsdom startMockWorker не падает (ветка unit-тестов)', async () => {
+    const { startMockWorker } = await import('@/mocks/runtime')
+    await expect(startMockWorker()).resolves.toBeUndefined()
   })
 })
