@@ -47,7 +47,7 @@ docker run --rm --name "wms-web-build-$TS" --memory "$BUILD_MEM" --memory-swap "
     mkdir /work && cp -a /in/. /work/ && cd /work
     npm ci --no-audit --no-fund --loglevel=error
     npx vite build
-    cp -a dist/. /out/ && rm -f /out/mockServiceWorker.js'
+    cp -a dist/. /out/'   # mockServiceWorker.js остаётся: он нужен демо-режиму (MSW в браузере), см. nginx location = /mockServiceWorker.js
 [ -s "$WEB_DIR.tmp/index.html" ] || { echo "сборка фронта не дала index.html" >&2; exit 1; }
 chmod -R a+rX "$WEB_DIR.tmp"
 rm -rf "$WEB_DIR" && mv "$WEB_DIR.tmp" "$WEB_DIR"
