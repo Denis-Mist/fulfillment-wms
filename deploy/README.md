@@ -37,7 +37,7 @@ GitHub: merge в main ─► workflow deploy: backend-tests + frontend-tests ─
 | `.env.example` | образец `/opt/wms/.env` без секретов |
 | `../.github/workflows/deploy.yml` | автодеплой: push в `main` (merge PR) или вручную (Run workflow) |
 | `landing/index.html` | лендинг https://korobfulfillment.ru (nginx-сайт `mysite`, `/var/www/mysite`). Автодеплоем **не** выкладывается |
-| `landing/deploy-landing.sh` | ручная выкладка лендинга с бэкапом (см. «Лендинг») |
+| `landing/deploy-landing.sh` | ручная выкладка лендинга и robots/sitemap/llms.txt с бэкапом (см. «Лендинг») |
 
 ### Что делает `server-deploy.sh`
 
@@ -117,16 +117,18 @@ docker exec -i wms-postgres pg_restore -U wms -d wms --clean --if-exists < /opt/
 
 ## Лендинг korobfulfillment.ru
 
-Исходник — `deploy/landing/index.html` (один самодостаточный файл: стили и скрипты внутри, шрифты с Google Fonts).
-Автодеплой WMS его **не** выкладывает: после merge он лишь появляется в `/opt/wms/src`. Выложить вручную, на сервере от root:
+Исходники — `deploy/landing/`: `index.html` (один самодостаточный файл: стили, скрипты и JSON-LD внутри, шрифты с Google Fonts),
+`robots.txt`, `sitemap.xml`, `llms.txt`, `llms-full.txt` (подробности и правила правки — `deploy/landing/README.md`).
+Автодеплой WMS их **не** выкладывает: после merge они лишь появляются в `/opt/wms/src`. Выложить вручную, на сервере от root:
 
 ```bash
 sudo bash /opt/wms/src/deploy/landing/deploy-landing.sh
 ```
 
-Скрипт бэкапит текущий `/var/www/mysite/index.html` в `/opt/wms/backups/landing/index-<время>.html` (20 последних),
-атомарно подменяет файл (temp + `mv`), сохраняя владельца и права. nginx не трогается (reload не нужен), конфиг `mysite` не меняется.
-Откат — тот же скрипт с путём к бэкапу (команду он печатает): `sudo bash /opt/wms/src/deploy/landing/deploy-landing.sh /opt/wms/backups/landing/index-<время>.html`.
+Скрипт сначала проверяет все файлы, затем для каждого изменённого бэкапит текущую версию из `/var/www/mysite/`
+в `/opt/wms/backups/landing/<имя>-<время>.<расширение>` (20 последних на файл) и атомарно подменяет его (temp + `mv`),
+сохраняя владельца и права. nginx не трогается (reload не нужен). В конфиге `mysite` нужен `charset utf-8;` (для `.txt`).
+Откат — тот же скрипт с путём к бэкапу (команды он печатает): `sudo bash /opt/wms/src/deploy/landing/deploy-landing.sh /opt/wms/backups/landing/index-<время>.html`.
 
 ## Текущая установка
 
