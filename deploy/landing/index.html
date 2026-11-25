@@ -3,8 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>КОРОБ — фулфилмент для маленьких селлеров</title>
-<meta name="description" content="Склад в Люберцах: приёмка, хранение, маркировка, упаковка, доставка на WB и Ozon, возвраты. Работаем с небольшими объёмами, которые не берут крупные фулфилменты.">
+<script>document.documentElement.className += ' js';</script>
+<title>КОРОБ — фулфилмент в Люберцах для селлеров WB, Ozon и Яндекс.Маркета без минимального объёма</title>
+<meta name="description" content="Фулфилмент-склад КОРОБ в Люберцах (Московская область) для небольших селлеров Wildberries, Ozon и Яндекс.Маркета: приёмка от 5 ₽/шт, маркировка «Честный знак», упаковка, хранение (3 дня бесплатно), доставка на склады маркетплейсов от 650 ₽ за короб, возвраты. Без минимального объёма.">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<link rel="canonical" href="https://korobfulfillment.ru/">
+<link rel="alternate" type="text/plain" href="https://korobfulfillment.ru/llms.txt" title="llms.txt — краткое описание КОРОБ для ИИ-ассистентов">
+<meta name="geo.region" content="RU-MOS">
+<meta name="geo.placename" content="Люберцы">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:site_name" content="КОРОБ">
+<meta property="og:url" content="https://korobfulfillment.ru/">
+<meta property="og:title" content="КОРОБ — фулфилмент в Люберцах для небольших селлеров WB, Ozon и Яндекс.Маркета">
+<meta property="og:description" content="Приёмка, маркировка, упаковка, хранение и доставка на склады маркетплейсов. Без минимального объёма, первые 3 дня хранения бесплатно.">
+<meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -483,11 +496,13 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
 .disclaimer{max-width:560px;line-height:1.7}
 
 /* reveal */
-.rv{
+/* прячем блоки до анимации только при включённом JS (класс js ставится в <head>);
+   без JS и для роботов, которые не исполняют JS, весь текст виден сразу */
+.js .rv{
   opacity:0;transform:translateY(28px);
   transition:opacity .7s var(--ease-out), transform .7s var(--ease-out);
 }
-.rv.in{opacity:1;transform:none}
+.js .rv.in{opacity:1;transform:none}
 .rv-d1{transition-delay:.08s}
 .rv-d2{transition-delay:.16s}
 .rv-d3{transition-delay:.24s}
@@ -865,6 +880,33 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
 .launch-box p{margin-top:7px;color:var(--muted);font-size:14px;line-height:1.6}
 
 
+/* ───────────── «Кратко о КОРОБ» ───────────── */
+.facts{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin:0;
+  background:var(--line);border:1px solid var(--line);border-radius:var(--r-xl);
+  overflow:hidden;box-shadow:var(--shadow-sm);
+}
+.fact{background:var(--surface);padding:22px 24px}
+.fact dt{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.fact dd{margin:8px 0 0;font-size:14.5px;line-height:1.6;color:var(--ink)}
+.fact dd a{color:var(--accent-ink);font-weight:600}
+.price-all{margin-top:26px;border-top:1px solid var(--line)}
+.price-all summary{font-size:16px}
+.price-all-wrap{overflow-x:auto;padding-bottom:22px}
+.price-all-table{width:100%;min-width:560px;border-collapse:collapse;font-size:14px;margin-bottom:18px}
+.price-all-table caption{text-align:left;font-weight:700;padding:0 0 10px;color:var(--ink)}
+.price-all-table th{
+  text-align:left;font-family:var(--mono);font-size:11.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--dim);
+  padding:9px 10px;border-bottom:1px solid var(--line);
+}
+.price-all-table td{padding:9px 10px;border-bottom:1px solid var(--line-soft);color:var(--muted)}
+.price-all-table td:first-child{color:var(--ink);font-weight:600}
+.price-all-table td:not(:first-child):not(:last-child){white-space:nowrap}
+.price-all-note{color:var(--dim);font-size:12.5px;padding:0}
+details .price-all-note{padding:0;animation:none}
+@media(max-width:760px){ .facts{grid-template-columns:1fr} }
+
 /* ───────────── расширенный калькулятор ───────────── */
 .calc-large{padding:34px}
 .calc-large .calc-head{align-items:flex-start}
@@ -1218,6 +1260,523 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
 }
 
 </style>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": [
+    "Organization",
+    "LocalBusiness"
+   ],
+   "@id": "https://korobfulfillment.ru/#organization",
+   "name": "КОРОБ",
+   "alternateName": [
+    "KOROB",
+    "КОРОБ фулфилмент",
+    "KOROB fulfillment"
+   ],
+   "url": "https://korobfulfillment.ru/",
+   "description": "Фулфилмент-склад в Люберцах для небольших продавцов Wildberries, Ozon, Яндекс.Маркета и других маркетплейсов: приёмка, маркировка, сортировка, упаковка, хранение, доставка на склады маркетплейсов и обработка возвратов. Без минимального объёма.",
+   "slogan": "Пока большие выбирают обороты — мы выбираем клиентов.",
+   "telephone": "+7-906-357-46-76",
+   "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Люберцы",
+    "addressRegion": "Московская область",
+    "addressCountry": "RU"
+   },
+   "openingHoursSpecification": [
+    {
+     "@type": "OpeningHoursSpecification",
+     "dayOfWeek": [
+      "https://schema.org/Monday",
+      "https://schema.org/Tuesday",
+      "https://schema.org/Wednesday",
+      "https://schema.org/Thursday",
+      "https://schema.org/Friday"
+     ],
+     "opens": "09:00",
+     "closes": "18:00"
+    },
+    {
+     "@type": "OpeningHoursSpecification",
+     "dayOfWeek": [
+      "https://schema.org/Saturday",
+      "https://schema.org/Sunday"
+     ],
+     "opens": "10:00",
+     "closes": "16:00"
+    }
+   ],
+   "contactPoint": [
+    {
+     "@type": "ContactPoint",
+     "name": "Дмитрий",
+     "telephone": "+7-906-357-46-76",
+     "contactType": "sales",
+     "availableLanguage": "ru",
+     "url": "https://t.me/dimochka_ff"
+    },
+    {
+     "@type": "ContactPoint",
+     "name": "Денис",
+     "telephone": "+7-925-780-72-53",
+     "contactType": "customer support",
+     "availableLanguage": "ru",
+     "url": "https://t.me/Mistt_tt"
+    }
+   ],
+   "priceRange": "от 4 ₽ до 850 ₽ за операцию",
+   "currenciesAccepted": "RUB",
+   "knowsAbout": [
+    "фулфилмент",
+    "фулфилмент для Wildberries",
+    "фулфилмент для Ozon",
+    "фулфилмент для Яндекс.Маркета",
+    "маркировка «Честный знак»",
+    "упаковка товаров для маркетплейсов",
+    "хранение товаров",
+    "обработка возвратов"
+   ],
+   "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "@id": "https://korobfulfillment.ru/#prices",
+    "name": "Прайс КОРОБ",
+    "itemListElement": [
+     {
+      "@type": "OfferCatalog",
+      "name": "Основной цикл (цена за 1 шт., зависит от размера товара XS–XL)",
+      "itemListElement": [
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Приёмка",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "шт.",
+         "minPrice": 5,
+         "maxPrice": 8
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "Приём товара на складе. Цены по размерам: XS — 5 ₽, S — 5 ₽, M — 5 ₽, L — 7 ₽, XL — 8 ₽."
+       },
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Маркировка",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "шт.",
+         "minPrice": 9,
+         "maxPrice": 15
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "Нанесение этикетки / «Честный знак». Цены по размерам: XS — 9 ₽, S — 9 ₽, M — 10 ₽, L — 12 ₽, XL — 15 ₽."
+       },
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Сортировка",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "шт.",
+         "minPrice": 4,
+         "maxPrice": 7
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "Распределение по артикулам и размерам. Цены по размерам: XS — 4 ₽, S — 4 ₽, M — 5 ₽, L — 6 ₽, XL — 7 ₽."
+       },
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Упаковка",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "шт.",
+         "minPrice": 22,
+         "maxPrice": 130
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "XS до 300 г · S до 1 кг · M 1–3 кг · L 3–8 кг · XL 8–15 кг. Цены по размерам: XS — 22 ₽, S — 32 ₽, M — 42 ₽, L — 85 ₽, XL — 130 ₽."
+       },
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Полный цикл",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "шт.",
+         "minPrice": 40,
+         "maxPrice": 160
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "Приёмка + маркировка + сортировка + упаковка. Цены по размерам: XS — 40 ₽, S — 50 ₽, M — 62 ₽, L — 110 ₽, XL — 160 ₽."
+       }
+      ]
+     },
+     {
+      "@type": "OfferCatalog",
+      "name": "Хранение",
+      "itemListElement": [
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Хранение короба",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "короб / сутки",
+         "minPrice": 4,
+         "maxPrice": 10
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "Первые 3 дня бесплатно. Далее: S — 4 ₽, M — 6–7 ₽, L — 9–10 ₽ за короб в сутки."
+       }
+      ]
+     },
+     {
+      "@type": "OfferCatalog",
+      "name": "Доставка на склады маркетплейсов",
+      "itemListElement": [
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Доставка на близкие склады WB/Ozon (Подольск, Электросталь)",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "короб",
+         "minPrice": 650,
+         "maxPrice": 700
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "Точный тариф зависит от маршрута и конкретной поставки."
+       },
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Доставка на дальние склады (Тула, Коледино, Софьино)",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "короб",
+         "minPrice": 800,
+         "maxPrice": 850
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "Точный тариф зависит от маршрута и конкретной поставки."
+       }
+      ]
+     },
+     {
+      "@type": "OfferCatalog",
+      "name": "Возвраты",
+      "itemListElement": [
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Приёмка возврата (грузоместо)",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "место",
+         "minPrice": 36,
+         "maxPrice": 40
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "Короб / мешок / микс"
+       },
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Приёмка возврата + базовый сюрвей",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "шт.",
+         "minPrice": 11,
+         "maxPrice": 12
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "Оценка состояния, фиксация в учёте"
+       },
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Расширенный сюрвей возврата",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "шт.",
+         "price": 5
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "Фото- и видеофиксация"
+       },
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Переупаковка / перемаркировка возврата",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "шт.",
+         "minPrice": 27,
+         "maxPrice": 31
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "Новая упаковка и этикетка"
+       },
+       {
+        "@type": "Offer",
+        "itemOffered": {
+         "@type": "Service",
+         "name": "Хранение возврата",
+         "provider": {
+          "@id": "https://korobfulfillment.ru/#organization"
+         }
+        },
+        "priceSpecification": {
+         "@type": "UnitPriceSpecification",
+         "priceCurrency": "RUB",
+         "unitText": "короб / сутки",
+         "minPrice": 4,
+         "maxPrice": 10
+        },
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "description": "После бесплатного периода: S — 4 ₽, M — 6–7 ₽, L — 9–10 ₽ за короб в сутки."
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "@type": "Service",
+   "@id": "https://korobfulfillment.ru/#fulfillment",
+   "name": "Фулфилмент для селлеров маркетплейсов",
+   "serviceType": "Фулфилмент",
+   "description": "Приёмка, маркировка, сортировка, упаковка, хранение и доставка товаров на склады Wildberries, Ozon, Яндекс.Маркета и других маркетплейсов, обработка возвратов. Без минимального объёма, первые 3 дня хранения бесплатно.",
+   "provider": {
+    "@id": "https://korobfulfillment.ru/#organization"
+   },
+   "audience": {
+    "@type": "BusinessAudience",
+    "name": "Продавцы маркетплейсов с небольшими партиями"
+   },
+   "hasOfferCatalog": {
+    "@id": "https://korobfulfillment.ru/#prices"
+   }
+  },
+  {
+   "@type": "WebSite",
+   "@id": "https://korobfulfillment.ru/#website",
+   "url": "https://korobfulfillment.ru/",
+   "name": "КОРОБ — фулфилмент в Люберцах",
+   "inLanguage": "ru-RU",
+   "publisher": {
+    "@id": "https://korobfulfillment.ru/#organization"
+   }
+  },
+  {
+   "@type": "WebPage",
+   "@id": "https://korobfulfillment.ru/#webpage",
+   "url": "https://korobfulfillment.ru/",
+   "name": "КОРОБ — фулфилмент в Люберцах для селлеров WB, Ozon и Яндекс.Маркета без минимального объёма",
+   "description": "Фулфилмент-склад КОРОБ в Люберцах (Московская область) для небольших селлеров Wildberries, Ozon и Яндекс.Маркета: приёмка от 5 ₽/шт, маркировка «Честный знак», упаковка, хранение (3 дня бесплатно), доставка на склады маркетплейсов от 650 ₽ за короб, возвраты. Без минимального объёма.",
+   "inLanguage": "ru-RU",
+   "isPartOf": {
+    "@id": "https://korobfulfillment.ru/#website"
+   },
+   "about": {
+    "@id": "https://korobfulfillment.ru/#organization"
+   },
+   "mainEntity": {
+    "@id": "https://korobfulfillment.ru/#organization"
+   },
+   "dateModified": "2026-11-25"
+  },
+  {
+   "@type": "FAQPage",
+   "@id": "https://korobfulfillment.ru/#faq",
+   "url": "https://korobfulfillment.ru/#faq",
+   "inLanguage": "ru-RU",
+   "isPartOf": {
+    "@id": "https://korobfulfillment.ru/#webpage"
+   },
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Какой у вас минимальный объём?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Минимального объёма нет — берём даже небольшие партии в 10–20 единиц. Это и есть наша ниша: клиенты, которых разворачивают крупные фулфилменты."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Работаете с «Честным знаком»?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Да, наносим маркировку на товары, для которых она обязательна — одежда, обувь, парфюмерия — в рамках услуги маркировки."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Что с возвратами?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Принимаем возврат, оцениваем состояние (новый / требует переупаковки / брак) и готовим товар к повторной продаже или к списанию по вашему решению."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Как оплата?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Оплата удобным для вас способом"
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Сколько хранится товар бесплатно?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "3 дня бесплатного хранения по текущему предложению. Дальше — 4 ₽/сутки для S, 6–7 ₽/сутки для M и 9–10 ₽/сутки для L."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Где находится склад КОРОБ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Склад находится в Люберцах (Московская область). Товар можно привезти самостоятельно, или мы заберём его у вас."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "С какими маркетплейсами вы работаете?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Готовим и отгружаем поставки на склады Wildberries, Ozon, Яндекс.Маркета и других маркетплейсов."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Сколько стоит фулфилмент одной единицы товара?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Полный цикл (приёмка, маркировка, сортировка и упаковка) стоит от 40 ₽ за единицу: XS до 300 г — 40 ₽, S до 1 кг — 50 ₽, M 1–3 кг — 62 ₽, L 3–8 кг — 110 ₽, XL 8–15 кг — 160 ₽. Операции можно заказывать и по отдельности: приёмка от 5 ₽, маркировка от 9 ₽, сортировка от 4 ₽, упаковка от 22 ₽ за штуку."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Сколько стоит доставка на склады Wildberries и Ozon?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Доставка на близкие склады WB/Ozon (Подольск, Электросталь) — 650–700 ₽ за короб, на дальние склады (Тула, Коледино, Софьино) — 800–850 ₽ за короб. Точный тариф зависит от маршрута и конкретной поставки."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Какой у вас режим работы?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Пн–Пт: 9:00–18:00, Сб–Вс: 10:00–16:00."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Как начать работу с КОРОБ?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Напишите в Telegram @dimochka_ff или позвоните по номеру +7 (906) 357-46-76: уточним товар, объём и нужные операции и посчитаем ориентировочную стоимость. Затем привозите товар или мы заберём его у вас."
+     }
+    }
+   ]
+  }
+ ]
+}
+</script>
 </head>
 <body>
 <div class="bg-fx"></div>
@@ -1254,7 +1813,7 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
     <div class="rv in">
       <span class="kicker"><i></i> Люберцы · небольшие партии · без минимального объёма</span>
       <h1>Пока большие выбирают обороты —<br>мы выбираем <em>клиентов.</em></h1>
-      <p class="hero-sub">Принимаем маленькие партии без минимального объёма. Приёмка, маркировка, упаковка и отгрузка на склады Wildberries, Ozon, Яндекс.Маркет и другие маркетплейсы — быстро и без очереди на входе.</p>
+      <p class="hero-sub">КОРОБ — фулфилмент-склад в Люберцах (Московская область). Принимаем маленькие партии без минимального объёма. Приёмка, маркировка, упаковка и отгрузка на склады Wildberries, Ozon, Яндекс.Маркет и другие маркетплейсы — быстро и без очереди на входе.</p>
       <div class="hero-actions">
         <a class="btn btn-primary btn-lg" href="#contacts">Рассчитать стоимость</a>
         <a class="btn btn-ghost btn-lg" href="#services">Смотреть тарифы</a>
@@ -1339,7 +1898,13 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
           <thead>
             <tr><th>Услуга</th><th>Единица</th><th>Цена</th><th>Параметры</th></tr>
           </thead>
-          <tbody id="price-body"></tbody>
+          <tbody id="price-body">
+            <tr><td data-label="Услуга">Приёмка</td><td data-label="Единица">шт.</td><td data-label="Цена"><span class="price-val">5 ₽</span></td><td data-label="Параметры">Приём товара на складе (цена для размера M)</td></tr>
+            <tr><td data-label="Услуга">Маркировка</td><td data-label="Единица">шт.</td><td data-label="Цена"><span class="price-val">10 ₽</span></td><td data-label="Параметры">Нанесение этикетки / «Честный знак» (цена для размера M)</td></tr>
+            <tr><td data-label="Услуга">Сортировка</td><td data-label="Единица">шт.</td><td data-label="Цена"><span class="price-val">5 ₽</span></td><td data-label="Параметры">Распределение по артикулам и размерам (цена для размера M)</td></tr>
+            <tr><td data-label="Услуга">Упаковка</td><td data-label="Единица">шт.</td><td data-label="Цена"><span class="price-val">42 ₽</span></td><td data-label="Параметры">XS до 300 г · S до 1 кг · M 1–3 кг · L 3–8 кг · XL 8–15 кг (цена для размера M)</td></tr>
+            <tr class="price-row-highlight"><td data-label="Услуга">Полный цикл</td><td data-label="Единица">шт.</td><td data-label="Цена"><span class="price-val">62 ₽</span></td><td data-label="Параметры">Приёмка + маркировка + сортировка + упаковка (цена для размера M)</td></tr>
+          </tbody>
         </table>
       </div>
       <div class="price-foot">
@@ -1588,6 +2153,58 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
   </div>
 </section>
 
+<section id="about" class="about-section">
+  <div class="container">
+    <div class="sec-head rv">
+      <span class="eyebrow">Кратко</span>
+      <h2>Кратко о КОРОБ</h2>
+      <p>Основные факты о фулфилменте КОРОБ одним списком: кто мы, где склад, для кого, сколько стоит и как связаться.</p>
+    </div>
+    <dl class="facts rv">
+      <div class="fact"><dt>Кто мы</dt><dd>КОРОБ — фулфилмент-склад для продавцов Wildberries, Ozon, Яндекс.Маркета и других маркетплейсов. Работаем с небольшими партиями, которые не берут крупные фулфилменты.</dd></div>
+      <div class="fact"><dt>Где</dt><dd>Склад в Люберцах (Московская область). Товар можно привезти самостоятельно, или мы заберём его у вас.</dd></div>
+      <div class="fact"><dt>Для кого</dt><dd>Начинающим селлерам, продавцам с небольшими объёмами, для пробных партий и тем, кто хочет отдать рутину складу. Минимального объёма нет: принимаем даже партии в 10–20 единиц.</dd></div>
+      <div class="fact"><dt>Услуги</dt><dd>Приёмка, маркировка (в том числе «Честный знак»), сортировка, упаковка, хранение, доставка коробов на склады маркетплейсов, приёмка и обработка возвратов.</dd></div>
+      <div class="fact"><dt>Цены</dt><dd>Приёмка от 5 ₽/шт, маркировка от 9 ₽/шт, сортировка от 4 ₽/шт, упаковка от 22 ₽/шт, полный цикл от 40 ₽/шт. Хранение: первые 3 дня бесплатно, далее от 4 ₽ за короб в сутки. Доставка на склады WB/Ozon от 650 ₽ за короб.</dd></div>
+      <div class="fact"><dt>Чем отличаемся</dt><dd>Без минимального объёма, оплата только за нужные операции, 3 дня бесплатного хранения, стоимость согласуем до начала работ, учёт по каждой позиции.</dd></div>
+      <div class="fact"><dt>Режим работы</dt><dd>Пн–Пт: 9:00–18:00, Сб–Вс: 10:00–16:00.</dd></div>
+      <div class="fact"><dt>Контакты</dt><dd>Дмитрий: <a href="tel:+79063574676">+7 (906) 357-46-76</a>, Telegram <a href="https://t.me/dimochka_ff" rel="noopener">@dimochka_ff</a>. Денис: <a href="tel:+79257807253">+7 (925) 780-72-53</a>, Telegram <a href="https://t.me/Mistt_tt" rel="noopener">@Mistt_tt</a>.</dd></div>
+    </dl>
+
+    <details class="price-all rv">
+      <summary>Весь прайс КОРОБ одной таблицей<span class="pm">+</span></summary>
+      <div class="price-all-wrap">
+        <table class="price-all-table">
+          <caption>Основной цикл, цена за 1 шт. по размеру товара: XS до 300 г, S до 1 кг, M 1–3 кг, L 3–8 кг, XL 8–15 кг</caption>
+          <thead><tr><th>Услуга</th><th>Единица</th><th>XS</th><th>S</th><th>M</th><th>L</th><th>XL</th></tr></thead>
+          <tbody>
+<tr><td>Приёмка</td><td>шт.</td><td>5 ₽</td><td>5 ₽</td><td>5 ₽</td><td>7 ₽</td><td>8 ₽</td></tr>
+<tr><td>Маркировка</td><td>шт.</td><td>9 ₽</td><td>9 ₽</td><td>10 ₽</td><td>12 ₽</td><td>15 ₽</td></tr>
+<tr><td>Сортировка</td><td>шт.</td><td>4 ₽</td><td>4 ₽</td><td>5 ₽</td><td>6 ₽</td><td>7 ₽</td></tr>
+<tr><td>Упаковка</td><td>шт.</td><td>22 ₽</td><td>32 ₽</td><td>42 ₽</td><td>85 ₽</td><td>130 ₽</td></tr>
+<tr><td>Полный цикл</td><td>шт.</td><td>40 ₽</td><td>50 ₽</td><td>62 ₽</td><td>110 ₽</td><td>160 ₽</td></tr>
+          </tbody>
+        </table>
+        <table class="price-all-table">
+          <caption>Хранение, доставка и возвраты</caption>
+          <thead><tr><th>Услуга</th><th>Единица</th><th>Цена</th><th>Примечание</th></tr></thead>
+          <tbody>
+<tr><td>Хранение короба</td><td>короб / сутки</td><td>S 4 ₽ · M 6–7 ₽ · L 9–10 ₽</td><td>Первые 3 дня бесплатно</td></tr>
+<tr><td>Доставка на близкие склады WB/Ozon (Подольск, Электросталь)</td><td>короб</td><td>650–700 ₽</td><td>Точный тариф зависит от маршрута и конкретной поставки</td></tr>
+<tr><td>Доставка на дальние склады (Тула, Коледино, Софьино)</td><td>короб</td><td>800–850 ₽</td><td>Точный тариф зависит от маршрута и конкретной поставки</td></tr>
+<tr><td>Приёмка возврата (грузоместо)</td><td>место</td><td>36–40 ₽</td><td>Короб / мешок / микс</td></tr>
+<tr><td>Приёмка возврата + базовый сюрвей</td><td>шт.</td><td>11–12 ₽</td><td>Оценка состояния, фиксация в учёте</td></tr>
+<tr><td>Расширенный сюрвей возврата</td><td>шт.</td><td>+5 ₽</td><td>Фото- и видеофиксация</td></tr>
+<tr><td>Переупаковка / перемаркировка возврата</td><td>шт.</td><td>27–31 ₽</td><td>Новая упаковка и этикетка</td></tr>
+<tr><td>Хранение возврата</td><td>короб / сутки</td><td>S 4 ₽ · M 6–7 ₽ · L 9–10 ₽</td><td>После бесплатного периода</td></tr>
+          </tbody>
+        </table>
+        <p class="price-all-note">Цены ориентировочные и не являются публичной офертой. Точную стоимость согласуем до начала работ.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
 <section id="faq">
   <div class="container">
     <div class="sec-head rv">
@@ -1614,6 +2231,30 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
       <details>
         <summary>Сколько хранится товар бесплатно?<span class="pm">+</span></summary>
         <p>3 дня бесплатного хранения по текущему предложению. Дальше — 4 ₽/сутки для S, 6–7 ₽/сутки для M и 9–10 ₽/сутки для L.</p>
+      </details>
+      <details>
+        <summary>Где находится склад КОРОБ?<span class="pm">+</span></summary>
+        <p>Склад находится в Люберцах (Московская область). Товар можно привезти самостоятельно, или мы заберём его у вас.</p>
+      </details>
+      <details>
+        <summary>С какими маркетплейсами вы работаете?<span class="pm">+</span></summary>
+        <p>Готовим и отгружаем поставки на склады Wildberries, Ozon, Яндекс.Маркета и других маркетплейсов.</p>
+      </details>
+      <details>
+        <summary>Сколько стоит фулфилмент одной единицы товара?<span class="pm">+</span></summary>
+        <p>Полный цикл (приёмка, маркировка, сортировка и упаковка) стоит от 40 ₽ за единицу: XS до 300 г — 40 ₽, S до 1 кг — 50 ₽, M 1–3 кг — 62 ₽, L 3–8 кг — 110 ₽, XL 8–15 кг — 160 ₽. Операции можно заказывать и по отдельности: приёмка от 5 ₽, маркировка от 9 ₽, сортировка от 4 ₽, упаковка от 22 ₽ за штуку.</p>
+      </details>
+      <details>
+        <summary>Сколько стоит доставка на склады Wildberries и Ozon?<span class="pm">+</span></summary>
+        <p>Доставка на близкие склады WB/Ozon (Подольск, Электросталь) — 650–700 ₽ за короб, на дальние склады (Тула, Коледино, Софьино) — 800–850 ₽ за короб. Точный тариф зависит от маршрута и конкретной поставки.</p>
+      </details>
+      <details>
+        <summary>Какой у вас режим работы?<span class="pm">+</span></summary>
+        <p>Пн–Пт: 9:00–18:00, Сб–Вс: 10:00–16:00.</p>
+      </details>
+      <details>
+        <summary>Как начать работу с КОРОБ?<span class="pm">+</span></summary>
+        <p>Напишите в Telegram @dimochka_ff или позвоните по номеру +7 (906) 357-46-76: уточним товар, объём и нужные операции и посчитаем ориентировочную стоимость. Затем привозите товар или мы заберём его у вас.</p>
       </details>
     </div>
   </div>
@@ -2143,15 +2784,19 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
 
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Reveal
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(!e.isIntersecting) return;
-      e.target.classList.add('in');
-      io.unobserve(e.target);
-    });
-  }, {threshold:.12, rootMargin:'0px 0px -50px 0px'});
-  document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+  // Reveal (без IntersectionObserver — показываем всё сразу)
+  if(!('IntersectionObserver' in window)){
+    document.querySelectorAll('.rv').forEach(function(el){ el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(!e.isIntersecting) return;
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      });
+    }, {threshold:.12, rootMargin:'0px 0px -50px 0px'});
+    document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+  }
 
   // Штрихкод
   var bc = document.getElementById('barcode');
@@ -2183,7 +2828,12 @@ footer{border-top:1px solid var(--line);padding:48px 0;background:var(--surface)
       btn.style.setProperty('--y', ((e.clientY - rect.top) / rect.height * 100) + '%');
     });
   });
+  window.__korobReady = true;
 })();
+</script>
+<script>
+// страховка: если основной скрипт упал, не оставляем блоки невидимыми
+if(!window.__korobReady){ document.documentElement.classList.remove('js'); }
 </script>
 </body>
 </html>
